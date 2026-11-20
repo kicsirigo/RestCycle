@@ -264,11 +264,12 @@ fun SettingsDialog(
                         ) {
                             rowLanguages.forEach { lang ->
                                 val selected = appLanguage == lang
-                                val label = if (lang == AppLanguage.SYSTEM) {
+                                val baseLabel = if (lang == AppLanguage.SYSTEM) {
                                     stringResource(R.string.settings_language_auto)
                                 } else {
                                     lang.nativeLabel
                                 }
+                                val label = "${lang.flagEmoji} $baseLabel"
                                 Surface(
                                     modifier = Modifier
                                         .weight(1f)
