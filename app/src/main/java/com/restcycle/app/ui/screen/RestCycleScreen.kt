@@ -1,10 +1,14 @@
 package com.restcycle.app.ui.screen
 
+import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.view.HapticFeedbackConstants
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -71,9 +75,12 @@ import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepOption
 import com.restcycle.app.domain.model.SleepUiState
+import com.restcycle.app.platform.reminder.BedtimeReminderScheduler
 import com.restcycle.app.platform.update.GitHubUpdateChecker
 import com.restcycle.app.platform.update.UpdateUiState
+import com.restcycle.app.platform.widget.RestCycleWidgetProvider
 import com.restcycle.app.ui.RestCycleTestTags
+import com.restcycle.app.ui.components.BreathingExerciseDialog
 import com.restcycle.app.ui.components.CelestialHeader
 import com.restcycle.app.ui.components.CelestialLandscapeScene
 import com.restcycle.app.ui.components.HapticTimeWheel
@@ -112,7 +119,13 @@ fun RestCycleScreen(
     onSelectThemeStyle: (AppThemeStyle) -> Unit = {},
     onSelectTimeFormatPreference: (TimeFormatPreference) -> Unit = {},
     appLanguage: AppLanguage = AppLanguage.SYSTEM,
-    onSelectAppLanguage: (AppLanguage) -> Unit = {}
+    onSelectAppLanguage: (AppLanguage) -> Unit = {},
+    pureAmoledNight: Boolean = false,
+    onTogglePureAmoledNight: (Boolean) -> Unit = {},
+    caffeineCutoffHours: Int = 8,
+    onSelectCaffeineCutoffHours: (Int) -> Unit = {},
+    bedtimeReminderEnabled: Boolean = false,
+    onToggleBedtimeReminder: (Boolean) -> Unit = {}
 ) {
     val baseContext = LocalContext.current
     val baseConfiguration = LocalConfiguration.current
@@ -146,12 +159,19 @@ fun RestCycleScreen(
             onLaunchAlarm = onLaunchAlarm,
             onLaunchTimer = onLaunchTimer,
             modifier = modifier,
+            baseActivityContext = baseContext,
             themeStyle = themeStyle,
             timeFormatPreference = timeFormatPreference,
             onSelectThemeStyle = onSelectThemeStyle,
             onSelectTimeFormatPreference = onSelectTimeFormatPreference,
             appLanguage = appLanguage,
-            onSelectAppLanguage = onSelectAppLanguage
+            onSelectAppLanguage = onSelectAppLanguage,
+            pureAmoledNight = pureAmoledNight,
+            onTogglePureAmoledNight = onTogglePureAmoledNight,
+            caffeineCutoffHours = caffeineCutoffHours,
+            onSelectCaffeineCutoffHours = onSelectCaffeineCutoffHours,
+            bedtimeReminderEnabled = bedtimeReminderEnabled,
+            onToggleBedtimeReminder = onToggleBedtimeReminder
         )
     }
 }
@@ -168,12 +188,19 @@ private fun RestCycleScreenContent(
     onLaunchAlarm: (time: LocalTime, message: String) -> Boolean,
     onLaunchTimer: (durationSeconds: Int, message: String) -> Boolean,
     modifier: Modifier,
+    baseActivityContext: Context,
     themeStyle: AppThemeStyle,
     timeFormatPreference: TimeFormatPreference,
     onSelectThemeStyle: (AppThemeStyle) -> Unit,
     onSelectTimeFormatPreference: (TimeFormatPreference) -> Unit,
     appLanguage: AppLanguage,
-    onSelectAppLanguage: (AppLanguage) -> Unit
+    onSelectAppLanguage: (AppLanguage) -> Unit,
+    pureAmoledNight: Boolean,
+    onTogglePureAmoledNight: (Boolean) -> Unit,
+    caffeineCutoffHours: Int,
+    onSelectCaffeineCutoffHours: (Int) -> Unit,
+    bedtimeReminderEnabled: Boolean,
+    onToggleBedtimeReminder: (Boolean) -> Unit
 ) {
     val palette = AtmosphereTheme.palette
     val context = LocalContext.current
@@ -183,9 +210,40 @@ private fun RestCycleScreenContent(
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarJob by remember { mutableStateOf<Job?>(null) }
     var showSettings by remember { mutableStateOf(false) }
+    var showBreathing by remember { mutableStateOf(false) }
     var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
     val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
     val clockUnavailableMessage = stringResource(R.string.clock_app_unavailable)
+
+    val activeBedtimeForHelpers: LocalTime? = when (uiState.mode) {
+        SleepMode.WAKE_UP_AT -> uiState.options.firstOrNull { it.id == uiState.highlightedOptionId }?.targetTime
+            ?: uiState.options.firstOrNull()?.targetTime
+        SleepMode.GO_TO_BED_AT -> uiState.selectedTime
+        SleepMode.SLEEP_NOW, SleepMode.POWER_NAP -> null
+    }
+
+    LaunchedEffect(bedtimeReminderEnabled, activeBedtimeForHelpers, uiState.is24HourFormat) {
+        if (bedtimeReminderEnabled && activeBedtimeForHelpers != null) {
+            val formatted = formatClockTime(activeBedtimeForHelpers, uiState.is24HourFormat)
+            BedtimeReminderScheduler.scheduleReminder(
+                context = baseActivityContext,
+                bedtime = activeBedtimeForHelpers,
+                formattedBedtime = formatted
+            )
+        } else if (!bedtimeReminderEnabled) {
+            BedtimeReminderScheduler.cancelReminder(baseActivityContext)
+        }
+    }
+
+    LaunchedEffect(uiState.sleepLatencyMinutes, uiState.is24HourFormat) {
+        runCatching {
+            RestCycleWidgetProvider.refreshAllWidgets(
+                context = baseActivityContext,
+                sleepLatencyMinutes = uiState.sleepLatencyMinutes,
+                is24HourFormat = uiState.is24HourFormat
+            )
+        }
+    }
 
     fun notifyMissingClockIfFailed(launched: Boolean) {
         if (!launched) {
@@ -319,60 +377,88 @@ private fun RestCycleScreenContent(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Top context action / status pill inside thumb zone
+                // Top context action / status pill (+ Caffeine Cutoff pill) inside thumb zone
                 when (uiState.mode) {
                     SleepMode.WAKE_UP_AT -> {
                         val formattedWake = formatClockTime(uiState.selectedTime, uiState.is24HourFormat)
-                        FilledTonalButton(
-                            onClick = {
-                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                val message = resources.getString(R.string.alarm_label_wakeup)
-                                notifyMissingClockIfFailed(onLaunchAlarm(uiState.selectedTime, message))
-                            },
-                            shape = RoundedCornerShape(50),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = palette.pillContainer,
-                                contentColor = palette.textPrimary
-                            ),
-                            modifier = Modifier
-                                .defaultMinSize(minHeight = 36.dp)
-                                .testTag(RestCycleTestTags.WAKE_ALARM_BTN)
+                        val caffeineCutoffTime = activeBedtimeForHelpers
+                            ?.takeIf { caffeineCutoffHours > 0 }
+                            ?.minusHours(caffeineCutoffHours.toLong())
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = RestCycleIcons.Alarm,
-                                contentDescription = null,
-                                tint = palette.accentText,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(R.string.action_wake_alarm),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = formattedWake,
-                                style = TabularTextStyles.headerLiveClock,
-                                color = palette.accentText
-                            )
+                            FilledTonalButton(
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    val message = resources.getString(R.string.alarm_label_wakeup)
+                                    notifyMissingClockIfFailed(onLaunchAlarm(uiState.selectedTime, message))
+                                },
+                                shape = RoundedCornerShape(50),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = palette.pillContainer,
+                                    contentColor = palette.textPrimary
+                                ),
+                                modifier = Modifier
+                                    .defaultMinSize(minHeight = 36.dp)
+                                    .testTag(RestCycleTestTags.WAKE_ALARM_BTN)
+                            ) {
+                                Icon(
+                                    imageVector = RestCycleIcons.Alarm,
+                                    contentDescription = null,
+                                    tint = palette.accentText,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = stringResource(R.string.action_wake_alarm),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = formattedWake,
+                                    style = TabularTextStyles.headerLiveClock,
+                                    color = palette.accentText
+                                )
+                            }
+                            if (caffeineCutoffTime != null) {
+                                CaffeineCutoffPill(
+                                    cutoffTime = caffeineCutoffTime,
+                                    is24HourFormat = uiState.is24HourFormat
+                                )
+                            }
                         }
                     }
 
                     SleepMode.GO_TO_BED_AT -> {
                         val formattedBedtime = formatClockTime(uiState.selectedTime, uiState.is24HourFormat)
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = palette.pillContainer,
-                            border = BorderStroke(1.dp, palette.borderSubtle)
+                        val caffeineCutoffTime = uiState.selectedTime
+                            .takeIf { caffeineCutoffHours > 0 }
+                            ?.minusHours(caffeineCutoffHours.toLong())
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = stringResource(R.string.planned_bedtime_label, formattedBedtime),
-                                style = TabularTextStyles.headerLiveClock,
-                                color = palette.textPrimary,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = palette.pillContainer,
+                                border = BorderStroke(1.dp, palette.borderSubtle)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.planned_bedtime_label, formattedBedtime),
+                                    style = TabularTextStyles.headerLiveClock,
+                                    color = palette.textPrimary,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                )
+                            }
+                            if (caffeineCutoffTime != null) {
+                                CaffeineCutoffPill(
+                                    cutoffTime = caffeineCutoffTime,
+                                    is24HourFormat = uiState.is24HourFormat
+                                )
+                            }
                         }
                     }
 
@@ -458,6 +544,7 @@ private fun RestCycleScreenContent(
                         CelestialLandscapeScene(
                             skyPhase = uiState.activeSkyPhase,
                             hintText = stringResource(id = hintRes),
+                            onOpenBreathing = { showBreathing = true },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(vertical = 4.dp)
@@ -517,6 +604,29 @@ private fun RestCycleScreenContent(
                 onDismiss = { showSettings = false },
                 appLanguage = appLanguage,
                 onSelectLanguage = onSelectAppLanguage,
+                pureAmoledNight = pureAmoledNight,
+                onTogglePureAmoledNight = onTogglePureAmoledNight,
+                caffeineCutoffHours = caffeineCutoffHours,
+                onSelectCaffeineCutoffHours = onSelectCaffeineCutoffHours,
+                bedtimeReminderEnabled = bedtimeReminderEnabled,
+                onToggleBedtimeReminder = { enabled ->
+                    if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val granted = ContextCompat.checkSelfPermission(
+                            baseActivityContext,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (!granted) {
+                            (baseActivityContext as? Activity)?.let { activity ->
+                                ActivityCompat.requestPermissions(
+                                    activity,
+                                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                                    REQ_POST_NOTIFICATIONS
+                                )
+                            }
+                        }
+                    }
+                    onToggleBedtimeReminder(enabled)
+                },
                 installedVersionName = installedVersionName,
                 updateUiState = updateUiState,
                 onCheckForUpdates = {
@@ -533,6 +643,37 @@ private fun RestCycleScreenContent(
                 }
             )
         }
+
+        if (showBreathing) {
+            BreathingExerciseDialog(
+                onDismiss = { showBreathing = false }
+            )
+        }
+    }
+}
+
+private const val REQ_POST_NOTIFICATIONS = 5211
+
+@Composable
+private fun CaffeineCutoffPill(
+    cutoffTime: LocalTime,
+    is24HourFormat: Boolean
+) {
+    val palette = AtmosphereTheme.palette
+    val formatted = formatClockTime(cutoffTime, is24HourFormat)
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = palette.pillContainer,
+        border = BorderStroke(1.dp, palette.borderSubtle),
+        modifier = Modifier.testTag(RestCycleTestTags.CAFFEINE_CUTOFF_PILL)
+    ) {
+        Text(
+            text = stringResource(R.string.caffeine_cutoff_label, formatted),
+            style = TabularTextStyles.headerLiveClock,
+            color = palette.textSecondary,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        )
     }
 }
 
@@ -612,8 +753,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.3.0"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.4.0"
     } catch (_: Exception) {
-        "1.3.0"
+        "1.4.0"
     }
 }

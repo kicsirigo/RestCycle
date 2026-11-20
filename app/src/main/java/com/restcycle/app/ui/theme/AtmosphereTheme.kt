@@ -99,7 +99,9 @@ val NightAtmospherePalette = AtmospherePalette(
 enum class AppThemeStyle {
     DYNAMIC,
     NORD,
-    CATPPUCCIN_MACCHIATO
+    CATPPUCCIN_MACCHIATO,
+    TOKYO_NIGHT,
+    GRUVBOX
 }
 
 enum class TimeFormatPreference {
@@ -231,6 +233,114 @@ val CatppuccinNightAtmospherePalette = AtmospherePalette(
 
 val CatppuccinMacchiatoAtmospherePalette = CatppuccinNightAtmospherePalette
 
+val TokyoNightDayAtmospherePalette = AtmospherePalette(
+    skyPhase = SkyPhase.DAY,
+    backgroundGlow = Color(0xFFE6E7ED),
+    backgroundTop = Color(0xFFDFE1EA),
+    backgroundMid = Color(0xFFD5D7E3),
+    backgroundBottom = Color(0xFFCBCDDC),
+    cardSurface = Color(0xFFE9EBF2),
+    cardSurfaceHighlighted = Color(0xFFDFE2EE),
+    accent = Color(0xFF2E7DE9),
+    accentText = Color(0xFF1F5BB8),
+    onAccent = Color(0xFFF4F6FB),
+    textPrimary = Color(0xFF343B58),
+    textSecondary = Color(0xFF565A6E),
+    borderSubtle = Color(0xFFBDC1D4),
+    pillContainer = Color(0xFFD5D8E5),
+    isLightSystemBars = true
+)
+
+val TokyoNightDawnDuskAtmospherePalette = AtmospherePalette(
+    skyPhase = SkyPhase.DAWN_DUSK,
+    backgroundGlow = Color(0xFFFF9E64),
+    backgroundTop = Color(0xFF2D2B4E),
+    backgroundMid = Color(0xFF22243B),
+    backgroundBottom = Color(0xFF1A1B26),
+    cardSurface = Color(0xFF24283B),
+    cardSurfaceHighlighted = Color(0xFF323750),
+    accent = Color(0xFFFF9E64),
+    accentText = Color(0xFFFF9E64),
+    onAccent = Color(0xFF1A1B26),
+    textPrimary = Color(0xFFC0CAF5),
+    textSecondary = Color(0xFFA9B1D6),
+    borderSubtle = Color(0xFF414868),
+    pillContainer = Color(0xFF22263A),
+    isLightSystemBars = false
+)
+
+val TokyoNightNightAtmospherePalette = AtmospherePalette(
+    skyPhase = SkyPhase.NIGHT,
+    backgroundGlow = Color(0xFF1A1B26),
+    backgroundTop = Color(0xFF16161E),
+    backgroundMid = Color(0xFF13141C),
+    backgroundBottom = Color(0xFF101118),
+    cardSurface = Color(0xFF1F2335),
+    cardSurfaceHighlighted = Color(0xFF292E42),
+    accent = Color(0xFF7AA2F7),
+    accentText = Color(0xFF7AA2F7),
+    onAccent = Color(0xFF101118),
+    textPrimary = Color(0xFFC0CAF5),
+    textSecondary = Color(0xFF9AA5CE),
+    borderSubtle = Color(0xFF3B4261),
+    pillContainer = Color(0xFF1B1E2E),
+    isLightSystemBars = false
+)
+
+val GruvboxDayAtmospherePalette = AtmospherePalette(
+    skyPhase = SkyPhase.DAY,
+    backgroundGlow = Color(0xFFF2E5BC),
+    backgroundTop = Color(0xFFEBDBB2),
+    backgroundMid = Color(0xFFE3D1A4),
+    backgroundBottom = Color(0xFFD5C4A1),
+    cardSurface = Color(0xFFF4E8C6),
+    cardSurfaceHighlighted = Color(0xFFEAD9AE),
+    accent = Color(0xFFD65D0E),
+    accentText = Color(0xFFAF3A03),
+    onAccent = Color(0xFFFBF1C7),
+    textPrimary = Color(0xFF3C3836),
+    textSecondary = Color(0xFF665C54),
+    borderSubtle = Color(0xFFBDAE93),
+    pillContainer = Color(0xFFE0CFA4),
+    isLightSystemBars = true
+)
+
+val GruvboxDawnDuskAtmospherePalette = AtmospherePalette(
+    skyPhase = SkyPhase.DAWN_DUSK,
+    backgroundGlow = Color(0xFFFE8019),
+    backgroundTop = Color(0xFF4B2D24),
+    backgroundMid = Color(0xFF362723),
+    backgroundBottom = Color(0xFF282828),
+    cardSurface = Color(0xFF3C3836),
+    cardSurfaceHighlighted = Color(0xFF504945),
+    accent = Color(0xFFFABD2F),
+    accentText = Color(0xFFFABD2F),
+    onAccent = Color(0xFF282828),
+    textPrimary = Color(0xFFEBDBB2),
+    textSecondary = Color(0xFFD5C4A1),
+    borderSubtle = Color(0xFF665C54),
+    pillContainer = Color(0xFF32302F),
+    isLightSystemBars = false
+)
+
+val GruvboxNightAtmospherePalette = AtmospherePalette(
+    skyPhase = SkyPhase.NIGHT,
+    backgroundGlow = Color(0xFF282828),
+    backgroundTop = Color(0xFF222222),
+    backgroundMid = Color(0xFF1D2021),
+    backgroundBottom = Color(0xFF181A1B),
+    cardSurface = Color(0xFF282828),
+    cardSurfaceHighlighted = Color(0xFF3C3836),
+    accent = Color(0xFFB8BB26),
+    accentText = Color(0xFFB8BB26),
+    onAccent = Color(0xFF1D2021),
+    textPrimary = Color(0xFFEBDBB2),
+    textSecondary = Color(0xFFBDAE93),
+    borderSubtle = Color(0xFF504945),
+    pillContainer = Color(0xFF252627),
+    isLightSystemBars = false
+)
+
 fun paletteForSkyPhase(skyPhase: SkyPhase): AtmospherePalette = when (skyPhase) {
     SkyPhase.DAY -> DayAtmospherePalette
     SkyPhase.DAWN_DUSK -> DawnDuskAtmospherePalette
@@ -239,18 +349,41 @@ fun paletteForSkyPhase(skyPhase: SkyPhase): AtmospherePalette = when (skyPhase) 
 
 fun paletteForTheme(
     skyPhase: SkyPhase,
-    themeStyle: AppThemeStyle = AppThemeStyle.DYNAMIC
-): AtmospherePalette = when (themeStyle) {
-    AppThemeStyle.DYNAMIC -> paletteForSkyPhase(skyPhase)
-    AppThemeStyle.NORD -> when (skyPhase) {
-        SkyPhase.DAY -> NordDayAtmospherePalette
-        SkyPhase.DAWN_DUSK -> NordDawnDuskAtmospherePalette
-        SkyPhase.NIGHT -> NordNightAtmospherePalette
+    themeStyle: AppThemeStyle = AppThemeStyle.DYNAMIC,
+    pureAmoledNight: Boolean = false
+): AtmospherePalette {
+    val base = when (themeStyle) {
+        AppThemeStyle.DYNAMIC -> paletteForSkyPhase(skyPhase)
+        AppThemeStyle.NORD -> when (skyPhase) {
+            SkyPhase.DAY -> NordDayAtmospherePalette
+            SkyPhase.DAWN_DUSK -> NordDawnDuskAtmospherePalette
+            SkyPhase.NIGHT -> NordNightAtmospherePalette
+        }
+        AppThemeStyle.CATPPUCCIN_MACCHIATO -> when (skyPhase) {
+            SkyPhase.DAY -> CatppuccinDayAtmospherePalette
+            SkyPhase.DAWN_DUSK -> CatppuccinDawnDuskAtmospherePalette
+            SkyPhase.NIGHT -> CatppuccinNightAtmospherePalette
+        }
+        AppThemeStyle.TOKYO_NIGHT -> when (skyPhase) {
+            SkyPhase.DAY -> TokyoNightDayAtmospherePalette
+            SkyPhase.DAWN_DUSK -> TokyoNightDawnDuskAtmospherePalette
+            SkyPhase.NIGHT -> TokyoNightNightAtmospherePalette
+        }
+        AppThemeStyle.GRUVBOX -> when (skyPhase) {
+            SkyPhase.DAY -> GruvboxDayAtmospherePalette
+            SkyPhase.DAWN_DUSK -> GruvboxDawnDuskAtmospherePalette
+            SkyPhase.NIGHT -> GruvboxNightAtmospherePalette
+        }
     }
-    AppThemeStyle.CATPPUCCIN_MACCHIATO -> when (skyPhase) {
-        SkyPhase.DAY -> CatppuccinDayAtmospherePalette
-        SkyPhase.DAWN_DUSK -> CatppuccinDawnDuskAtmospherePalette
-        SkyPhase.NIGHT -> CatppuccinNightAtmospherePalette
+    return if (pureAmoledNight && skyPhase == SkyPhase.NIGHT) {
+        base.copy(
+            backgroundGlow = Color(0xFF000000),
+            backgroundTop = Color(0xFF000000),
+            backgroundMid = Color(0xFF000000),
+            backgroundBottom = Color(0xFF000000)
+        )
+    } else {
+        base
     }
 }
 
@@ -273,9 +406,10 @@ const val ATMOSPHERE_TRANSITION_DURATION_MS = 600
 fun AtmosphereTheme(
     skyPhase: SkyPhase,
     themeStyle: AppThemeStyle = AppThemeStyle.DYNAMIC,
+    pureAmoledNight: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val target = paletteForTheme(skyPhase, themeStyle)
+    val target = paletteForTheme(skyPhase, themeStyle, pureAmoledNight)
     val animSpec = tween<Color>(durationMillis = ATMOSPHERE_TRANSITION_DURATION_MS)
 
     val backgroundGlow by animateColorAsState(target.backgroundGlow, animSpec, label = "bgGlow")

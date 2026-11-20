@@ -1,5 +1,6 @@
 package com.restcycle.app.ui.components
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -9,16 +10,21 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -30,10 +36,16 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.restcycle.app.R
 import com.restcycle.app.domain.model.SkyPhase
+import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.ATMOSPHERE_TRANSITION_DURATION_MS
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
@@ -189,6 +201,96 @@ private val CatppuccinNightLandscapeColors = LandscapeColors(
     waterShimmer = Color(0xFFC6A0F6)
 )
 
+private val TokyoNightDayLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFF2E7DE9),
+    celestialDisc = Color(0xFF8C6C3E),
+    farMountain = Color(0xFF9699A3),
+    midMountain = Color(0xFF6172B0),
+    midMountainHighlight = Color(0xFF7AA2F7),
+    foothill = Color(0xFF485E30),
+    treeBack = Color(0xFF3A4C28),
+    treeFront = Color(0xFF2A391E),
+    lakeTop = Color(0xFF5A8DEE),
+    lakeBottom = Color(0xFF3D59A1),
+    streamColor = Color(0xFF7DCFFF),
+    waterShimmer = Color(0xFFE6E7ED)
+)
+
+private val TokyoNightDawnDuskLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFFF9E64),
+    celestialDisc = Color(0xFFE0AF68),
+    farMountain = Color(0xFF414868),
+    midMountain = Color(0xFF292E42),
+    midMountainHighlight = Color(0xFFFF9E64),
+    foothill = Color(0xFF1F2335),
+    treeBack = Color(0xFF1A1B26),
+    treeFront = Color(0xFF13141C),
+    lakeTop = Color(0xFF3D59A1),
+    lakeBottom = Color(0xFF1A1B26),
+    streamColor = Color(0xFF7DCFFF),
+    waterShimmer = Color(0xFFFF9E64)
+)
+
+private val TokyoNightNightLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFF7AA2F7),
+    celestialDisc = Color(0xFFC0CAF5),
+    farMountain = Color(0xFF292E42),
+    midMountain = Color(0xFF1F2335),
+    midMountainHighlight = Color(0xFF7AA2F7),
+    foothill = Color(0xFF16161E),
+    treeBack = Color(0xFF13141C),
+    treeFront = Color(0xFF0D0E14),
+    lakeTop = Color(0xFF283457),
+    lakeBottom = Color(0xFF101118),
+    streamColor = Color(0xFF7AA2F7),
+    waterShimmer = Color(0xFF7DCFFF)
+)
+
+private val GruvboxDayLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFD65D0E),
+    celestialDisc = Color(0xFFD79921),
+    farMountain = Color(0xFFA89984),
+    midMountain = Color(0xFF7C6F64),
+    midMountainHighlight = Color(0xFFD79921),
+    foothill = Color(0xFF79740E),
+    treeBack = Color(0xFF625E0B),
+    treeFront = Color(0xFF4B4808),
+    lakeTop = Color(0xFF458588),
+    lakeBottom = Color(0xFF076678),
+    streamColor = Color(0xFF689D6A),
+    waterShimmer = Color(0xFFFBF1C7)
+)
+
+private val GruvboxDawnDuskLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFFE8019),
+    celestialDisc = Color(0xFFFABD2F),
+    farMountain = Color(0xFF665C54),
+    midMountain = Color(0xFF504945),
+    midMountainHighlight = Color(0xFFFE8019),
+    foothill = Color(0xFF3C3836),
+    treeBack = Color(0xFF282828),
+    treeFront = Color(0xFF1D2021),
+    lakeTop = Color(0xFF83A598),
+    lakeBottom = Color(0xFF282828),
+    streamColor = Color(0xFFFE8019),
+    waterShimmer = Color(0xFFFABD2F)
+)
+
+private val GruvboxNightLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFB8BB26),
+    celestialDisc = Color(0xFFEBDBB2),
+    farMountain = Color(0xFF504945),
+    midMountain = Color(0xFF3C3836),
+    midMountainHighlight = Color(0xFF83A598),
+    foothill = Color(0xFF282828),
+    treeBack = Color(0xFF222222),
+    treeFront = Color(0xFF181A1B),
+    lakeTop = Color(0xFF458588),
+    lakeBottom = Color(0xFF181A1B),
+    streamColor = Color(0xFF8EC07C),
+    waterShimmer = Color(0xFFB8BB26)
+)
+
 private fun landscapeColorsFor(
     skyPhase: SkyPhase,
     themeStyle: AppThemeStyle
@@ -202,6 +304,16 @@ private fun landscapeColorsFor(
         SkyPhase.DAY -> CatppuccinDayLandscapeColors
         SkyPhase.DAWN_DUSK -> CatppuccinDawnDuskLandscapeColors
         SkyPhase.NIGHT -> CatppuccinNightLandscapeColors
+    }
+    AppThemeStyle.TOKYO_NIGHT -> when (skyPhase) {
+        SkyPhase.DAY -> TokyoNightDayLandscapeColors
+        SkyPhase.DAWN_DUSK -> TokyoNightDawnDuskLandscapeColors
+        SkyPhase.NIGHT -> TokyoNightNightLandscapeColors
+    }
+    AppThemeStyle.GRUVBOX -> when (skyPhase) {
+        SkyPhase.DAY -> GruvboxDayLandscapeColors
+        SkyPhase.DAWN_DUSK -> GruvboxDawnDuskLandscapeColors
+        SkyPhase.NIGHT -> GruvboxNightLandscapeColors
     }
     AppThemeStyle.DYNAMIC -> when (skyPhase) {
         SkyPhase.DAY -> DayLandscapeColors
@@ -255,10 +367,12 @@ private val SCENE_STARS = listOf(
 fun CelestialLandscapeScene(
     skyPhase: SkyPhase,
     hintText: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenBreathing: (() -> Unit)? = null
 ) {
     val palette = AtmosphereTheme.palette
     val themeStyle = AtmosphereTheme.themeStyle
+    val view = LocalView.current
     val target = landscapeColorsFor(skyPhase, themeStyle)
     val colorSpec = tween<Color>(durationMillis = ATMOSPHERE_TRANSITION_DURATION_MS)
 
@@ -587,6 +701,33 @@ fun CelestialLandscapeScene(
                 ),
                 blendMode = BlendMode.DstIn
             )
+        }
+
+        if (onOpenBreathing != null) {
+            val shape = RoundedCornerShape(50)
+            Surface(
+                shape = shape,
+                color = palette.pillContainer.copy(alpha = 0.85f),
+                border = BorderStroke(1.dp, palette.borderSubtle),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 4.dp, end = 4.dp)
+                    .clip(shape)
+                    .testTag(RestCycleTestTags.BREATHE_BUTTON)
+                    .clickable {
+                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        onOpenBreathing()
+                    }
+            ) {
+                Text(
+                    text = "🌬️ ${stringResource(R.string.action_breathe)}",
+                    color = palette.textPrimary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                )
+            }
         }
 
         Text(

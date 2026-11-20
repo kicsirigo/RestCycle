@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -39,6 +40,12 @@ interface LatencyPreferencesRepository {
         get() = flowOf(DEFAULT_GO_TO_BED_TIME_MINUTES)
     val lastWheelMode: Flow<SleepMode>
         get() = flowOf(SleepMode.WAKE_UP_AT)
+    val pureAmoledNight: Flow<Boolean>
+        get() = flowOf(false)
+    val caffeineCutoffHours: Flow<Int>
+        get() = flowOf(DEFAULT_CAFFEINE_CUTOFF_HOURS)
+    val bedtimeReminderEnabled: Flow<Boolean>
+        get() = flowOf(false)
     suspend fun setSleepLatency(minutes: Int)
     suspend fun setNapLatency(minutes: Int)
     suspend fun setThemeStyle(style: AppThemeStyle) {}
@@ -47,6 +54,9 @@ interface LatencyPreferencesRepository {
     suspend fun setWakeUpTimeMinutes(minutesOfDay: Int) {}
     suspend fun setGoToBedTimeMinutes(minutesOfDay: Int) {}
     suspend fun setLastWheelMode(mode: SleepMode) {}
+    suspend fun setPureAmoledNight(enabled: Boolean) {}
+    suspend fun setCaffeineCutoffHours(hours: Int) {}
+    suspend fun setBedtimeReminderEnabled(enabled: Boolean) {}
 
     companion object {
         const val PREFS_NAME = "restcycle_prefs"
@@ -62,6 +72,10 @@ interface LatencyPreferencesRepository {
         const val DEFAULT_GO_TO_BED_TIME_MINUTES = 22 * 60 + 30
         const val MIN_TIME_MINUTES_OF_DAY = 0
         const val MAX_TIME_MINUTES_OF_DAY = 23 * 60 + 59
+
+        const val DEFAULT_CAFFEINE_CUTOFF_HOURS = 8
+        const val MIN_CAFFEINE_CUTOFF_HOURS = 0
+        const val MAX_CAFFEINE_CUTOFF_HOURS = 12
     }
 }
 
@@ -78,6 +92,9 @@ class DataStoreLatencyPreferencesRepository(
         val WAKE_UP_TIME_MINUTES = intPreferencesKey("wake_up_time_minutes")
         val GO_TO_BED_TIME_MINUTES = intPreferencesKey("go_to_bed_time_minutes")
         val LAST_WHEEL_MODE = stringPreferencesKey("last_wheel_mode")
+        val PURE_AMOLED_NIGHT = booleanPreferencesKey("pure_amoled_night")
+        val CAFFEINE_CUTOFF_HOURS = intPreferencesKey("caffeine_cutoff_hours")
+        val BEDTIME_REMINDER_ENABLED = booleanPreferencesKey("bedtime_reminder_enabled")
     }
 
     private val safeData: Flow<Preferences> = dataStore.data.catch { exception ->
@@ -162,6 +179,25 @@ class DataStoreLatencyPreferencesRepository(
         }
         .distinctUntilChanged()
 
+    override val pureAmoledNight: Flow<Boolean> = safeData
+        .map { prefs -> prefs[Keys.PURE_AMOLED_NIGHT] ?: false }
+        .distinctUntilChanged()
+
+    override val caffeineCutoffHours: Flow<Int> = safeData
+        .map { prefs ->
+            (prefs[Keys.CAFFEINE_CUTOFF_HOURS]
+                ?: LatencyPreferencesRepository.DEFAULT_CAFFEINE_CUTOFF_HOURS)
+                .coerceIn(
+                    LatencyPreferencesRepository.MIN_CAFFEINE_CUTOFF_HOURS,
+                    LatencyPreferencesRepository.MAX_CAFFEINE_CUTOFF_HOURS
+                )
+        }
+        .distinctUntilChanged()
+
+    override val bedtimeReminderEnabled: Flow<Boolean> = safeData
+        .map { prefs -> prefs[Keys.BEDTIME_REMINDER_ENABLED] ?: false }
+        .distinctUntilChanged()
+
     override suspend fun setSleepLatency(minutes: Int) {
         val clamped = minutes.coerceIn(
             LatencyPreferencesRepository.MIN_SLEEP_LATENCY_MINUTES,
@@ -224,6 +260,28 @@ class DataStoreLatencyPreferencesRepository(
         if (mode != SleepMode.WAKE_UP_AT && mode != SleepMode.GO_TO_BED_AT) return
         dataStore.edit { prefs ->
             prefs[Keys.LAST_WHEEL_MODE] = mode.name
+        }
+    }
+
+    override suspend fun setPureAmoledNight(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[Keys.PURE_AMOLED_NIGHT] = enabled
+        }
+    }
+
+    override suspend fun setCaffeineCutoffHours(hours: Int) {
+        val clamped = hours.coerceIn(
+            LatencyPreferencesRepository.MIN_CAFFEINE_CUTOFF_HOURS,
+            LatencyPreferencesRepository.MAX_CAFFEINE_CUTOFF_HOURS
+        )
+        dataStore.edit { prefs ->
+            prefs[Keys.CAFFEINE_CUTOFF_HOURS] = clamped
+        }
+    }
+
+    override suspend fun setBedtimeReminderEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[Keys.BEDTIME_REMINDER_ENABLED] = enabled
         }
     }
 

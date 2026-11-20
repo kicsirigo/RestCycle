@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.restcycle.app.domain.model.SleepMode
+import com.restcycle.app.platform.widget.RestCycleWidgetProvider
 import com.restcycle.app.ui.screen.RestCycleScreen
 import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.viewmodel.SleepViewModel
@@ -29,6 +30,9 @@ class MainActivity : ComponentActivity() {
             val themeStyle by viewModel.themeStyle.collectAsStateWithLifecycle()
             val timeFormatPref by viewModel.timeFormatPreference.collectAsStateWithLifecycle()
             val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
+            val pureAmoledNight by viewModel.pureAmoledNight.collectAsStateWithLifecycle()
+            val caffeineCutoffHours by viewModel.caffeineCutoffHours.collectAsStateWithLifecycle()
+            val bedtimeReminderEnabled by viewModel.bedtimeReminderEnabled.collectAsStateWithLifecycle()
             val liveClockTime by viewModel.clockTime.collectAsStateWithLifecycle()
             val syncedClockTime = uiState.options.firstOrNull()
                 ?.takeIf {
@@ -41,7 +45,8 @@ class MainActivity : ComponentActivity() {
                 ?: liveClockTime
             AtmosphereTheme(
                 skyPhase = uiState.activeSkyPhase,
-                themeStyle = themeStyle
+                themeStyle = themeStyle,
+                pureAmoledNight = pureAmoledNight
             ) {
                 RestCycleScreen(
                     uiState = uiState,
@@ -62,7 +67,13 @@ class MainActivity : ComponentActivity() {
                     onSelectThemeStyle = viewModel::selectThemeStyle,
                     onSelectTimeFormatPreference = viewModel::selectTimeFormatPreference,
                     appLanguage = appLanguage,
-                    onSelectAppLanguage = viewModel::selectAppLanguage
+                    onSelectAppLanguage = viewModel::selectAppLanguage,
+                    pureAmoledNight = pureAmoledNight,
+                    onTogglePureAmoledNight = viewModel::setPureAmoledNight,
+                    caffeineCutoffHours = caffeineCutoffHours,
+                    onSelectCaffeineCutoffHours = viewModel::setCaffeineCutoffHours,
+                    bedtimeReminderEnabled = bedtimeReminderEnabled,
+                    onToggleBedtimeReminder = viewModel::setBedtimeReminderEnabled
                 )
             }
         }
@@ -73,5 +84,11 @@ class MainActivity : ComponentActivity() {
         val container = (application as RestCycleApplication).container
         viewModel.refreshTimeFormat(container.timeFormatProvider.is24HourFormat())
         viewModel.refreshClockNow()
+        val currentState = viewModel.uiState.value
+        RestCycleWidgetProvider.refreshAllWidgets(
+            context = this,
+            sleepLatencyMinutes = currentState.sleepLatencyMinutes,
+            is24HourFormat = currentState.is24HourFormat
+        )
     }
 }

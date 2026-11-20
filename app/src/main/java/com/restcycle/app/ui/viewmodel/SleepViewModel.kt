@@ -57,6 +57,9 @@ class SleepViewModel(
     internal val wakeUpTimeWritesInFlight = AtomicInteger(0)
     internal val goToBedTimeWritesInFlight = AtomicInteger(0)
     internal val modeWritesInFlight = AtomicInteger(0)
+    internal val amoledWritesInFlight = AtomicInteger(0)
+    internal val caffeineWritesInFlight = AtomicInteger(0)
+    internal val reminderWritesInFlight = AtomicInteger(0)
 
     private var hasUserSelectedModeInSession = false
     private var hasUserSelectedWakeTimeInSession = false
@@ -76,6 +79,15 @@ class SleepViewModel(
 
     private val _appLanguage = MutableStateFlow(AppLanguage.SYSTEM)
     val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+
+    private val _pureAmoledNight = MutableStateFlow(false)
+    val pureAmoledNight: StateFlow<Boolean> = _pureAmoledNight.asStateFlow()
+
+    private val _caffeineCutoffHours = MutableStateFlow(LatencyPreferencesRepository.DEFAULT_CAFFEINE_CUTOFF_HOURS)
+    val caffeineCutoffHours: StateFlow<Int> = _caffeineCutoffHours.asStateFlow()
+
+    private val _bedtimeReminderEnabled = MutableStateFlow(false)
+    val bedtimeReminderEnabled: StateFlow<Boolean> = _bedtimeReminderEnabled.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -190,6 +202,36 @@ class SleepViewModel(
                 .collect { stored ->
                     if (languageWritesInFlight.get() == 0 && stored != _appLanguage.value) {
                         _appLanguage.value = stored
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            repository.pureAmoledNight
+                .distinctUntilChanged()
+                .collect { stored ->
+                    if (amoledWritesInFlight.get() == 0 && stored != _pureAmoledNight.value) {
+                        _pureAmoledNight.value = stored
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            repository.caffeineCutoffHours
+                .distinctUntilChanged()
+                .collect { stored ->
+                    if (caffeineWritesInFlight.get() == 0 && stored != _caffeineCutoffHours.value) {
+                        _caffeineCutoffHours.value = stored
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            repository.bedtimeReminderEnabled
+                .distinctUntilChanged()
+                .collect { stored ->
+                    if (reminderWritesInFlight.get() == 0 && stored != _bedtimeReminderEnabled.value) {
+                        _bedtimeReminderEnabled.value = stored
                     }
                 }
         }
@@ -363,6 +405,55 @@ class SleepViewModel(
                 if (e is CancellationException) throw e
             } finally {
                 languageWritesInFlight.decrementAndGet()
+            }
+        }
+    }
+
+    fun setPureAmoledNight(enabled: Boolean) {
+        if (_pureAmoledNight.value == enabled) return
+        _pureAmoledNight.value = enabled
+        amoledWritesInFlight.incrementAndGet()
+        viewModelScope.launch {
+            try {
+                repository.setPureAmoledNight(enabled)
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+            } finally {
+                amoledWritesInFlight.decrementAndGet()
+            }
+        }
+    }
+
+    fun setCaffeineCutoffHours(hours: Int) {
+        val clamped = hours.coerceIn(
+            LatencyPreferencesRepository.MIN_CAFFEINE_CUTOFF_HOURS,
+            LatencyPreferencesRepository.MAX_CAFFEINE_CUTOFF_HOURS
+        )
+        if (_caffeineCutoffHours.value == clamped) return
+        _caffeineCutoffHours.value = clamped
+        caffeineWritesInFlight.incrementAndGet()
+        viewModelScope.launch {
+            try {
+                repository.setCaffeineCutoffHours(clamped)
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+            } finally {
+                caffeineWritesInFlight.decrementAndGet()
+            }
+        }
+    }
+
+    fun setBedtimeReminderEnabled(enabled: Boolean) {
+        if (_bedtimeReminderEnabled.value == enabled) return
+        _bedtimeReminderEnabled.value = enabled
+        reminderWritesInFlight.incrementAndGet()
+        viewModelScope.launch {
+            try {
+                repository.setBedtimeReminderEnabled(enabled)
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+            } finally {
+                reminderWritesInFlight.decrementAndGet()
             }
         }
     }

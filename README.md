@@ -8,7 +8,7 @@
 [![Android](https://img.shields.io/badge/Android-8.0%2B%20(API%2026%E2%80%9336)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Tests](https://img.shields.io/badge/Tests-331%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-334%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
 [![Privacy](https://img.shields.io/badge/Privacy-Zero%20Tracking-0F172A?style=for-the-badge&logo=shield&logoColor=white)](#privacy--permissions)
 
 </div>
@@ -46,11 +46,13 @@ Every interaction reacts in real time: as you scroll the haptic time wheel or sw
 | **Power Nap** | Science-backed naps | One-tap **10 min** (Micro), **20 min** (Optimal), and **90 min** (Full Cycle) presets with built-in sleep-inertia guidance. |
 
 ### 🌅 Dynamic Celestial Atmosphere Engine & Themes
-RestCycle features **3 curated themes**, and **all 3 dynamically adapt across 3 time-of-day phases (`DAY`, `DAWN_DUSK`, `NIGHT`)** — synchronized across the sky backdrop, cards, controls, status bar, and landscape illustration with zero transition delay:
+RestCycle features **5 curated themes**, and **all 5 dynamically adapt across 3 time-of-day phases (`DAY`, `DAWN_DUSK`, `NIGHT`)** — synchronized across the sky backdrop, cards, controls, status bar, and landscape illustration with zero transition delay, plus an optional **Pure AMOLED Black (`#000000`)** night mode toggle:
 
-- **Dynamic Sky** — Soft daylight sky (`#EBF2F7`), warm twilight sunset, and deep AMOLED midnight (`#080B14`).
-- **Nord** — Polar Snow Storm (`#ECEFF4`) by day, Frost & Aurora Twilight at dawn/dusk, and Polar Night (`#2E3440`) at night.
-- **Catppuccin Macchiato** — Warm Latte-inspired daylight, Mauve/Peach twilight, and authentic Macchiato (`#24273A`) night.
+- **Dynamic Sky** — Soft daylight sky, warm twilight sunset, and deep AMOLED midnight.
+- **Nord** — Polar Snow Storm by day, Frost & Aurora Twilight at dawn/dusk, and Polar Night at night.
+- **Catppuccin Macchiato** — Warm Latte-inspired daylight, Mauve/Peach twilight, and authentic Macchiato night.
+- **Tokyo Night** — Crisp Tokyo Day, warm Neon Twilight, and deep Tokyo Night.
+- **Gruvbox** — Warm retro parchment daylight, Ember Twilight, and Gruvbox Dark night.
 
 ### 🏔️ Borderless Alpine Landscape Scene
 In **Sleep Now** and **Power Nap** modes, the open lower canvas renders a custom Jetpack Compose `Canvas` alpine landscape — layered mountains, pine silhouettes, a winding stream, and a gently shimmering lake — seamlessly feathered into the background (`BlendMode.DstIn`) with living time-of-day micro-animations (shooting star at night, valley mist at golden hour, drifting cloud wisps by day) and dynamically re-tinted to match your active theme.
@@ -60,6 +62,10 @@ In **Sleep Now** and **Power Nap** modes, the open lower canvas renders a custom
 - **Visual Cycle Capsules & Bedtime Countdown** — 6-capsule sleep cycle indicator on every card plus a live *"time until bedtime"* countdown in **Wake Up At** mode.
 - **Fluid 120Hz Animations** — Smooth `220ms` wheel ↔ landscape mode transitions, sliding spring pill selector, smooth latency slider (`0–60 min`, default `15 min`), and unified frame-synchronized theme interpolation.
 - **Remembered Schedule** — Persists your last selected wake-up time, bedtime, and scheduled mode locally via Jetpack DataStore.
+- **Home Screen Widget** — Glanceable 4×1 home screen widget displaying live 5-cycle & 6-cycle wake windows right from your launcher.
+- **4-7-8 Sleep Breathing Guide** — Built-in 120Hz breathing orb animation (`4s Inhale • 7s Hold • 8s Exhale`) with subtle haptic cues right from *Sleep Now* / *Power Nap*.
+- **Caffeine Cutoff Indicator** — Shows your recommended last caffeine time (`☕`, configurable Off / 6h / 8h / 10h before bedtime).
+- **Bedtime Wind-Down Reminder** — Optional local `AlarmManager` notification 20 minutes before your ideal bedtime (zero background battery drain).
 - **Native Alarm & Timer Integration** — Tap any calculated cycle card to launch Android's native `AlarmClock` (`ACTION_SET_ALARM` / `ACTION_SET_TIMER`) directly with the exact target time and label.
 - **Flexible Clock Format** — Choose **System Default**, **24-hour**, or **12-hour** in Settings (`⚙️`).
 - **7-Language Localization & In-App Switcher** — Switch languages anytime inside Settings (`🌐 Auto`, `🇬🇧 English`, `🇭🇺 Magyar`, `🇪🇸 Español`, `🇷🇴 Română`, `🇵🇱 Polski`, `🇵🇹 Português`, `🇧🇷 Português (BR)`) with strict lint translation checks.
@@ -156,7 +162,7 @@ app/src/main/java/com/restcycle/app/
 git clone https://github.com/kicsirigo/RestCycle.git
 cd RestCycle
 
-# Run all 331 unit & Compose/Robolectric E2E tests
+# Run all 334 unit & Compose/Robolectric E2E tests
 ./gradlew testDebugUnitTest
 
 # Run Android Lint checks
@@ -182,7 +188,7 @@ export RESTCYCLE_KEY_PASSWORD="your-key-password"
 
 ## 🧪 Testing
 
-The test suite includes **331 automated tests** covering:
+The test suite includes **334 automated tests** covering:
 - Sleep cycle math, midnight/DST boundaries, and Power Nap calculations
 - Dynamic Celestial Atmosphere Engine phase detection & color interpolation across all 3 themes
 - DataStore preference persistence and defaults

@@ -51,11 +51,17 @@ import com.restcycle.app.ui.theme.CatppuccinDayAtmospherePalette
 import com.restcycle.app.ui.theme.CatppuccinNightAtmospherePalette
 import com.restcycle.app.ui.theme.DawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.DayAtmospherePalette
+import com.restcycle.app.ui.theme.GruvboxDawnDuskAtmospherePalette
+import com.restcycle.app.ui.theme.GruvboxDayAtmospherePalette
+import com.restcycle.app.ui.theme.GruvboxNightAtmospherePalette
 import com.restcycle.app.ui.theme.NightAtmospherePalette
 import com.restcycle.app.ui.theme.NordDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.NordDayAtmospherePalette
 import com.restcycle.app.ui.theme.NordNightAtmospherePalette
 import com.restcycle.app.ui.theme.TimeFormatPreference
+import com.restcycle.app.ui.theme.TokyoNightDawnDuskAtmospherePalette
+import com.restcycle.app.ui.theme.TokyoNightDayAtmospherePalette
+import com.restcycle.app.ui.theme.TokyoNightNightAtmospherePalette
 
 @Composable
 fun SettingsDialog(
@@ -66,7 +72,13 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
     appLanguage: AppLanguage = AppLanguage.SYSTEM,
     onSelectLanguage: (AppLanguage) -> Unit = {},
-    installedVersionName: String = "1.2.0",
+    pureAmoledNight: Boolean = false,
+    onTogglePureAmoledNight: (Boolean) -> Unit = {},
+    caffeineCutoffHours: Int = 8,
+    onSelectCaffeineCutoffHours: (Int) -> Unit = {},
+    bedtimeReminderEnabled: Boolean = false,
+    onToggleBedtimeReminder: (Boolean) -> Unit = {},
+    installedVersionName: String = "1.4.0",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {}
@@ -175,8 +187,8 @@ fun SettingsDialog(
                     }
                 }
 
-                // Theme Selector
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Theme Selector (2-column compact grid for all 5 themes)
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = stringResource(R.string.settings_theme_label),
                         color = palette.textSecondary,
@@ -211,51 +223,195 @@ fun SettingsDialog(
                                 CatppuccinDawnDuskAtmospherePalette.backgroundGlow,
                                 CatppuccinNightAtmospherePalette.accent
                             )
+                        ),
+                        Triple(
+                            AppThemeStyle.TOKYO_NIGHT,
+                            R.string.settings_theme_tokyo_night,
+                            listOf(
+                                TokyoNightDayAtmospherePalette.accent,
+                                TokyoNightDawnDuskAtmospherePalette.backgroundGlow,
+                                TokyoNightNightAtmospherePalette.accent
+                            )
+                        ),
+                        Triple(
+                            AppThemeStyle.GRUVBOX,
+                            R.string.settings_theme_gruvbox,
+                            listOf(
+                                GruvboxDayAtmospherePalette.accent,
+                                GruvboxDawnDuskAtmospherePalette.backgroundGlow,
+                                GruvboxNightAtmospherePalette.accent
+                            )
                         )
                     )
 
-                    themeOptions.forEach { (style, labelRes, dots) ->
-                        val selected = themeStyle == style
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .clickable(role = Role.RadioButton) {
-                                    if (!selected) {
-                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                        onSelectTheme(style)
-                                    }
-                                },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (selected) palette.cardSurfaceHighlighted else palette.pillContainer,
-                            border = BorderStroke(
-                                width = if (selected) 1.5.dp else 1.dp,
-                                color = if (selected) palette.accent else palette.borderSubtle
-                            )
+                    themeOptions.chunked(2).forEach { rowThemes ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = stringResource(labelRes),
-                                    color = palette.textPrimary,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                                )
-                                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                                    dots.forEach { swatch ->
-                                        Box(
-                                            modifier = Modifier
-                                                .size(12.dp)
-                                                .clip(CircleShape)
-                                                .background(swatch)
+                            rowThemes.forEach { (style, labelRes, dots) ->
+                                val selected = themeStyle == style
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .clickable(role = Role.RadioButton) {
+                                            if (!selected) {
+                                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                                onSelectTheme(style)
+                                            }
+                                        },
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = if (selected) palette.cardSurfaceHighlighted else palette.pillContainer,
+                                    border = BorderStroke(
+                                        width = if (selected) 1.5.dp else 1.dp,
+                                        color = if (selected) palette.accent else palette.borderSubtle
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 9.dp, vertical = 7.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(labelRes),
+                                            color = palette.textPrimary,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
                                         )
+                                        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                            dots.forEach { swatch ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(8.dp)
+                                                        .clip(CircleShape)
+                                                        .background(swatch)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
+                            }
+                            if (rowThemes.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+
+                    // Compact 2-column quick toggles: Pure AMOLED Black + Bedtime Reminder
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .testTag(RestCycleTestTags.AMOLED_NIGHT_TOGGLE)
+                                .clickable(role = Role.Switch) {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    onTogglePureAmoledNight(!pureAmoledNight)
+                                },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (pureAmoledNight) palette.accent else palette.pillContainer,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (pureAmoledNight) palette.accent else palette.borderSubtle
+                            )
+                        ) {
+                            Text(
+                                text = "🖤 ${stringResource(R.string.settings_amoled_night)}",
+                                color = if (pureAmoledNight) palette.onAccent else palette.textPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = if (pureAmoledNight) FontWeight.Bold else FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
+                            )
+                        }
+
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .testTag(RestCycleTestTags.BEDTIME_REMINDER_TOGGLE)
+                                .clickable(role = Role.Switch) {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    onToggleBedtimeReminder(!bedtimeReminderEnabled)
+                                },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (bedtimeReminderEnabled) palette.accent else palette.pillContainer,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (bedtimeReminderEnabled) palette.accent else palette.borderSubtle
+                            )
+                        ) {
+                            Text(
+                                text = "🔔 ${stringResource(R.string.settings_reminder_toggle)}",
+                                color = if (bedtimeReminderEnabled) palette.onAccent else palette.textPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = if (bedtimeReminderEnabled) FontWeight.Bold else FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Caffeine Cutoff Selector
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_caffeine_label),
+                        color = palette.textSecondary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(0, 6, 8, 10).forEach { hours ->
+                            val selected = caffeineCutoffHours == hours
+                            val label = if (hours == 0) {
+                                stringResource(R.string.settings_caffeine_off)
+                            } else {
+                                stringResource(R.string.settings_caffeine_hours, hours)
+                            }
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .testTag(RestCycleTestTags.caffeineOption(hours))
+                                    .clickable(role = Role.RadioButton) {
+                                        if (!selected) {
+                                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                            onSelectCaffeineCutoffHours(hours)
+                                        }
+                                    },
+                                shape = RoundedCornerShape(14.dp),
+                                color = if (selected) palette.accent else palette.pillContainer,
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = if (selected) palette.accent else palette.borderSubtle
+                                )
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (selected) palette.onAccent else palette.textPrimary,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
+                                )
                             }
                         }
                     }
