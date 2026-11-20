@@ -76,6 +76,10 @@ class LocalizationParityTest {
             R.string.settings_theme_catppuccin_macchiato,
             R.string.settings_language_label,
             R.string.settings_language_auto,
+            R.string.settings_update_label,
+            R.string.settings_update_check,
+            R.string.settings_update_checking,
+            R.string.settings_update_error_retry,
             R.string.settings_made_by,
             R.string.action_close
         )
@@ -94,6 +98,9 @@ class LocalizationParityTest {
         assertFalse(context.getString(R.string.planned_bedtime_label, "22:30").isBlank())
         assertFalse(context.getString(R.string.cd_set_alarm_for_time, "06:50").isBlank())
         assertFalse(context.getString(R.string.cd_set_timer_for_nap, "Quick Boost").isBlank())
+        assertFalse(context.getString(R.string.settings_update_up_to_date, "v1.2.0").isBlank())
+        assertFalse(context.getString(R.string.settings_update_available_download, "v1.2.1").isBlank())
+        assertFalse(context.getString(R.string.settings_update_downloading, "v1.2.1").isBlank())
     }
 
     @Test
@@ -174,6 +181,10 @@ class LocalizationParityTest {
             R.string.settings_theme_catppuccin_macchiato,
             R.string.settings_language_label,
             R.string.settings_language_auto,
+            R.string.settings_update_label,
+            R.string.settings_update_check,
+            R.string.settings_update_checking,
+            R.string.settings_update_error_retry,
             R.string.settings_made_by,
             R.string.action_close
         )
@@ -217,6 +228,9 @@ class LocalizationParityTest {
             assertFalse(localizedContext.getString(R.string.cycles_count, 5).isBlank())
             assertFalse(localizedContext.getString(R.string.duration_hours_minutes, 9, "00").isBlank())
             assertFalse(localizedContext.getString(R.string.countdown_in_minutes, 30).isBlank())
+            assertFalse(localizedContext.getString(R.string.settings_update_up_to_date, "v1.2.0").isBlank())
+            assertFalse(localizedContext.getString(R.string.settings_update_available_download, "v1.2.1").isBlank())
+            assertFalse(localizedContext.getString(R.string.settings_update_downloading, "v1.2.1").isBlank())
         }
     }
 }

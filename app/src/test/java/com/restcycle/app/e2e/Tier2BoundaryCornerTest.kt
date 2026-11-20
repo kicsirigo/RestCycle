@@ -1397,7 +1397,6 @@ class Tier2BoundaryCornerTest {
         val permNodes = doc.getElementsByTagName("uses-permission")
         val perms = (0 until permNodes.length).map { (permNodes.item(it) as Element).getAttribute("android:name") }
         listOf(
-            "android.permission.INTERNET",
             "android.permission.ACCESS_NETWORK_STATE",
             "android.permission.ACCESS_WIFI_STATE",
             "android.permission.ACCESS_FINE_LOCATION",

@@ -24,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.restcycle.app.R
+import com.restcycle.app.platform.update.ReleaseUpdateInfo
+import com.restcycle.app.platform.update.UpdateUiState
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
@@ -62,10 +65,20 @@ fun SettingsDialog(
     onSelectTimeFormat: (TimeFormatPreference) -> Unit,
     onDismiss: () -> Unit,
     appLanguage: AppLanguage = AppLanguage.SYSTEM,
-    onSelectLanguage: (AppLanguage) -> Unit = {}
+    onSelectLanguage: (AppLanguage) -> Unit = {},
+    installedVersionName: String = "1.2.0",
+    updateUiState: UpdateUiState = UpdateUiState.Idle,
+    onCheckForUpdates: () -> Unit = {},
+    onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {}
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
+
+    LaunchedEffect(Unit) {
+        if (updateUiState is UpdateUiState.Idle) {
+            onCheckForUpdates()
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -223,7 +236,7 @@ fun SettingsDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -249,7 +262,7 @@ fun SettingsDialog(
                 }
 
                 // Language Selector
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = stringResource(R.string.settings_language_label),
                         color = palette.textSecondary,
@@ -296,11 +309,85 @@ fun SettingsDialog(
                                         textAlign = TextAlign.Center,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp)
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
                                     )
                                 }
                             }
                         }
+                    }
+                }
+
+                // Updates Section (non-intrusive check & optional user download)
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_update_label),
+                            color = palette.textSecondary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "v$installedVersionName",
+                            color = palette.textSecondary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    val isUpdateAvailable = updateUiState is UpdateUiState.UpdateAvailable
+                    val isChecking = updateUiState is UpdateUiState.Checking
+                    val updateButtonText = when (updateUiState) {
+                        UpdateUiState.Idle -> stringResource(R.string.settings_update_check)
+                        UpdateUiState.Checking -> stringResource(R.string.settings_update_checking)
+                        is UpdateUiState.UpToDate -> stringResource(
+                            R.string.settings_update_up_to_date,
+                            "v$installedVersionName"
+                        )
+                        is UpdateUiState.UpdateAvailable -> stringResource(
+                            R.string.settings_update_available_download,
+                            "v${updateUiState.info.latestVersion}"
+                        )
+                        is UpdateUiState.Downloading -> stringResource(
+                            R.string.settings_update_downloading,
+                            "v${updateUiState.info.latestVersion}"
+                        )
+                        UpdateUiState.Error -> stringResource(R.string.settings_update_error_retry)
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .testTag(RestCycleTestTags.UPDATE_ACTION_BTN)
+                            .clickable(enabled = !isChecking, role = Role.Button) {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                when (updateUiState) {
+                                    is UpdateUiState.UpdateAvailable -> onDownloadUpdate(updateUiState.info)
+                                    is UpdateUiState.Downloading -> onDownloadUpdate(updateUiState.info)
+                                    else -> onCheckForUpdates()
+                                }
+                            },
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (isUpdateAvailable) palette.accent else palette.pillContainer,
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = if (isUpdateAvailable) palette.accent else palette.borderSubtle
+                        )
+                    ) {
+                        Text(
+                            text = updateButtonText,
+                            color = if (isUpdateAvailable) palette.onAccent else palette.textPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = if (isUpdateAvailable) FontWeight.Bold else FontWeight.SemiBold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 9.dp)
+                        )
                     }
                 }
 

@@ -83,6 +83,13 @@
     <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
     <string name="settings_language_label">Idioma</string>
     <string name="settings_language_auto">Auto</string>
+    <string name="settings_update_label">Actualizaciones</string>
+    <string name="settings_update_check">Buscar actualizaciones</string>
+    <string name="settings_update_checking">Comprobando en GitHub…</string>
+    <string name="settings_update_up_to_date">Actualizado (%1$s)</string>
+    <string name="settings_update_available_download">Descargar actualización %1$s</string>
+    <string name="settings_update_downloading">Descargando %1$s…</string>
+    <string name="settings_update_error_retry">Error al comprobar • Reintentar</string>
     <string name="settings_made_by">made by: kicsirigo</string>
     <string name="action_close">Cerrar</string>
 </resources>

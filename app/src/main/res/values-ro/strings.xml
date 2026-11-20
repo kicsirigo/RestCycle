@@ -83,6 +83,13 @@
     <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
     <string name="settings_language_label">Limbă</string>
     <string name="settings_language_auto">Auto</string>
+    <string name="settings_update_label">Actualizări</string>
+    <string name="settings_update_check">Caută actualizări</string>
+    <string name="settings_update_checking">Se verifică pe GitHub…</string>
+    <string name="settings_update_up_to_date">La zi (%1$s)</string>
+    <string name="settings_update_available_download">Descarcă actualizarea %1$s</string>
+    <string name="settings_update_downloading">Se descarcă %1$s…</string>
+    <string name="settings_update_error_retry">Eroare la verificare • Reîncearcă</string>
     <string name="settings_made_by">made by: kicsirigo</string>
     <string name="action_close">Închide</string>
 </resources>

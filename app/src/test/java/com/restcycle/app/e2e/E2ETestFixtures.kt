@@ -1124,13 +1124,12 @@ fun assertOfflineManifestAndPermissions(context: Context) {
         "Manifest must declare com.android.alarm.permission.SET_ALARM",
         perms.contains("com.android.alarm.permission.SET_ALARM")
     )
-    assertFalse("Manifest must NOT declare INTERNET permission", perms.contains(android.Manifest.permission.INTERNET))
+    assertTrue(
+        "Manifest must declare INTERNET permission for GitHub updater",
+        perms.contains(android.Manifest.permission.INTERNET)
+    )
     assertFalse("Manifest must NOT declare ACCESS_NETWORK_STATE", perms.contains(android.Manifest.permission.ACCESS_NETWORK_STATE))
     assertFalse("Manifest must NOT declare ACCESS_WIFI_STATE", perms.contains(android.Manifest.permission.ACCESS_WIFI_STATE))
-    assertEquals(
-        PackageManager.PERMISSION_DENIED,
-        context.packageManager.checkPermission(android.Manifest.permission.INTERNET, context.packageName)
-    )
 }
 
 fun assertMissingClockFallbackShown(composeRule: ComposeTestRule, activity: Activity) {

@@ -3,13 +3,13 @@
 # 🌙 RestCycle
 
 **Native Android Sleep Cycle & Power Nap Calculator**  
-*100% Offline • 120Hz AMOLED Optimized • Dynamic Celestial Atmosphere Engine*
+*Zero Tracking • 120Hz AMOLED Optimized • Dynamic Celestial Atmosphere Engine*
 
 [![Android](https://img.shields.io/badge/Android-8.0%2B%20(API%2026%E2%80%9336)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Tests](https://img.shields.io/badge/Tests-323%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
-[![Offline](https://img.shields.io/badge/Privacy-100%25%20Offline-0F172A?style=for-the-badge&logo=shield&logoColor=white)](#privacy--permissions)
+[![Tests](https://img.shields.io/badge/Tests-327%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
+[![Privacy](https://img.shields.io/badge/Privacy-Zero%20Tracking-0F172A?style=for-the-badge&logo=shield&logoColor=white)](#privacy--permissions)
 
 </div>
 
@@ -17,7 +17,7 @@
 
 ## ✨ Overview
 
-**RestCycle** is a minimalist, zero-latency sleep cycle and power nap calculator built natively for Android with **Kotlin**, **Jetpack Compose**, and **Material 3**. Designed for effortless one-handed use in the thumb zone, RestCycle calculates optimal sleep and wake windows based on **90-minute REM sleep cycles** and your personal **sleep latency** — with zero ads, zero telemetry, and zero internet permissions.
+**RestCycle** is a minimalist, zero-latency sleep cycle and power nap calculator built natively for Android with **Kotlin**, **Jetpack Compose**, and **Material 3**. Designed for effortless one-handed use in the thumb zone, RestCycle calculates optimal sleep and wake windows based on **90-minute REM sleep cycles** and your personal **sleep latency** — with zero ads, zero telemetry, and an optional GitHub Release update checker inside Settings.
 
 Every interaction reacts in real time: as you scroll the haptic time wheel or switch modes, the entire sky, UI palette, and seamless alpine landscape smoothly transition across **Day**, **Dawn / Dusk**, and **Night** atmospheres.
 
@@ -60,17 +60,16 @@ In **Sleep Now** and **Power Nap** modes, the open lower canvas renders a custom
 - **Fluid 120Hz Animations** — Sliding spring pill selector, smooth latency slider (`0–60 min`, default `15 min`), and unified frame-synchronized theme interpolation.
 - **Native Alarm & Timer Integration** — Tap any calculated cycle card to launch Android's native `AlarmClock` (`ACTION_SET_ALARM` / `ACTION_SET_TIMER`) directly with the exact target time and label.
 - **Flexible Clock Format** — Choose **System Default**, **24-hour**, or **12-hour** in Settings (`⚙️`).
-- **7-Language Localization & In-App Switcher** — Switch languages anytime inside Settings (**Auto**, **English**, **Magyar / Hungarian**, **Español / Spanish**, **Română / Romanian**, **Polski / Polish**, **Português / Portuguese**, and **Português (BR) / Brazilian Portuguese**) with strict lint translation checks.
+- **7-Language Localization & In-App Switcher** — Switch languages anytime inside Settings (`🌐 Auto`, `🇬🇧 English`, `🇭🇺 Magyar`, `🇪🇸 Español`, `🇷🇴 Română`, `🇵🇱 Polski`, `🇵🇹 Português`, `🇧🇷 Português (BR)`) with strict lint translation checks.
+- **Optional GitHub Release Auto-Updater** — Opening Settings (`⚙️`) quietly checks GitHub Releases against your installed version and lets you download the newest APK with one tap if available — **never forced**.
 
 ---
 
 ## 🔒 Privacy & Permissions
 
-RestCycle is **100% offline**:
-- **No `INTERNET` permission** — the app cannot send or receive network traffic.
-- **No analytics, no tracking, no ads.**
-- Uses only `com.android.alarm.permission.SET_ALARM` to hand off your chosen wake time or nap timer to your device's built-in Clock app.
-- Preferences (sleep latency, theme, 12h/24h format, language) are stored locally via **Jetpack DataStore**.
+RestCycle has **zero ads, zero analytics, and zero background tracking**:
+- **Minimal Permissions:** Uses only `com.android.alarm.permission.SET_ALARM` (to set alarms/timers in your Clock app) and `android.permission.INTERNET` (used strictly when you open Settings or tap *Check for updates* to query `api.github.com/repos/kicsirigo/RestCycle/releases/latest` and download updates you choose).
+- **Local Preferences:** Sleep latency, theme, 12h/24h format, and language are stored locally via **Jetpack DataStore**.
 
 ---
 
@@ -122,7 +121,8 @@ app/src/main/java/com/restcycle/app/
 │       └── SleepContracts.kt                # Modes, TimeFormatPreference, AtmospherePhase, domain models
 ├── platform/
 │   ├── intent/AlarmScheduler.kt             # Native AlarmClock alarm & timer handoff
-│   └── time/TimeFormatProvider.kt           # System / 12h / 24h clock format provider
+│   ├── time/TimeFormatProvider.kt           # System / 12h / 24h clock format provider
+│   └── update/GitHubUpdateChecker.kt        # Optional GitHub Releases version check & APK download
 └── ui/
     ├── screen/RestCycleScreen.kt            # Adaptive thumb-zone layout & mode orchestration
     ├── viewmodel/SleepViewModel.kt          # Reactive unidirectional state flow
@@ -154,7 +154,7 @@ app/src/main/java/com/restcycle/app/
 git clone https://github.com/kicsirigo/RestCycle.git
 cd RestCycle
 
-# Run all 323 unit & Compose/Robolectric E2E tests
+# Run all 327 unit & Compose/Robolectric E2E tests
 ./gradlew testDebugUnitTest
 
 # Run Android Lint checks
@@ -180,7 +180,7 @@ export RESTCYCLE_KEY_PASSWORD="your-key-password"
 
 ## 🧪 Testing
 
-The test suite includes **323 automated tests** covering:
+The test suite includes **327 automated tests** covering:
 - Sleep cycle math, midnight/DST boundaries, and Power Nap calculations
 - Dynamic Celestial Atmosphere Engine phase detection & color interpolation across all 3 themes
 - DataStore preference persistence and defaults

@@ -1,6 +1,9 @@
 package com.restcycle.app.ui.screen
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -59,6 +62,8 @@ import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepOption
 import com.restcycle.app.domain.model.SleepUiState
+import com.restcycle.app.platform.update.GitHubUpdateChecker
+import com.restcycle.app.platform.update.UpdateUiState
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.components.CelestialHeader
 import com.restcycle.app.ui.components.CelestialLandscapeScene
@@ -162,12 +167,15 @@ private fun RestCycleScreenContent(
     onSelectAppLanguage: (AppLanguage) -> Unit
 ) {
     val palette = AtmosphereTheme.palette
+    val context = LocalContext.current
     val resources = LocalResources.current
     val view = LocalView.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarJob by remember { mutableStateOf<Job?>(null) }
     var showSettings by remember { mutableStateOf(false) }
+    var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
+    val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
     val clockUnavailableMessage = stringResource(R.string.clock_app_unavailable)
 
     fun notifyMissingClockIfFailed(launched: Boolean) {
@@ -448,7 +456,21 @@ private fun RestCycleScreenContent(
                 onSelectTimeFormat = onSelectTimeFormatPreference,
                 onDismiss = { showSettings = false },
                 appLanguage = appLanguage,
-                onSelectLanguage = onSelectAppLanguage
+                onSelectLanguage = onSelectAppLanguage,
+                installedVersionName = installedVersionName,
+                updateUiState = updateUiState,
+                onCheckForUpdates = {
+                    if (updateUiState !is UpdateUiState.Checking) {
+                        updateUiState = UpdateUiState.Checking
+                        coroutineScope.launch {
+                            updateUiState = GitHubUpdateChecker.checkForUpdate(installedVersionName)
+                        }
+                    }
+                },
+                onDownloadUpdate = { releaseInfo ->
+                    updateUiState = UpdateUiState.Downloading(releaseInfo)
+                    GitHubUpdateChecker.downloadUpdateApk(context, releaseInfo)
+                }
             )
         }
     }
@@ -458,4 +480,21 @@ private fun alarmMessageResForMode(mode: SleepMode): Int = when (mode) {
     SleepMode.WAKE_UP_AT -> R.string.alarm_label_bedtime
     SleepMode.SLEEP_NOW, SleepMode.GO_TO_BED_AT -> R.string.alarm_label_wakeup
     SleepMode.POWER_NAP -> R.string.alarm_label_nap
+}
+
+private fun resolveInstalledVersionName(context: Context): String {
+    return try {
+        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.PackageInfoFlags.of(0)
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.2.0"
+    } catch (_: Exception) {
+        "1.2.0"
+    }
 }

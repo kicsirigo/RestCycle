@@ -27,6 +27,7 @@ object RestCycleTestTags {
     const val INERTIA_TOOLTIP = "INERTIA_TOOLTIP"
     const val SETTINGS_BUTTON = "SETTINGS_BUTTON"
     const val SETTINGS_DIALOG = "SETTINGS_DIALOG"
+    const val UPDATE_ACTION_BTN = "UPDATE_ACTION_BTN"
 
     const val OPTION_CARD_PREFIX = "OPTION_CARD_"
     const val SET_ALARM_BTN_PREFIX = "SET_ALARM_BTN_"

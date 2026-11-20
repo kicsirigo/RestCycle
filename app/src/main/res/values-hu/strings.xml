@@ -83,6 +83,13 @@
     <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
     <string name="settings_language_label">Nyelv</string>
     <string name="settings_language_auto">Automatikus</string>
+    <string name="settings_update_label">Frissítések</string>
+    <string name="settings_update_check">Frissítések keresése</string>
+    <string name="settings_update_checking">Ellenőrzés GitHubon…</string>
+    <string name="settings_update_up_to_date">Naprakész (%1$s)</string>
+    <string name="settings_update_available_download">Frissítés letöltése (%1$s)</string>
+    <string name="settings_update_downloading">%1$s letöltése…</string>
+    <string name="settings_update_error_retry">Sikertelen • Újrapróbálás</string>
     <string name="settings_made_by">made by: kicsirigo</string>
     <string name="action_close">Bezárás</string>
 </resources>

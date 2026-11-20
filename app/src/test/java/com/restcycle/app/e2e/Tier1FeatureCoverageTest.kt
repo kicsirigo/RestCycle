@@ -1267,7 +1267,7 @@ class Tier1FeatureCoverageTest {
             (permNodes.item(it) as Element).getAttribute("android:name")
         }
         assertTrue(permNames.contains("com.android.alarm.permission.SET_ALARM"))
-        assertFalse(permNames.contains("android.permission.INTERNET"))
+        assertTrue(permNames.contains("android.permission.INTERNET"))
         assertFalse(permNames.contains("android.permission.ACCESS_NETWORK_STATE"))
         assertFalse(permNames.contains("android.permission.ACCESS_WIFI_STATE"))
     }
