@@ -23,6 +23,18 @@ Every interaction reacts in real time: as you scroll the haptic time wheel or sw
 
 ---
 
+## 📸 Screenshots
+
+<div align="center">
+
+| Wake Up At *(Dynamic Sky · Night)* | Sleep Now *(Dynamic Sky · Day)* | Power Nap *(Nord · Twilight)* | Go to Bed At *(Catppuccin Macchiato)* |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/01_wake_up_night.png" alt="Wake Up At - Dynamic Sky Night" width="210" /> | <img src="docs/screenshots/02_sleep_now_day.png" alt="Sleep Now - Dynamic Sky Day" width="210" /> | <img src="docs/screenshots/03_power_nap_nord.png" alt="Power Nap - Nord Twilight" width="210" /> | <img src="docs/screenshots/04_catppuccin_night.png" alt="Go to Bed At - Catppuccin Macchiato" width="210" /> |
+
+</div>
+
+---
+
 ## 🚀 Key Features
 
 ### 🧭 4 Reactive Calculation Modes
