@@ -1,9 +1,11 @@
 package com.restcycle.app.unit
 
+import android.content.res.Configuration
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.restcycle.app.R
 import com.restcycle.app.RestCycleApplication
+import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.util.formatClockTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -72,6 +74,8 @@ class LocalizationParityTest {
             R.string.settings_theme_dynamic,
             R.string.settings_theme_nord,
             R.string.settings_theme_catppuccin_macchiato,
+            R.string.settings_language_label,
+            R.string.settings_language_auto,
             R.string.settings_made_by,
             R.string.action_close
         )
@@ -110,6 +114,109 @@ class LocalizationParityTest {
             assertEquals("00:15", formatClockTime(LocalTime.of(0, 15), is24HourFormat = true))
         } finally {
             Locale.setDefault(previousLocale)
+        }
+    }
+
+    @Test
+    fun allSupportedLanguagesResolveAllStringsAndModeTitles() {
+        val baseContext = ApplicationProvider.getApplicationContext<RestCycleApplication>()
+        val simpleIds = listOf(
+            R.string.app_name,
+            R.string.mode_wake_up_at,
+            R.string.mode_sleep_now,
+            R.string.mode_go_to_bed_at,
+            R.string.mode_power_nap,
+            R.string.quality_optimal,
+            R.string.quality_good,
+            R.string.quality_short,
+            R.string.nap_quick_title,
+            R.string.nap_classic_title,
+            R.string.nap_full_title,
+            R.string.nap_quick_desc,
+            R.string.nap_classic_desc,
+            R.string.nap_full_desc,
+            R.string.badge_suggested,
+            R.string.nap_inertia_tooltip,
+            R.string.alarm_label_wakeup,
+            R.string.alarm_label_bedtime,
+            R.string.alarm_label_nap,
+            R.string.action_set_alarm,
+            R.string.action_set_timer,
+            R.string.action_wake_alarm,
+            R.string.clock_app_unavailable,
+            R.string.wheel_am,
+            R.string.wheel_pm,
+            R.string.latency_sleep_label,
+            R.string.latency_nap_label,
+            R.string.header_subtitle_wake_up_at,
+            R.string.header_subtitle_sleep_now,
+            R.string.header_subtitle_go_to_bed_at,
+            R.string.header_subtitle_power_nap,
+            R.string.sky_phase_day,
+            R.string.sky_phase_dawn_dusk,
+            R.string.sky_phase_night,
+            R.string.cd_celestial_day,
+            R.string.cd_celestial_dawn_dusk,
+            R.string.cd_celestial_night,
+            R.string.cd_time_wheel_hours,
+            R.string.cd_time_wheel_minutes,
+            R.string.cd_time_wheel_am_pm,
+            R.string.sleep_now_hint,
+            R.string.power_nap_hint,
+            R.string.settings_title,
+            R.string.settings_time_format_label,
+            R.string.settings_time_format_system,
+            R.string.settings_time_format_24h,
+            R.string.settings_time_format_12h,
+            R.string.settings_theme_label,
+            R.string.settings_theme_dynamic,
+            R.string.settings_theme_nord,
+            R.string.settings_theme_catppuccin_macchiato,
+            R.string.settings_language_label,
+            R.string.settings_language_auto,
+            R.string.settings_made_by,
+            R.string.action_close
+        )
+
+        val expectedWakeUpTitle = mapOf(
+            AppLanguage.ENGLISH to "Wake Up At",
+            AppLanguage.HUNGARIAN to "Ébredés ekkor",
+            AppLanguage.SPANISH to "Despertar a las",
+            AppLanguage.ROMANIAN to "Trezire la",
+            AppLanguage.POLISH to "Pobudka o",
+            AppLanguage.PORTUGUESE to "Acordar às",
+            AppLanguage.BRAZILIAN_PORTUGUESE to "Acordar às"
+        )
+
+        val expectedNapTitle = mapOf(
+            AppLanguage.ENGLISH to "Power Nap",
+            AppLanguage.HUNGARIAN to "Szieszta",
+            AppLanguage.SPANISH to "Siesta",
+            AppLanguage.ROMANIAN to "Siestă",
+            AppLanguage.POLISH to "Drzemka",
+            AppLanguage.PORTUGUESE to "Sesta",
+            AppLanguage.BRAZILIAN_PORTUGUESE to "Cochilo"
+        )
+
+        AppLanguage.entries.filter { it != AppLanguage.SYSTEM }.forEach { language ->
+            val locale = Locale.forLanguageTag(language.languageTag!!)
+            val config = Configuration(baseContext.resources.configuration).apply {
+                setLocale(locale)
+            }
+            val localizedContext = baseContext.createConfigurationContext(config)
+
+            simpleIds.forEach { resId ->
+                assertFalse(
+                    "Blank string for $language resId=$resId",
+                    localizedContext.getString(resId).isBlank()
+                )
+            }
+
+            assertEquals(expectedWakeUpTitle[language], localizedContext.getString(R.string.mode_wake_up_at))
+            assertEquals(expectedNapTitle[language], localizedContext.getString(R.string.mode_power_nap))
+            assertFalse(localizedContext.getString(R.string.cycles_count, 5).isBlank())
+            assertFalse(localizedContext.getString(R.string.duration_hours_minutes, 9, "00").isBlank())
+            assertFalse(localizedContext.getString(R.string.countdown_in_minutes, 30).isBlank())
         }
     }
 }

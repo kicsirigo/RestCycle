@@ -1,5 +1,6 @@
 package com.restcycle.app.ui.screen
 
+import android.content.res.Configuration
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -34,6 +35,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +45,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -66,6 +70,7 @@ import com.restcycle.app.ui.components.PowerNapPresetCard
 import com.restcycle.app.ui.components.RestCycleIcons
 import com.restcycle.app.ui.components.SettingsDialog
 import com.restcycle.app.ui.components.SleepOptionCard
+import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.theme.TabularTextStyles
@@ -74,6 +79,7 @@ import com.restcycle.app.ui.util.formatClockTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.LocalTime
+import java.util.Locale
 
 @Composable
 fun RestCycleScreen(
@@ -90,7 +96,70 @@ fun RestCycleScreen(
     themeStyle: AppThemeStyle = AppThemeStyle.DYNAMIC,
     timeFormatPreference: TimeFormatPreference = TimeFormatPreference.SYSTEM,
     onSelectThemeStyle: (AppThemeStyle) -> Unit = {},
-    onSelectTimeFormatPreference: (TimeFormatPreference) -> Unit = {}
+    onSelectTimeFormatPreference: (TimeFormatPreference) -> Unit = {},
+    appLanguage: AppLanguage = AppLanguage.SYSTEM,
+    onSelectAppLanguage: (AppLanguage) -> Unit = {}
+) {
+    val baseContext = LocalContext.current
+    val baseConfiguration = LocalConfiguration.current
+    val localizedContext = remember(baseContext, baseConfiguration, appLanguage) {
+        val tag = appLanguage.languageTag
+        if (tag == null) {
+            baseContext
+        } else {
+            val locale = Locale.forLanguageTag(tag)
+            val config = Configuration(baseConfiguration).apply {
+                setLocale(locale)
+                setLayoutDirection(locale)
+            }
+            baseContext.createConfigurationContext(config)
+        }
+    }
+
+    CompositionLocalProvider(
+        LocalContext provides localizedContext,
+        LocalConfiguration provides localizedContext.resources.configuration,
+        LocalResources provides localizedContext.resources
+    ) {
+        RestCycleScreenContent(
+            uiState = uiState,
+            currentClockTime = currentClockTime,
+            onSelectMode = onSelectMode,
+            onSelectTime = onSelectTime,
+            onUpdateSleepLatency = onUpdateSleepLatency,
+            onUpdateNapLatency = onUpdateNapLatency,
+            onHighlightOption = onHighlightOption,
+            onLaunchAlarm = onLaunchAlarm,
+            onLaunchTimer = onLaunchTimer,
+            modifier = modifier,
+            themeStyle = themeStyle,
+            timeFormatPreference = timeFormatPreference,
+            onSelectThemeStyle = onSelectThemeStyle,
+            onSelectTimeFormatPreference = onSelectTimeFormatPreference,
+            appLanguage = appLanguage,
+            onSelectAppLanguage = onSelectAppLanguage
+        )
+    }
+}
+
+@Composable
+private fun RestCycleScreenContent(
+    uiState: SleepUiState,
+    currentClockTime: LocalTime,
+    onSelectMode: (SleepMode) -> Unit,
+    onSelectTime: (LocalTime) -> Unit,
+    onUpdateSleepLatency: (Int) -> Unit,
+    onUpdateNapLatency: (Int) -> Unit,
+    onHighlightOption: (String) -> Unit,
+    onLaunchAlarm: (time: LocalTime, message: String) -> Boolean,
+    onLaunchTimer: (durationSeconds: Int, message: String) -> Boolean,
+    modifier: Modifier,
+    themeStyle: AppThemeStyle,
+    timeFormatPreference: TimeFormatPreference,
+    onSelectThemeStyle: (AppThemeStyle) -> Unit,
+    onSelectTimeFormatPreference: (TimeFormatPreference) -> Unit,
+    appLanguage: AppLanguage,
+    onSelectAppLanguage: (AppLanguage) -> Unit
 ) {
     val palette = AtmosphereTheme.palette
     val resources = LocalResources.current
@@ -377,7 +446,9 @@ fun RestCycleScreen(
                 timeFormatPreference = timeFormatPreference,
                 onSelectTheme = onSelectThemeStyle,
                 onSelectTimeFormat = onSelectTimeFormatPreference,
-                onDismiss = { showSettings = false }
+                onDismiss = { showSettings = false },
+                appLanguage = appLanguage,
+                onSelectLanguage = onSelectAppLanguage
             )
         }
     }

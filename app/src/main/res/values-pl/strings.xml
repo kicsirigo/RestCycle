@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RestCycle</string>
+
+    <!-- Modes -->
+    <string name="mode_wake_up_at">Pobudka o</string>
+    <string name="mode_sleep_now">Śpij teraz</string>
+    <string name="mode_go_to_bed_at">Sen o</string>
+    <string name="mode_power_nap">Drzemka</string>
+
+    <!-- Cycle Quality Labels -->
+    <string name="quality_optimal">Optymalnie</string>
+    <string name="quality_good">Dobrze</string>
+    <string name="quality_short">Krótko</string>
+
+    <!-- Power Nap Presets -->
+    <string name="nap_quick_title">Szybkie pobudzenie</string>
+    <string name="nap_classic_title">Klasyczna drzemka</string>
+    <string name="nap_full_title">Pełny cykl drzemki</string>
+    <string name="nap_quick_desc">Natychmiastowa czujność bez otępienia</string>
+    <string name="nap_classic_desc">Szczytowa regeneracja przed głębokim snem</string>
+    <string name="nap_full_desc">Pełny cykl fazy REM i snu głębokiego</string>
+    <string name="badge_suggested">Polecane</string>
+    <string name="nap_inertia_tooltip">Dlaczego unikać drzemek 30–60 min? Pobudka w fazie głębokiej powoduje bezwładność senną.</string>
+
+    <!-- Alarms & Timers -->
+    <string name="alarm_label_wakeup">Budzik</string>
+    <string name="alarm_label_bedtime">Przypomnienie o śnie</string>
+    <string name="alarm_label_nap">Alarm drzemki</string>
+    <string name="action_set_alarm">Budzik</string>
+    <string name="action_set_timer">Minutnik</string>
+    <string name="action_wake_alarm">Alarm pobudki</string>
+    <string name="clock_app_unavailable">Brak aplikacji zegara lub budzika na tym urządzeniu.</string>
+
+    <!-- Durations & Countdowns -->
+    <string name="cycles_count">%1$d cykli</string>
+    <string name="cycles_count_single">%1$d cykl</string>
+    <string name="duration_hours_minutes">%1$dg %2$sm</string>
+    <string name="duration_minutes_only">%1$d min</string>
+    <string name="countdown_in_minutes">Za %1$d min</string>
+
+    <!-- Latency Controls -->
+    <string name="latency_sleep_label">Czas zasypiania</string>
+    <string name="latency_nap_label">Czas zasypiania (drzemka)</string>
+    <string name="latency_minutes_value">%1$d min</string>
+
+    <!-- Time Wheel -->
+    <string name="wheel_am">AM</string>
+    <string name="wheel_pm">PM</string>
+
+    <!-- Header Subtitles & Sky Phases -->
+    <string name="header_subtitle_wake_up_at">Idealne pory snu dla wybranej pobudki</string>
+    <string name="header_subtitle_sleep_now">Okna pobudki, jeśli zaśniesz wkrótce</string>
+    <string name="header_subtitle_go_to_bed_at">Okna pobudki dla planowanego snu</string>
+    <string name="header_subtitle_power_nap">Drzemki dzienne z czasem zasypiania</string>
+    <string name="sleep_now_current_time_label">Teraz: %1$s</string>
+    <string name="sky_phase_day">Dzień</string>
+    <string name="sky_phase_dawn_dusk">Złota godzina</string>
+    <string name="sky_phase_night">Cicha noc</string>
+
+    <!-- Accessibility & Guidance -->
+    <string name="cd_celestial_day">Dzienne niebo ze słońcem</string>
+    <string name="cd_celestial_dawn_dusk">Niebo o zmierzchu ze słońcem nad horyzontem</string>
+    <string name="cd_celestial_night">Nocne niebo z półksiężycem i gwiazdami</string>
+    <string name="cd_time_wheel_hours">Godziny</string>
+    <string name="cd_time_wheel_minutes">Minuty</string>
+    <string name="cd_time_wheel_am_pm">AM lub PM</string>
+    <string name="planned_bedtime_label">Sen: %1$s</string>
+    <string name="sleep_now_hint">Okna pobudki aktualizują się automatycznie co minutę</string>
+    <string name="power_nap_hint">Dotknij opcji, aby podejrzeć niebo lub ustawić alarm</string>
+    <string name="cd_set_alarm_for_time">Ustaw alarm na %1$s</string>
+    <string name="cd_set_timer_for_nap">Ustaw minutnik dla %1$s</string>
+
+    <!-- Settings & Credits -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="settings_time_format_label">Format czasu</string>
+    <string name="settings_time_format_system">System</string>
+    <string name="settings_time_format_24h">24-godz.</string>
+    <string name="settings_time_format_12h">12-godz.</string>
+    <string name="settings_theme_label">Motyw</string>
+    <string name="settings_theme_dynamic">Dynamiczne niebo</string>
+    <string name="settings_theme_nord">Nord</string>
+    <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
+    <string name="settings_language_label">Język</string>
+    <string name="settings_language_auto">Auto</string>
+    <string name="settings_made_by">made by: kicsirigo</string>
+    <string name="action_close">Zamknij</string>
+</resources>

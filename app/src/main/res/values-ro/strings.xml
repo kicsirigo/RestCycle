@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RestCycle</string>
+
+    <!-- Modes -->
+    <string name="mode_wake_up_at">Trezire la</string>
+    <string name="mode_sleep_now">Dormi acum</string>
+    <string name="mode_go_to_bed_at">Culcare la</string>
+    <string name="mode_power_nap">Siestă</string>
+
+    <!-- Cycle Quality Labels -->
+    <string name="quality_optimal">Optim</string>
+    <string name="quality_good">Bun</string>
+    <string name="quality_short">Scurt</string>
+
+    <!-- Power Nap Presets -->
+    <string name="nap_quick_title">Revigorare rapidă</string>
+    <string name="nap_classic_title">Siestă clasică</string>
+    <string name="nap_full_title">Siestă ciclu complet</string>
+    <string name="nap_quick_desc">Energie instantanee, fără amețeală</string>
+    <string name="nap_classic_desc">Reîncărcare cognitivă maximă înainte de somnul profund</string>
+    <string name="nap_full_desc">Ciclu complet de somn REM și profund</string>
+    <string name="badge_suggested">Recomandat</string>
+    <string name="nap_inertia_tooltip">De ce să eviți siestele de 30–60 min? Trezirea din somnul profund provoacă inerție de somn.</string>
+
+    <!-- Alarms & Timers -->
+    <string name="alarm_label_wakeup">Alarmă de trezire</string>
+    <string name="alarm_label_bedtime">Memento de culcare</string>
+    <string name="alarm_label_nap">Alarmă siestă</string>
+    <string name="action_set_alarm">Alarmă</string>
+    <string name="action_set_timer">Cronometru</string>
+    <string name="action_wake_alarm">Alarmă trezire</string>
+    <string name="clock_app_unavailable">Nicio aplicație de ceas sau alarmă nu este disponibilă pe acest dispozitiv.</string>
+
+    <!-- Durations & Countdowns -->
+    <string name="cycles_count">%1$d cicluri</string>
+    <string name="cycles_count_single">%1$d ciclu</string>
+    <string name="duration_hours_minutes">%1$do %2$sm</string>
+    <string name="duration_minutes_only">%1$d min</string>
+    <string name="countdown_in_minutes">În %1$d min</string>
+
+    <!-- Latency Controls -->
+    <string name="latency_sleep_label">Timp de adormire</string>
+    <string name="latency_nap_label">Timp de adormire (siestă)</string>
+    <string name="latency_minutes_value">%1$d min</string>
+
+    <!-- Time Wheel -->
+    <string name="wheel_am">AM</string>
+    <string name="wheel_pm">PM</string>
+
+    <!-- Header Subtitles & Sky Phases -->
+    <string name="header_subtitle_wake_up_at">Ore ideale de culcare pentru trezirea dorită</string>
+    <string name="header_subtitle_sleep_now">Ore de trezire dacă adormi curând</string>
+    <string name="header_subtitle_go_to_bed_at">Ore de trezire pentru culcarea planificată</string>
+    <string name="header_subtitle_power_nap">Opțiuni de zi cu latență de adormire</string>
+    <string name="sleep_now_current_time_label">Acum: %1$s</string>
+    <string name="sky_phase_day">Zi</string>
+    <string name="sky_phase_dawn_dusk">Ora de aur</string>
+    <string name="sky_phase_night">Noapte liniștită</string>
+
+    <!-- Accessibility & Guidance -->
+    <string name="cd_celestial_day">Cer de zi cu soare strălucitor</string>
+    <string name="cd_celestial_dawn_dusk">Cer la apus cu soarele la orizont</string>
+    <string name="cd_celestial_night">Cer senin de noapte cu semilună și stele</string>
+    <string name="cd_time_wheel_hours">Ore</string>
+    <string name="cd_time_wheel_minutes">Minute</string>
+    <string name="cd_time_wheel_am_pm">AM sau PM</string>
+    <string name="planned_bedtime_label">Culcare: %1$s</string>
+    <string name="sleep_now_hint">Intervalele se actualizează automat în fiecare minut</string>
+    <string name="power_nap_hint">Atinge o opțiune pentru previzualizarea cerului sau setează o alarmă</string>
+    <string name="cd_set_alarm_for_time">Setează alarma pentru %1$s</string>
+    <string name="cd_set_timer_for_nap">Setează cronometrul pentru %1$s</string>
+
+    <!-- Settings & Credits -->
+    <string name="settings_title">Setări</string>
+    <string name="settings_time_format_label">Format oră</string>
+    <string name="settings_time_format_system">Sistem</string>
+    <string name="settings_time_format_24h">24 ore</string>
+    <string name="settings_time_format_12h">12 ore</string>
+    <string name="settings_theme_label">Temă</string>
+    <string name="settings_theme_dynamic">Cer dinamic</string>
+    <string name="settings_theme_nord">Nord</string>
+    <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
+    <string name="settings_language_label">Limbă</string>
+    <string name="settings_language_auto">Auto</string>
+    <string name="settings_made_by">made by: kicsirigo</string>
+    <string name="action_close">Închide</string>
+</resources>

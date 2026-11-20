@@ -10,6 +10,7 @@ import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.calculator.SleepOptionLabels
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepUiState
+import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.TimeFormatPreference
 import kotlinx.coroutines.CancellationException
@@ -52,6 +53,7 @@ class SleepViewModel(
     internal val napWritesInFlight = AtomicInteger(0)
     internal val themeWritesInFlight = AtomicInteger(0)
     internal val timeFormatWritesInFlight = AtomicInteger(0)
+    internal val languageWritesInFlight = AtomicInteger(0)
 
     private val _uiState = MutableStateFlow(buildUiState())
     val uiState: StateFlow<SleepUiState> = _uiState.asStateFlow()
@@ -61,6 +63,9 @@ class SleepViewModel(
 
     private val _timeFormatPreference = MutableStateFlow(TimeFormatPreference.SYSTEM)
     val timeFormatPreference: StateFlow<TimeFormatPreference> = _timeFormatPreference.asStateFlow()
+
+    private val _appLanguage = MutableStateFlow(AppLanguage.SYSTEM)
+    val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -113,6 +118,16 @@ class SleepViewModel(
                             is24HourFormat = effective24h
                             emitState()
                         }
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            repository.appLanguage
+                .distinctUntilChanged()
+                .collect { stored ->
+                    if (languageWritesInFlight.get() == 0 && stored != _appLanguage.value) {
+                        _appLanguage.value = stored
                     }
                 }
         }
@@ -231,6 +246,21 @@ class SleepViewModel(
                 if (e is CancellationException) throw e
             } finally {
                 timeFormatWritesInFlight.decrementAndGet()
+            }
+        }
+    }
+
+    fun selectAppLanguage(language: AppLanguage) {
+        if (_appLanguage.value == language) return
+        _appLanguage.value = language
+        languageWritesInFlight.incrementAndGet()
+        viewModelScope.launch {
+            try {
+                repository.setAppLanguage(language)
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+            } finally {
+                languageWritesInFlight.decrementAndGet()
             }
         }
     }

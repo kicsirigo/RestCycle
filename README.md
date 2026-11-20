@@ -8,7 +8,7 @@
 [![Android](https://img.shields.io/badge/Android-8.0%2B%20(API%2026%E2%80%9336)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Tests](https://img.shields.io/badge/Tests-321%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-323%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
 [![Offline](https://img.shields.io/badge/Privacy-100%25%20Offline-0F172A?style=for-the-badge&logo=shield&logoColor=white)](#privacy--permissions)
 
 </div>
@@ -60,7 +60,7 @@ In **Sleep Now** and **Power Nap** modes, the open lower canvas renders a custom
 - **Fluid 120Hz Animations** — Sliding spring pill selector, smooth latency slider (`0–60 min`, default `15 min`), and unified frame-synchronized theme interpolation.
 - **Native Alarm & Timer Integration** — Tap any calculated cycle card to launch Android's native `AlarmClock` (`ACTION_SET_ALARM` / `ACTION_SET_TIMER`) directly with the exact target time and label.
 - **Flexible Clock Format** — Choose **System Default**, **24-hour**, or **12-hour** in Settings (`⚙️`).
-- **Bilingual Localization** — Full **English** and **Hungarian** (`hu`) support with strict lint translation checks.
+- **7-Language Localization & In-App Switcher** — Switch languages anytime inside Settings (**Auto**, **English**, **Magyar / Hungarian**, **Español / Spanish**, **Română / Romanian**, **Polski / Polish**, **Português / Portuguese**, and **Português (BR) / Brazilian Portuguese**) with strict lint translation checks.
 
 ---
 
@@ -70,7 +70,7 @@ RestCycle is **100% offline**:
 - **No `INTERNET` permission** — the app cannot send or receive network traffic.
 - **No analytics, no tracking, no ads.**
 - Uses only `com.android.alarm.permission.SET_ALARM` to hand off your chosen wake time or nap timer to your device's built-in Clock app.
-- Preferences (sleep latency, theme, 12h/24h format) are stored locally via **Jetpack DataStore**.
+- Preferences (sleep latency, theme, 12h/24h format, language) are stored locally via **Jetpack DataStore**.
 
 ---
 
@@ -113,7 +113,7 @@ app/src/main/java/com/restcycle/app/
 ├── MainActivity.kt                          # Edge-to-edge host, live clock ticker, AlarmClock intents
 ├── RestCycleApplication.kt                  # Application entry point
 ├── data/preferences/
-│   └── LatencyPreferencesRepository.kt      # DataStore persistence (latency, theme, time format)
+│   └── LatencyPreferencesRepository.kt      # DataStore persistence (latency, theme, time format, language)
 ├── domain/
 │   ├── calculator/
 │   │   ├── SkyPhaseResolver.kt              # Time-of-day atmosphere phase resolver
@@ -134,7 +134,7 @@ app/src/main/java/com/restcycle/app/
     │   ├── ModeSegmentedBar.kt              # Spring-animated 4-mode navigation pill
     │   ├── PowerNapSection.kt               # 10 / 20 / 90 min power nap selector + inertia tip
     │   ├── SleepOptionCard.kt               # Cycle cards with quality badges & alarm handoff
-    │   └── SettingsDialog.kt                # Theme selector, 12h/24h selector & credits
+    │   └── SettingsDialog.kt                # Theme, 12h/24h, language selectors & credits
     └── theme/
         ├── AtmosphereTheme.kt               # Unified 3-phase color interpolation (Dynamic Sky / Nord / Catppuccin)
         └── Type.kt                          # Typography with tabular numerals (tnum)
@@ -154,7 +154,7 @@ app/src/main/java/com/restcycle/app/
 git clone https://github.com/kicsirigo/RestCycle.git
 cd RestCycle
 
-# Run all 321 unit & Compose/Robolectric E2E tests
+# Run all 323 unit & Compose/Robolectric E2E tests
 ./gradlew testDebugUnitTest
 
 # Run Android Lint checks
@@ -180,7 +180,7 @@ export RESTCYCLE_KEY_PASSWORD="your-key-password"
 
 ## 🧪 Testing
 
-The test suite includes **321 automated tests** covering:
+The test suite includes **323 automated tests** covering:
 - Sleep cycle math, midnight/DST boundaries, and Power Nap calculations
 - Dynamic Celestial Atmosphere Engine phase detection & color interpolation across all 3 themes
 - DataStore preference persistence and defaults

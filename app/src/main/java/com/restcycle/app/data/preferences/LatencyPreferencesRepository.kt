@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.TimeFormatPreference
 import kotlinx.coroutines.CoroutineScope
@@ -29,10 +30,13 @@ interface LatencyPreferencesRepository {
         get() = flowOf(AppThemeStyle.DYNAMIC)
     val timeFormatPreference: Flow<TimeFormatPreference>
         get() = flowOf(TimeFormatPreference.SYSTEM)
+    val appLanguage: Flow<AppLanguage>
+        get() = flowOf(AppLanguage.SYSTEM)
     suspend fun setSleepLatency(minutes: Int)
     suspend fun setNapLatency(minutes: Int)
     suspend fun setThemeStyle(style: AppThemeStyle) {}
     suspend fun setTimeFormatPreference(pref: TimeFormatPreference) {}
+    suspend fun setAppLanguage(language: AppLanguage) {}
 
     companion object {
         const val PREFS_NAME = "restcycle_prefs"
@@ -55,6 +59,7 @@ class DataStoreLatencyPreferencesRepository(
         val NAP_LATENCY_MINUTES = intPreferencesKey("nap_latency_minutes")
         val APP_THEME_STYLE = stringPreferencesKey("app_theme_style")
         val TIME_FORMAT_PREFERENCE = stringPreferencesKey("time_format_preference")
+        val APP_LANGUAGE = stringPreferencesKey("app_language")
     }
 
     private val safeData: Flow<Preferences> = dataStore.data.catch { exception ->
@@ -101,6 +106,13 @@ class DataStoreLatencyPreferencesRepository(
         }
         .distinctUntilChanged()
 
+    override val appLanguage: Flow<AppLanguage> = safeData
+        .map { prefs ->
+            val raw = prefs[Keys.APP_LANGUAGE]
+            AppLanguage.entries.firstOrNull { it.name == raw } ?: AppLanguage.SYSTEM
+        }
+        .distinctUntilChanged()
+
     override suspend fun setSleepLatency(minutes: Int) {
         val clamped = minutes.coerceIn(
             LatencyPreferencesRepository.MIN_SLEEP_LATENCY_MINUTES,
@@ -130,6 +142,12 @@ class DataStoreLatencyPreferencesRepository(
     override suspend fun setTimeFormatPreference(pref: TimeFormatPreference) {
         dataStore.edit { prefs ->
             prefs[Keys.TIME_FORMAT_PREFERENCE] = pref.name
+        }
+    }
+
+    override suspend fun setAppLanguage(language: AppLanguage) {
+        dataStore.edit { prefs ->
+            prefs[Keys.APP_LANGUAGE] = language.name
         }
     }
 

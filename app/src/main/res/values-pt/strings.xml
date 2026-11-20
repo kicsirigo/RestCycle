@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RestCycle</string>
+
+    <!-- Modes -->
+    <string name="mode_wake_up_at">Acordar às</string>
+    <string name="mode_sleep_now">Dormir agora</string>
+    <string name="mode_go_to_bed_at">Deitar às</string>
+    <string name="mode_power_nap">Sesta</string>
+
+    <!-- Cycle Quality Labels -->
+    <string name="quality_optimal">Ótimo</string>
+    <string name="quality_good">Bom</string>
+    <string name="quality_short">Curto</string>
+
+    <!-- Power Nap Presets -->
+    <string name="nap_quick_title">Energia rápida</string>
+    <string name="nap_classic_title">Sesta clássica</string>
+    <string name="nap_full_title">Sesta de ciclo completo</string>
+    <string name="nap_quick_desc">Alerta imediata, sem sonolência</string>
+    <string name="nap_classic_desc">Recarga cognitiva máxima antes do sono profundo</string>
+    <string name="nap_full_desc">Ciclo completo REM e de sono profundo</string>
+    <string name="badge_suggested">Sugerido</string>
+    <string name="nap_inertia_tooltip">Porquê evitar sestas de 30–60 min? Acordar durante o sono profundo causa inércia do sono.</string>
+
+    <!-- Alarms & Timers -->
+    <string name="alarm_label_wakeup">Alarme para acordar</string>
+    <string name="alarm_label_bedtime">Lembrete para deitar</string>
+    <string name="alarm_label_nap">Alarme da sesta</string>
+    <string name="action_set_alarm">Alarme</string>
+    <string name="action_set_timer">Temporizador</string>
+    <string name="action_wake_alarm">Alarme ao acordar</string>
+    <string name="clock_app_unavailable">Nenhuma aplicação de relógio ou alarme disponível neste dispositivo.</string>
+
+    <!-- Durations & Countdowns -->
+    <string name="cycles_count">%1$d ciclos</string>
+    <string name="cycles_count_single">%1$d ciclo</string>
+    <string name="duration_hours_minutes">%1$dh %2$sm</string>
+    <string name="duration_minutes_only">%1$d min</string>
+    <string name="countdown_in_minutes">Em %1$d min</string>
+
+    <!-- Latency Controls -->
+    <string name="latency_sleep_label">Tempo para adormecer</string>
+    <string name="latency_nap_label">Tempo para adormecer (sesta)</string>
+    <string name="latency_minutes_value">%1$d min</string>
+
+    <!-- Time Wheel -->
+    <string name="wheel_am">AM</string>
+    <string name="wheel_pm">PM</string>
+
+    <!-- Header Subtitles & Sky Phases -->
+    <string name="header_subtitle_wake_up_at">Horas ideais de deitar para o despertar</string>
+    <string name="header_subtitle_sleep_now">Janelas de despertar se adormecer em breve</string>
+    <string name="header_subtitle_go_to_bed_at">Janelas de despertar para a hora de deitar</string>
+    <string name="header_subtitle_power_nap">Opções diurnas com latência de sono</string>
+    <string name="sleep_now_current_time_label">Agora: %1$s</string>
+    <string name="sky_phase_day">Dia</string>
+    <string name="sky_phase_dawn_dusk">Hora dourada</string>
+    <string name="sky_phase_night">Noite tranquila</string>
+
+    <!-- Accessibility & Guidance -->
+    <string name="cd_celestial_day">Céu diurno com sol radiante</string>
+    <string name="cd_celestial_dawn_dusk">Céu dourado com o sol no horizonte</string>
+    <string name="cd_celestial_night">Céu noturno tranquilo com lua crescente e estrelas</string>
+    <string name="cd_time_wheel_hours">Horas</string>
+    <string name="cd_time_wheel_minutes">Minutos</string>
+    <string name="cd_time_wheel_am_pm">AM ou PM</string>
+    <string name="planned_bedtime_label">Deitar: %1$s</string>
+    <string name="sleep_now_hint">As janelas são atualizadas automaticamente a cada minuto</string>
+    <string name="power_nap_hint">Toque numa opção para pré-visualizar o céu ou definir um alarme</string>
+    <string name="cd_set_alarm_for_time">Definir alarme para as %1$s</string>
+    <string name="cd_set_timer_for_nap">Definir temporizador para %1$s</string>
+
+    <!-- Settings & Credits -->
+    <string name="settings_title">Definições</string>
+    <string name="settings_time_format_label">Formato da hora</string>
+    <string name="settings_time_format_system">Sistema</string>
+    <string name="settings_time_format_24h">24 horas</string>
+    <string name="settings_time_format_12h">12 horas</string>
+    <string name="settings_theme_label">Tema</string>
+    <string name="settings_theme_dynamic">Céu dinâmico</string>
+    <string name="settings_theme_nord">Nord</string>
+    <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
+    <string name="settings_language_label">Idioma</string>
+    <string name="settings_language_auto">Auto</string>
+    <string name="settings_made_by">made by: kicsirigo</string>
+    <string name="action_close">Fechar</string>
+</resources>

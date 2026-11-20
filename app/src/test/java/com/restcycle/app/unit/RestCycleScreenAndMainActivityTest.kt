@@ -21,6 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.restcycle.app.MainActivity
 import com.restcycle.app.ui.RestCycleTestTags
+import com.restcycle.app.ui.theme.AppLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -230,5 +231,48 @@ class RestCycleScreenAndMainActivityTest {
         composeRule.waitForIdle()
 
         composeRule.onNodeWithTag(RestCycleTestTags.WHEEL_AM_PM).assertDoesNotExist()
+    }
+
+    @Test
+    fun mainActivity_settingsDialog_switchesLanguageReactivelyAndRestoresAuto() {
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_BUTTON).performClick()
+        composeRule.waitForIdle()
+
+        // Switch to Spanish
+        composeRule.onNodeWithTag(RestCycleTestTags.languageOption(AppLanguage.SPANISH.name))
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Ajustes").assertIsDisplayed()
+        composeRule.onNodeWithText("Cerrar").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Despertar a las").assertIsDisplayed()
+
+        // Switch to Brazilian Portuguese
+        composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_BUTTON).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.languageOption(AppLanguage.BRAZILIAN_PORTUGUESE.name))
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Configurações").assertIsDisplayed()
+        composeRule.onNodeWithText("Fechar").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Cochilo").assertIsDisplayed()
+
+        // Restore Auto (System)
+        composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_BUTTON).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.languageOption(AppLanguage.SYSTEM.name))
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Close").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Wake Up At").assertIsDisplayed()
     }
 }

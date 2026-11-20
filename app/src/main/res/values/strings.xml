@@ -81,6 +81,8 @@
     <string name="settings_theme_dynamic">Dynamic Sky</string>
     <string name="settings_theme_nord">Nord</string>
     <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
+    <string name="settings_language_label">Language</string>
+    <string name="settings_language_auto">Auto</string>
     <string name="settings_made_by">made by: kicsirigo</string>
     <string name="action_close">Close</string>
 </resources>

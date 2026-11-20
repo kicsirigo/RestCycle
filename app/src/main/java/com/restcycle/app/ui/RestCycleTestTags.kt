@@ -31,10 +31,12 @@ object RestCycleTestTags {
     const val OPTION_CARD_PREFIX = "OPTION_CARD_"
     const val SET_ALARM_BTN_PREFIX = "SET_ALARM_BTN_"
     const val SET_TIMER_BTN_PREFIX = "SET_TIMER_BTN_"
+    const val LANGUAGE_OPTION_PREFIX = "LANGUAGE_OPTION_"
 
     fun optionCard(id: String): String = "$OPTION_CARD_PREFIX$id"
     fun setAlarmButton(id: String): String = "$SET_ALARM_BTN_PREFIX$id"
     fun setTimerButton(id: String): String = "$SET_TIMER_BTN_PREFIX$id"
+    fun languageOption(languageName: String): String = "$LANGUAGE_OPTION_PREFIX$languageName"
 
     fun modeTab(mode: SleepMode): String = when (mode) {
         SleepMode.WAKE_UP_AT -> MODE_TAB_WAKE_UP_AT

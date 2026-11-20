@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val themeStyle by viewModel.themeStyle.collectAsStateWithLifecycle()
             val timeFormatPref by viewModel.timeFormatPreference.collectAsStateWithLifecycle()
+            val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
             val syncedClockTime = uiState.options.firstOrNull()
                 ?.takeIf {
                     (uiState.mode == SleepMode.SLEEP_NOW || uiState.mode == SleepMode.POWER_NAP) &&
@@ -58,7 +59,9 @@ class MainActivity : ComponentActivity() {
                     themeStyle = themeStyle,
                     timeFormatPreference = timeFormatPref,
                     onSelectThemeStyle = viewModel::selectThemeStyle,
-                    onSelectTimeFormatPreference = viewModel::selectTimeFormatPreference
+                    onSelectTimeFormatPreference = viewModel::selectTimeFormatPreference,
+                    appLanguage = appLanguage,
+                    onSelectAppLanguage = viewModel::selectAppLanguage
                 )
             }
         }

@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.restcycle.app.R
 import com.restcycle.app.ui.RestCycleTestTags
+import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.theme.CatppuccinDawnDuskAtmospherePalette
@@ -57,7 +60,9 @@ fun SettingsDialog(
     timeFormatPreference: TimeFormatPreference,
     onSelectTheme: (AppThemeStyle) -> Unit,
     onSelectTimeFormat: (TimeFormatPreference) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    appLanguage: AppLanguage = AppLanguage.SYSTEM,
+    onSelectLanguage: (AppLanguage) -> Unit = {}
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
@@ -75,8 +80,9 @@ fun SettingsDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -236,6 +242,61 @@ fun SettingsDialog(
                                                 .background(swatch)
                                         )
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Language Selector
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_language_label),
+                        color = palette.textSecondary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    AppLanguage.entries.chunked(2).forEach { rowLanguages ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            rowLanguages.forEach { lang ->
+                                val selected = appLanguage == lang
+                                val label = if (lang == AppLanguage.SYSTEM) {
+                                    stringResource(R.string.settings_language_auto)
+                                } else {
+                                    lang.nativeLabel
+                                }
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .testTag(RestCycleTestTags.languageOption(lang.name))
+                                        .clickable(role = Role.RadioButton) {
+                                            if (!selected) {
+                                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                                onSelectLanguage(lang)
+                                            }
+                                        },
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = if (selected) palette.accent else palette.pillContainer,
+                                    border = BorderStroke(
+                                        width = 1.dp,
+                                        color = if (selected) palette.accent else palette.borderSubtle
+                                    )
+                                ) {
+                                    Text(
+                                        text = label,
+                                        color = if (selected) palette.onAccent else palette.textPrimary,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp)
+                                    )
                                 }
                             }
                         }
