@@ -32,7 +32,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -62,13 +67,13 @@ fun HapticTimeWheel(
     selectedTime: LocalTime,
     is24HourFormat: Boolean,
     onTimeChange: (LocalTime) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    itemHeight: Dp = 42.dp
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
     val coroutineScope = rememberCoroutineScope()
-    val itemHeight = 42.dp
-    val wheelHeight = itemHeight * 3 // 126.dp (>= 110.dp)
+    val wheelHeight = itemHeight * 3 // 126.dp default (>= 110.dp)
 
     val amLabel = stringResource(R.string.wheel_am)
     val pmLabel = stringResource(R.string.wheel_pm)
@@ -266,7 +271,24 @@ fun HapticTimeWheel(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(wheelHeight),
+                .height(wheelHeight)
+                .graphicsLayer {
+                    compositingStrategy = CompositingStrategy.Offscreen
+                }
+                .drawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            0.00f to Color.Transparent,
+                            0.14f to Color.Black,
+                            0.86f to Color.Black,
+                            1.00f to Color.Transparent,
+                            startY = 0f,
+                            endY = size.height
+                        ),
+                        blendMode = BlendMode.DstIn
+                    )
+                },
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -357,6 +379,7 @@ private fun WheelColumn(
 ) {
     val palette = AtmosphereTheme.palette
     val density = LocalDensity.current
+    val cameraDistancePx = 10f * density.density
     val baseSnapProvider = remember(listState) { SnapLayoutInfoProvider(listState) }
     val wheelSnapProvider = remember(baseSnapProvider, density) {
         object : SnapLayoutInfoProvider by baseSnapProvider {
@@ -406,7 +429,25 @@ private fun WheelColumn(
                         TabularTextStyles.wheelDigitUnselected
                     },
                     color = if (isCentered) palette.textPrimary else palette.textSecondary,
-                    modifier = Modifier.alpha(if (isCentered) 1f else 0.55f)
+                    modifier = Modifier.graphicsLayer {
+                        val layoutInfo = listState.layoutInfo
+                        val viewportCenter =
+                            (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2f
+                        val itemInfo = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+                        val normalizedOffset = if (itemInfo != null && itemInfo.size > 0) {
+                            ((itemInfo.offset + itemInfo.size / 2f) - viewportCenter) /
+                                itemInfo.size.toFloat()
+                        } else {
+                            (index - centeredIndex).toFloat()
+                        }.coerceIn(-1.5f, 1.5f)
+                        val absOffset = abs(normalizedOffset)
+                        rotationX = -normalizedOffset * 28f
+                        val scale = (1f - absOffset * 0.14f).coerceIn(0.78f, 1f)
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = (1f - absOffset * 0.45f).coerceIn(0.35f, 1f)
+                        cameraDistance = cameraDistancePx
+                    }
                 )
             }
         }

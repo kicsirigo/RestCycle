@@ -4,6 +4,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -27,6 +28,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -53,7 +58,8 @@ fun SleepOptionCard(
     is24HourFormat: Boolean,
     onSelect: () -> Unit,
     onSetAlarm: (SleepOption) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    untilBedtimeMinutes: Long? = null
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
@@ -165,6 +171,16 @@ fun SleepOptionCard(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    option.cycles?.let { cycleCount ->
+                        CycleCapsulesIndicator(
+                            cycles = cycleCount,
+                            activeColor = qualityBadgeColor,
+                            inactiveColor = palette.textSecondary.copy(alpha = 0.22f),
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .testTag(RestCycleTestTags.cycleDots(option.id))
+                        )
+                    }
                     if (cyclesText != null) {
                         Text(
                             text = cyclesText,
@@ -185,7 +201,8 @@ fun SleepOptionCard(
                         color = palette.textSecondary,
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
-                    option.countdownMinutesFromNow?.let { countdown ->
+                    val countdown = option.countdownMinutesFromNow
+                    if (countdown != null) {
                         Text(
                             text = "•",
                             color = palette.textSecondary,
@@ -194,6 +211,28 @@ fun SleepOptionCard(
                         )
                         Text(
                             text = stringResource(R.string.countdown_in_minutes, countdown.toInt()),
+                            style = TabularTextStyles.cardCountdown,
+                            color = palette.accentText,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    } else if (untilBedtimeMinutes != null) {
+                        val untilLabel = when {
+                            untilBedtimeMinutes <= 0L -> stringResource(R.string.bedtime_countdown_now)
+                            untilBedtimeMinutes >= 60L -> stringResource(
+                                R.string.bedtime_countdown_hm,
+                                (untilBedtimeMinutes / 60L).toInt(),
+                                (untilBedtimeMinutes % 60L).toInt()
+                            )
+                            else -> stringResource(R.string.bedtime_countdown_m, untilBedtimeMinutes.toInt())
+                        }
+                        Text(
+                            text = "•",
+                            color = palette.textSecondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Text(
+                            text = untilLabel,
                             style = TabularTextStyles.cardCountdown,
                             color = palette.accentText,
                             modifier = Modifier.align(Alignment.CenterVertically)
@@ -235,6 +274,31 @@ fun SleepOptionCard(
                     maxLines = 1
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun CycleCapsulesIndicator(
+    cycles: Int,
+    activeColor: Color,
+    inactiveColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier.size(width = 36.dp, height = 6.dp)) {
+        val totalSlots = 6
+        val gapPx = 2.dp.toPx()
+        val pillWidth = ((size.width - gapPx * (totalSlots - 1)) / totalSlots).coerceAtLeast(2f)
+        val radius = size.height / 2f
+        val corner = CornerRadius(radius, radius)
+        for (i in 0 until totalSlots) {
+            val left = i * (pillWidth + gapPx)
+            drawRoundRect(
+                color = if (i < cycles) activeColor else inactiveColor,
+                topLeft = Offset(left, 0f),
+                size = Size(pillWidth, size.height),
+                cornerRadius = corner
+            )
         }
     }
 }

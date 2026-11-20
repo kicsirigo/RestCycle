@@ -54,6 +54,16 @@ class SleepViewModel(
     internal val themeWritesInFlight = AtomicInteger(0)
     internal val timeFormatWritesInFlight = AtomicInteger(0)
     internal val languageWritesInFlight = AtomicInteger(0)
+    internal val wakeUpTimeWritesInFlight = AtomicInteger(0)
+    internal val goToBedTimeWritesInFlight = AtomicInteger(0)
+    internal val modeWritesInFlight = AtomicInteger(0)
+
+    private var hasUserSelectedModeInSession = false
+    private var hasUserSelectedWakeTimeInSession = false
+    private var hasUserSelectedBedTimeInSession = false
+
+    private val _clockTime = MutableStateFlow(currentClockTime)
+    val clockTime: StateFlow<LocalTime> = _clockTime.asStateFlow()
 
     private val _uiState = MutableStateFlow(buildUiState())
     val uiState: StateFlow<SleepUiState> = _uiState.asStateFlow()
@@ -90,6 +100,58 @@ class SleepViewModel(
                         val clamped = stored.coerceIn(MIN_LATENCY, MAX_NAP_LATENCY)
                         if (clamped != napLatencyMinutes) {
                             napLatencyMinutes = clamped
+                            emitState()
+                        }
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            repository.wakeUpTimeMinutes
+                .distinctUntilChanged()
+                .collect { storedMinutes ->
+                    if (wakeUpTimeWritesInFlight.get() == 0 && !hasUserSelectedWakeTimeInSession) {
+                        val clamped = storedMinutes.coerceIn(
+                            LatencyPreferencesRepository.MIN_TIME_MINUTES_OF_DAY,
+                            LatencyPreferencesRepository.MAX_TIME_MINUTES_OF_DAY
+                        )
+                        val restoredTime = LocalTime.of(clamped / 60, clamped % 60)
+                        if (restoredTime != wakeUpSelectedTime) {
+                            wakeUpSelectedTime = restoredTime
+                            emitState()
+                        }
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            repository.goToBedTimeMinutes
+                .distinctUntilChanged()
+                .collect { storedMinutes ->
+                    if (goToBedTimeWritesInFlight.get() == 0 && !hasUserSelectedBedTimeInSession) {
+                        val clamped = storedMinutes.coerceIn(
+                            LatencyPreferencesRepository.MIN_TIME_MINUTES_OF_DAY,
+                            LatencyPreferencesRepository.MAX_TIME_MINUTES_OF_DAY
+                        )
+                        val restoredTime = LocalTime.of(clamped / 60, clamped % 60)
+                        if (restoredTime != goToBedSelectedTime) {
+                            goToBedSelectedTime = restoredTime
+                            emitState()
+                        }
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            repository.lastWheelMode
+                .distinctUntilChanged()
+                .collect { storedMode ->
+                    if (modeWritesInFlight.get() == 0 && !hasUserSelectedModeInSession) {
+                        if ((storedMode == SleepMode.WAKE_UP_AT || storedMode == SleepMode.GO_TO_BED_AT) &&
+                            storedMode != currentMode
+                        ) {
+                            currentMode = storedMode
+                            explicitHighlightedOptionId = null
                             emitState()
                         }
                     }
@@ -137,6 +199,7 @@ class SleepViewModel(
                 val truncated = tickedTime.truncatedTo(ChronoUnit.MINUTES)
                 if (truncated != currentClockTime) {
                     currentClockTime = truncated
+                    _clockTime.value = truncated
                     if (currentMode == SleepMode.SLEEP_NOW || currentMode == SleepMode.POWER_NAP) {
                         emitState()
                     }
@@ -146,7 +209,9 @@ class SleepViewModel(
     }
 
     fun selectMode(mode: SleepMode) {
+        hasUserSelectedModeInSession = true
         currentClockTime = nowProvider().truncatedTo(ChronoUnit.MINUTES)
+        _clockTime.value = currentClockTime
         if (currentMode == mode) {
             emitState()
             return
@@ -154,22 +219,59 @@ class SleepViewModel(
         currentMode = mode
         explicitHighlightedOptionId = null
         emitState()
+        if (mode == SleepMode.WAKE_UP_AT || mode == SleepMode.GO_TO_BED_AT) {
+            modeWritesInFlight.incrementAndGet()
+            viewModelScope.launch {
+                try {
+                    repository.setLastWheelMode(mode)
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                } finally {
+                    modeWritesInFlight.decrementAndGet()
+                }
+            }
+        }
     }
 
     fun selectTime(time: LocalTime) {
         val truncated = time.truncatedTo(ChronoUnit.MINUTES)
         when (currentMode) {
             SleepMode.WAKE_UP_AT -> {
+                hasUserSelectedWakeTimeInSession = true
                 if (truncated == wakeUpSelectedTime) return
                 wakeUpSelectedTime = truncated
+                emitState()
+                val minutesOfDay = truncated.hour * 60 + truncated.minute
+                wakeUpTimeWritesInFlight.incrementAndGet()
+                viewModelScope.launch {
+                    try {
+                        repository.setWakeUpTimeMinutes(minutesOfDay)
+                    } catch (e: Exception) {
+                        if (e is CancellationException) throw e
+                    } finally {
+                        wakeUpTimeWritesInFlight.decrementAndGet()
+                    }
+                }
             }
             SleepMode.GO_TO_BED_AT -> {
+                hasUserSelectedBedTimeInSession = true
                 if (truncated == goToBedSelectedTime) return
                 goToBedSelectedTime = truncated
+                emitState()
+                val minutesOfDay = truncated.hour * 60 + truncated.minute
+                goToBedTimeWritesInFlight.incrementAndGet()
+                viewModelScope.launch {
+                    try {
+                        repository.setGoToBedTimeMinutes(minutesOfDay)
+                    } catch (e: Exception) {
+                        if (e is CancellationException) throw e
+                    } finally {
+                        goToBedTimeWritesInFlight.decrementAndGet()
+                    }
+                }
             }
             SleepMode.SLEEP_NOW, SleepMode.POWER_NAP -> return
         }
-        emitState()
     }
 
     fun updateSleepLatency(minutes: Int) {
@@ -283,6 +385,7 @@ class SleepViewModel(
         val fresh = nowProvider().truncatedTo(ChronoUnit.MINUTES)
         if (fresh != currentClockTime) {
             currentClockTime = fresh
+            _clockTime.value = fresh
             if (currentMode == SleepMode.SLEEP_NOW || currentMode == SleepMode.POWER_NAP) {
                 emitState()
             }

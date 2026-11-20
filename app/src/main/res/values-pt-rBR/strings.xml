@@ -38,6 +38,9 @@
     <string name="duration_hours_minutes">%1$dh %2$sm</string>
     <string name="duration_minutes_only">%1$d min</string>
     <string name="countdown_in_minutes">Em %1$d min</string>
+    <string name="bedtime_countdown_hm">em %1$dh %2$dm</string>
+    <string name="bedtime_countdown_m">em %1$dm</string>
+    <string name="bedtime_countdown_now">hora de dormir</string>
 
     <!-- Latency Controls -->
     <string name="latency_sleep_label">Tempo para pegar no sono</string>

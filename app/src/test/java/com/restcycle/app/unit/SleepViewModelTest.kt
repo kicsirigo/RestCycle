@@ -53,16 +53,28 @@ class SleepViewModelTest {
 
     private class FakeLatencyPreferencesRepository(
         initialSleep: Int = LatencyPreferencesRepository.DEFAULT_SLEEP_LATENCY_MINUTES,
-        initialNap: Int = LatencyPreferencesRepository.DEFAULT_NAP_LATENCY_MINUTES
+        initialNap: Int = LatencyPreferencesRepository.DEFAULT_NAP_LATENCY_MINUTES,
+        initialWakeMinutes: Int = LatencyPreferencesRepository.DEFAULT_WAKE_UP_TIME_MINUTES,
+        initialBedMinutes: Int = LatencyPreferencesRepository.DEFAULT_GO_TO_BED_TIME_MINUTES,
+        initialLastMode: SleepMode = SleepMode.WAKE_UP_AT
     ) : LatencyPreferencesRepository {
         private val _sleep = MutableStateFlow(initialSleep)
         private val _nap = MutableStateFlow(initialNap)
+        private val _wakeMinutes = MutableStateFlow(initialWakeMinutes)
+        private val _bedMinutes = MutableStateFlow(initialBedMinutes)
+        private val _lastMode = MutableStateFlow(initialLastMode)
 
         override val sleepLatencyMinutes: Flow<Int> = _sleep.asStateFlow()
         override val napLatencyMinutes: Flow<Int> = _nap.asStateFlow()
+        override val wakeUpTimeMinutes: Flow<Int> = _wakeMinutes.asStateFlow()
+        override val goToBedTimeMinutes: Flow<Int> = _bedMinutes.asStateFlow()
+        override val lastWheelMode: Flow<SleepMode> = _lastMode.asStateFlow()
 
         val recordedSleepWrites = mutableListOf<Int>()
         val recordedNapWrites = mutableListOf<Int>()
+        val recordedWakeWrites = mutableListOf<Int>()
+        val recordedBedWrites = mutableListOf<Int>()
+        val recordedModeWrites = mutableListOf<SleepMode>()
         var sleepWriteGate: CompletableDeferred<Unit>? = null
         var sleepWriteException: Throwable? = null
         var napWriteException: Throwable? = null
@@ -86,6 +98,29 @@ class SleepViewModelTest {
             )
             recordedNapWrites.add(clamped)
             _nap.value = clamped
+        }
+
+        override suspend fun setWakeUpTimeMinutes(minutesOfDay: Int) {
+            val clamped = minutesOfDay.coerceIn(
+                LatencyPreferencesRepository.MIN_TIME_MINUTES_OF_DAY,
+                LatencyPreferencesRepository.MAX_TIME_MINUTES_OF_DAY
+            )
+            recordedWakeWrites.add(clamped)
+            _wakeMinutes.value = clamped
+        }
+
+        override suspend fun setGoToBedTimeMinutes(minutesOfDay: Int) {
+            val clamped = minutesOfDay.coerceIn(
+                LatencyPreferencesRepository.MIN_TIME_MINUTES_OF_DAY,
+                LatencyPreferencesRepository.MAX_TIME_MINUTES_OF_DAY
+            )
+            recordedBedWrites.add(clamped)
+            _bedMinutes.value = clamped
+        }
+
+        override suspend fun setLastWheelMode(mode: SleepMode) {
+            recordedModeWrites.add(mode)
+            _lastMode.value = mode
         }
 
         fun emitSleepFromStore(minutes: Int) {
@@ -518,5 +553,40 @@ class SleepViewModelTest {
         advanceUntilIdle()
 
         assertEquals(18, viewModel.uiState.value.napLatencyMinutes)
+    }
+
+    @Test
+    fun init_restoresPersistedWakeBedTimesAndLastWheelMode() = runTest {
+        val repo = FakeLatencyPreferencesRepository(
+            initialWakeMinutes = 7 * 60 + 30,
+            initialBedMinutes = 23 * 60 + 15,
+            initialLastMode = SleepMode.GO_TO_BED_AT
+        )
+        val viewModel = createViewModel(repo = repo)
+        advanceUntilIdle()
+
+        assertEquals(SleepMode.GO_TO_BED_AT, viewModel.uiState.value.mode)
+        assertEquals(LocalTime.of(23, 15), viewModel.uiState.value.selectedTime)
+
+        viewModel.selectMode(SleepMode.WAKE_UP_AT)
+        assertEquals(LocalTime.of(7, 30), viewModel.uiState.value.selectedTime)
+    }
+
+    @Test
+    fun selectTimeAndSelectMode_persistWheelTimesAndScheduledModeOnly() = runTest {
+        val repo = FakeLatencyPreferencesRepository()
+        val viewModel = createViewModel(repo = repo)
+        advanceUntilIdle()
+
+        viewModel.selectTime(LocalTime.of(7, 0))
+        viewModel.selectMode(SleepMode.GO_TO_BED_AT)
+        viewModel.selectTime(LocalTime.of(22, 15))
+        viewModel.selectMode(SleepMode.POWER_NAP)
+        viewModel.selectMode(SleepMode.SLEEP_NOW)
+        advanceUntilIdle()
+
+        assertEquals(listOf(7 * 60), repo.recordedWakeWrites)
+        assertEquals(listOf(22 * 60 + 15), repo.recordedBedWrites)
+        assertEquals(listOf(SleepMode.GO_TO_BED_AT), repo.recordedModeWrites)
     }
 }

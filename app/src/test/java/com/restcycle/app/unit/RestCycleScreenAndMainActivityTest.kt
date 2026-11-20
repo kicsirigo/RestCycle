@@ -20,8 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.restcycle.app.MainActivity
+import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppLanguage
+import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -277,5 +279,41 @@ class RestCycleScreenAndMainActivityTest {
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Wake Up At").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_quickTimeChipsAndCycleCapsulesUpdateWheelAndCards() {
+        val resolver = composeRule.activity.contentResolver
+        Settings.System.putString(resolver, Settings.System.TIME_12_24, "24")
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag(RestCycleTestTags.QUICK_TIME_CHIPS_ROW).assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.cycleDots("wake_6"), useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.cycleDots("wake_5"), useUnmergedTree = true)
+            .assertIsDisplayed()
+
+        // Tap 07:00 preset chip in WAKE_UP_AT
+        composeRule.onNodeWithTag(RestCycleTestTags.quickTimeChip("0700"))
+            .assertIsDisplayed()
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.WAKE_ALARM_BTN)
+            .assertTextContains("07:00", substring = true)
+
+        // Switch to GO_TO_BED_AT and tap 23:00 preset chip
+        composeRule.onNodeWithTag(RestCycleTestTags.modeTab(SleepMode.GO_TO_BED_AT)).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.quickTimeChip("2300"))
+            .assertIsDisplayed()
+            .performClick()
+        composeRule.waitForIdle()
+        val hasState = { expected: String ->
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, expected)
+        }
+        composeRule.onNodeWithTag(RestCycleTestTags.WHEEL_HOUR).assert(hasState("23"))
+        composeRule.onNodeWithTag(RestCycleTestTags.WHEEL_MINUTE).assert(hasState("00"))
     }
 }

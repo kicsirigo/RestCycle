@@ -38,6 +38,9 @@
     <string name="duration_hours_minutes">%1$dg %2$sm</string>
     <string name="duration_minutes_only">%1$d min</string>
     <string name="countdown_in_minutes">Za %1$d min</string>
+    <string name="bedtime_countdown_hm">za %1$dg %2$dm</string>
+    <string name="bedtime_countdown_m">za %1$dm</string>
+    <string name="bedtime_countdown_now">pora spać</string>
 
     <!-- Latency Controls -->
     <string name="latency_sleep_label">Czas zasypiania</string>

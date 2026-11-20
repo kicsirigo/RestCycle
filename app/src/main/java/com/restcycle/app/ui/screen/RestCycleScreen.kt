@@ -5,10 +5,16 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,6 +45,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,8 +53,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
@@ -272,10 +281,18 @@ private fun RestCycleScreenContent(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(uiState.options, key = { it.id }) { option ->
+                            val untilBedtimeMinutes = if (uiState.mode == SleepMode.WAKE_UP_AT) {
+                                val nowMin = currentClockTime.hour * 60 + currentClockTime.minute
+                                val targetMin = option.targetTime.hour * 60 + option.targetTime.minute
+                                ((targetMin - nowMin + 1440) % 1440).toLong()
+                            } else {
+                                null
+                            }
                             SleepOptionCard(
                                 option = option,
                                 isHighlighted = option.id == uiState.highlightedOptionId,
                                 is24HourFormat = uiState.is24HourFormat,
+                                untilBedtimeMinutes = untilBedtimeMinutes,
                                 onSelect = { onHighlightOption(option.id) },
                                 onSetAlarm = { targetOption ->
                                     val alarmMessage = resources.getString(
@@ -376,19 +393,62 @@ private fun RestCycleScreenContent(
                     }
                 }
 
-                // Middle thumb area: HapticTimeWheel in wheel modes, reactive scenic landscape in live modes
-                Box(
+                // Middle thumb area: HapticTimeWheel + Quick Chips in wheel modes, reactive scenic landscape in live modes
+                val modeTransition = remember { Animatable(1f) }
+                var previousMiddleMode by remember { mutableStateOf(uiState.mode) }
+                LaunchedEffect(uiState.mode) {
+                    if (previousMiddleMode != uiState.mode) {
+                        previousMiddleMode = uiState.mode
+                        modeTransition.snapTo(0f)
+                        modeTransition.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+                        )
+                    }
+                }
+
+                BoxWithConstraints(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            val p = modeTransition.value
+                            alpha = 0.25f + 0.75f * p
+                            val s = 0.96f + 0.04f * p
+                            scaleX = s
+                            scaleY = s
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     if (uiState.mode == SleepMode.WAKE_UP_AT || uiState.mode == SleepMode.GO_TO_BED_AT) {
-                        HapticTimeWheel(
-                            selectedTime = uiState.selectedTime,
-                            is24HourFormat = uiState.is24HourFormat,
-                            onTimeChange = onSelectTime
-                        )
+                        val compactWheel = maxHeight < 170.dp
+                        val wheelItemHeight = if (compactWheel) 34.dp else 42.dp
+                        val presets = if (uiState.mode == SleepMode.WAKE_UP_AT) {
+                            WAKE_UP_PRESET_TIMES
+                        } else {
+                            GO_TO_BED_PRESET_TIMES
+                        }
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(if (compactWheel) 4.dp else 8.dp)
+                        ) {
+                            HapticTimeWheel(
+                                selectedTime = uiState.selectedTime,
+                                is24HourFormat = uiState.is24HourFormat,
+                                onTimeChange = onSelectTime,
+                                itemHeight = wheelItemHeight
+                            )
+                            QuickTimePresetRow(
+                                presets = presets,
+                                selectedTime = uiState.selectedTime,
+                                is24HourFormat = uiState.is24HourFormat,
+                                onSelectPreset = { preset ->
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    onSelectTime(preset)
+                                }
+                            )
+                        }
                     } else {
                         val hintRes = if (uiState.mode == SleepMode.SLEEP_NOW) {
                             R.string.sleep_now_hint
@@ -476,6 +536,65 @@ private fun RestCycleScreenContent(
     }
 }
 
+private val WAKE_UP_PRESET_TIMES = listOf(
+    LocalTime.of(6, 0),
+    LocalTime.of(6, 30),
+    LocalTime.of(7, 0),
+    LocalTime.of(7, 30)
+)
+
+private val GO_TO_BED_PRESET_TIMES = listOf(
+    LocalTime.of(22, 0),
+    LocalTime.of(22, 30),
+    LocalTime.of(23, 0),
+    LocalTime.of(0, 0)
+)
+
+@Composable
+private fun QuickTimePresetRow(
+    presets: List<LocalTime>,
+    selectedTime: LocalTime,
+    is24HourFormat: Boolean,
+    onSelectPreset: (LocalTime) -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .testTag(RestCycleTestTags.QUICK_TIME_CHIPS_ROW),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        presets.forEach { preset ->
+            val isSelected = selectedTime == preset
+            val key = String.format(Locale.US, "%02d%02d", preset.hour, preset.minute)
+            val label = formatClockTime(preset, is24HourFormat)
+            val shape = RoundedCornerShape(50)
+            Surface(
+                shape = shape,
+                color = if (isSelected) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = if (isSelected) palette.accent else palette.borderSubtle
+                ),
+                modifier = Modifier
+                    .clip(shape)
+                    .clickable { onSelectPreset(preset) }
+                    .testTag(RestCycleTestTags.quickTimeChip(key))
+            ) {
+                Text(
+                    text = label,
+                    style = TabularTextStyles.cardDuration,
+                    color = if (isSelected) palette.accentText else palette.textSecondary,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = 11.dp, vertical = 5.dp)
+                )
+            }
+        }
+    }
+}
+
 private fun alarmMessageResForMode(mode: SleepMode): Int = when (mode) {
     SleepMode.WAKE_UP_AT -> R.string.alarm_label_bedtime
     SleepMode.SLEEP_NOW, SleepMode.GO_TO_BED_AT -> R.string.alarm_label_wakeup
@@ -493,8 +612,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.2.0"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.3.0"
     } catch (_: Exception) {
-        "1.2.0"
+        "1.3.0"
     }
 }

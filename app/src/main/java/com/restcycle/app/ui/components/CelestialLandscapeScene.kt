@@ -2,6 +2,7 @@ package com.restcycle.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -18,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -278,6 +280,16 @@ fun CelestialLandscapeScene(
         animationSpec = tween(durationMillis = ATMOSPHERE_TRANSITION_DURATION_MS),
         label = "sceneNightAlpha"
     )
+    val dayAlpha by animateFloatAsState(
+        targetValue = if (skyPhase == SkyPhase.DAY) 1f else 0f,
+        animationSpec = tween(durationMillis = ATMOSPHERE_TRANSITION_DURATION_MS),
+        label = "sceneDayAlpha"
+    )
+    val dawnDuskAlpha by animateFloatAsState(
+        targetValue = if (skyPhase == SkyPhase.DAWN_DUSK) 1f else 0f,
+        animationSpec = tween(durationMillis = ATMOSPHERE_TRANSITION_DURATION_MS),
+        label = "sceneDawnDuskAlpha"
+    )
 
     val infiniteTransition = rememberInfiniteTransition(label = "landscape_water_motion")
     val ripplePhase by infiniteTransition.animateFloat(
@@ -288,6 +300,15 @@ fun CelestialLandscapeScene(
             repeatMode = RepeatMode.Restart
         ),
         label = "waterRipplePhase"
+    )
+    val ambientProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 8_400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "landscapeAmbientProgress"
     )
 
     val farMountainPath = remember { Path() }
@@ -313,7 +334,7 @@ fun CelestialLandscapeScene(
 
             val horizonY = h * 0.64f
 
-            // 1. Subtle stars (night phase only, floating directly on the transparent sky)
+            // 1. Subtle stars & occasional shooting star (night phase only)
             if (nightAlpha > 0.02f) {
                 for (star in SCENE_STARS) {
                     val twinkle = 0.55f + 0.45f * sin(ripplePhase + star.phaseOffset)
@@ -323,10 +344,57 @@ fun CelestialLandscapeScene(
                         center = Offset(w * star.xFraction, h * star.yFraction)
                     )
                 }
+                if (ambientProgress in 0.18f..0.34f) {
+                    val streakT = (ambientProgress - 0.18f) / 0.16f
+                    val fadeEnvelope = sin(streakT * Math.PI).toFloat().coerceIn(0f, 1f)
+                    val headX = w * (0.22f + 0.34f * streakT)
+                    val headY = h * (0.11f + 0.11f * streakT)
+                    val tailX = headX - w * 0.085f
+                    val tailY = headY - h * 0.032f
+                    val meteorAlpha = (0.78f * fadeEnvelope * nightAlpha).coerceIn(0f, 1f)
+                    drawLine(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color(0xFFFFF4D6).copy(alpha = meteorAlpha)
+                            ),
+                            start = Offset(tailX, tailY),
+                            end = Offset(headX, headY)
+                        ),
+                        start = Offset(tailX, tailY),
+                        end = Offset(headX, headY),
+                        strokeWidth = 1.6.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                    drawCircle(
+                        color = Color(0xFFFFFAEB).copy(alpha = meteorAlpha),
+                        radius = 1.8.dp.toPx(),
+                        center = Offset(headX, headY)
+                    )
+                }
+            }
+
+            // 1b. Softly drifting high-altitude cloud wisps (day phase)
+            if (dayAlpha > 0.05f) {
+                for (cIdx in 0..2) {
+                    val baseOffset = (ambientProgress + cIdx * 0.33f) % 1.0f
+                    val cloudCenterX = w * (0.12f + 0.76f * baseOffset)
+                    val cloudCenterY = h * (0.18f + cIdx * 0.045f)
+                    val cloudWidth = w * (0.18f - cIdx * 0.02f)
+                    val cloudHeight = 7.dp.toPx()
+                    val edgeAlpha = sin(baseOffset * Math.PI).toFloat().coerceIn(0f, 1f)
+                    drawRoundRect(
+                        color = waterShimmer.copy(alpha = (0.20f * dayAlpha * edgeAlpha).coerceIn(0f, 0.25f)),
+                        topLeft = Offset(cloudCenterX - cloudWidth / 2f, cloudCenterY),
+                        size = Size(cloudWidth, cloudHeight),
+                        cornerRadius = CornerRadius(cloudHeight / 2f, cloudHeight / 2f)
+                    )
+                }
             }
 
             // 2. Soft celestial glow & sun/moon disc nestled above the central valley
-            val celCenter = Offset(w * 0.52f, h * 0.28f)
+            val celArcOffsetY = -0.04f * dayAlpha + 0.045f * dawnDuskAlpha
+            val celCenter = Offset(w * 0.52f, h * (0.26f + celArcOffsetY))
             val celGlowRadius = minOf(w, h) * 0.40f
             drawCircle(
                 brush = Brush.radialGradient(
@@ -471,6 +539,29 @@ fun CelestialLandscapeScene(
                     strokeWidth = (1.8f - i * 0.18f).dp.toPx().coerceAtLeast(1.dp.toPx()),
                     cap = StrokeCap.Round
                 )
+            }
+
+            // 9b. Gently drifting translucent valley mist during golden hour (DAWN_DUSK)
+            if (dawnDuskAlpha > 0.05f) {
+                for (mIdx in 0..1) {
+                    val drift = sin(ripplePhase + mIdx * 2.1f) * (w * 0.04f)
+                    val mistWidth = w * (0.48f - mIdx * 0.08f)
+                    val mistHeight = 9.dp.toPx()
+                    val mistY = horizonY - h * (0.025f - mIdx * 0.032f)
+                    val mistX = w * 0.50f - mistWidth / 2f + drift
+                    drawRoundRect(
+                        brush = Brush.horizontalGradient(
+                            0.0f to Color.Transparent,
+                            0.5f to celestialGlow.copy(alpha = 0.18f * dawnDuskAlpha),
+                            1.0f to Color.Transparent,
+                            startX = mistX,
+                            endX = mistX + mistWidth
+                        ),
+                        topLeft = Offset(mistX, mistY),
+                        size = Size(mistWidth, mistHeight),
+                        cornerRadius = CornerRadius(mistHeight / 2f, mistHeight / 2f)
+                    )
+                }
             }
 
             // 10. Seamless edge feathering so the scene melts directly into the app background

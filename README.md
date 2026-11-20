@@ -8,7 +8,7 @@
 [![Android](https://img.shields.io/badge/Android-8.0%2B%20(API%2026%E2%80%9336)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Tests](https://img.shields.io/badge/Tests-327%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-331%20Passing-2EA043?style=for-the-badge&logo=checkmarx&logoColor=white)](#testing)
 [![Privacy](https://img.shields.io/badge/Privacy-Zero%20Tracking-0F172A?style=for-the-badge&logo=shield&logoColor=white)](#privacy--permissions)
 
 </div>
@@ -53,11 +53,13 @@ RestCycle features **3 curated themes**, and **all 3 dynamically adapt across 3 
 - **Catppuccin Macchiato** — Warm Latte-inspired daylight, Mauve/Peach twilight, and authentic Macchiato (`#24273A`) night.
 
 ### 🏔️ Borderless Alpine Landscape Scene
-In **Sleep Now** and **Power Nap** modes, the open lower canvas renders a custom Jetpack Compose `Canvas` alpine landscape — layered mountains, pine silhouettes, a winding stream, and a gently shimmering lake — seamlessly feathered into the background (`BlendMode.DstIn`) and dynamically re-tinted to match your active theme and time of day.
+In **Sleep Now** and **Power Nap** modes, the open lower canvas renders a custom Jetpack Compose `Canvas` alpine landscape — layered mountains, pine silhouettes, a winding stream, and a gently shimmering lake — seamlessly feathered into the background (`BlendMode.DstIn`) with living time-of-day micro-animations (shooting star at night, valley mist at golden hour, drifting cloud wisps by day) and dynamically re-tinted to match your active theme.
 
 ### 🎛️ One-Handed Ergonomics & Polish
-- **Haptic Time Wheel** — Tactile `CLOCK_TICK` feedback, tabular numerals (`tnum`), and automatic `AM ↔ PM` toggling when scrolling across `11 ↔ 12` in 12-hour mode.
-- **Fluid 120Hz Animations** — Sliding spring pill selector, smooth latency slider (`0–60 min`, default `15 min`), and unified frame-synchronized theme interpolation.
+- **3D Cylindrical Haptic Time Wheel & Quick Time Chips** — GPU-accelerated 3D cylinder perspective with edge fade, tactile `CLOCK_TICK` feedback, tabular numerals (`tnum`), automatic `AM ↔ PM` toggling across `11 ↔ 12`, and one-tap preset chips (`06:00–07:30` / `22:00–00:00`).
+- **Visual Cycle Capsules & Bedtime Countdown** — 6-capsule sleep cycle indicator on every card plus a live *"time until bedtime"* countdown in **Wake Up At** mode.
+- **Fluid 120Hz Animations** — Smooth `220ms` wheel ↔ landscape mode transitions, sliding spring pill selector, smooth latency slider (`0–60 min`, default `15 min`), and unified frame-synchronized theme interpolation.
+- **Remembered Schedule** — Persists your last selected wake-up time, bedtime, and scheduled mode locally via Jetpack DataStore.
 - **Native Alarm & Timer Integration** — Tap any calculated cycle card to launch Android's native `AlarmClock` (`ACTION_SET_ALARM` / `ACTION_SET_TIMER`) directly with the exact target time and label.
 - **Flexible Clock Format** — Choose **System Default**, **24-hour**, or **12-hour** in Settings (`⚙️`).
 - **7-Language Localization & In-App Switcher** — Switch languages anytime inside Settings (`🌐 Auto`, `🇬🇧 English`, `🇭🇺 Magyar`, `🇪🇸 Español`, `🇷🇴 Română`, `🇵🇱 Polski`, `🇵🇹 Português`, `🇧🇷 Português (BR)`) with strict lint translation checks.
@@ -154,7 +156,7 @@ app/src/main/java/com/restcycle/app/
 git clone https://github.com/kicsirigo/RestCycle.git
 cd RestCycle
 
-# Run all 327 unit & Compose/Robolectric E2E tests
+# Run all 331 unit & Compose/Robolectric E2E tests
 ./gradlew testDebugUnitTest
 
 # Run Android Lint checks
@@ -180,7 +182,7 @@ export RESTCYCLE_KEY_PASSWORD="your-key-password"
 
 ## 🧪 Testing
 
-The test suite includes **327 automated tests** covering:
+The test suite includes **331 automated tests** covering:
 - Sleep cycle math, midnight/DST boundaries, and Power Nap calculations
 - Dynamic Celestial Atmosphere Engine phase detection & color interpolation across all 3 themes
 - DataStore preference persistence and defaults

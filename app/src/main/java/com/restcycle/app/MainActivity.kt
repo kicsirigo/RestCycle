@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
             val themeStyle by viewModel.themeStyle.collectAsStateWithLifecycle()
             val timeFormatPref by viewModel.timeFormatPreference.collectAsStateWithLifecycle()
             val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
+            val liveClockTime by viewModel.clockTime.collectAsStateWithLifecycle()
             val syncedClockTime = uiState.options.firstOrNull()
                 ?.takeIf {
                     (uiState.mode == SleepMode.SLEEP_NOW || uiState.mode == SleepMode.POWER_NAP) &&
@@ -37,7 +38,7 @@ class MainActivity : ComponentActivity() {
                 ?.let { option ->
                     option.targetTime.minusMinutes(option.countdownMinutesFromNow!!)
                 }
-                ?: container.timeFormatProvider.currentTime()
+                ?: liveClockTime
             AtmosphereTheme(
                 skyPhase = uiState.activeSkyPhase,
                 themeStyle = themeStyle

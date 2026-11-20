@@ -14,6 +14,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.restcycle.app.DefaultAppContainer
 import com.restcycle.app.data.preferences.DataStoreLatencyPreferencesRepository
+import com.restcycle.app.domain.model.SleepMode
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -221,6 +222,35 @@ class LatencyPreferencesRepositoryTest {
         repo.setSleepLatency(24)
         collectJob.join()
         assertEquals(listOf(15, 24), collected)
+    }
+
+    @Test
+    fun wakeUpBedTimeAndLastWheelMode_persistAcrossInstancesAndClampBounds() = runTest {
+        val file = File(tempFolder.newFolder(), "session_prefs.preferences_pb")
+
+        val job1 = Job()
+        val scope1 = CoroutineScope(coroutineContext + job1)
+        val repo1 = DataStoreLatencyPreferencesRepository(createDataStore(file, scope1))
+        assertEquals(6 * 60 + 50, repo1.wakeUpTimeMinutes.first())
+        assertEquals(22 * 60 + 30, repo1.goToBedTimeMinutes.first())
+        assertEquals(SleepMode.WAKE_UP_AT, repo1.lastWheelMode.first())
+
+        repo1.setWakeUpTimeMinutes(7 * 60 + 15)
+        repo1.setGoToBedTimeMinutes(23 * 60 + 59)
+        repo1.setLastWheelMode(SleepMode.GO_TO_BED_AT)
+        // Non-wheel modes must not overwrite lastWheelMode
+        repo1.setLastWheelMode(SleepMode.POWER_NAP)
+        job1.cancelAndJoin()
+
+        val repo2 = DataStoreLatencyPreferencesRepository(createDataStore(file, backgroundScope))
+        assertEquals(7 * 60 + 15, repo2.wakeUpTimeMinutes.first())
+        assertEquals(23 * 60 + 59, repo2.goToBedTimeMinutes.first())
+        assertEquals(SleepMode.GO_TO_BED_AT, repo2.lastWheelMode.first())
+
+        repo2.setWakeUpTimeMinutes(-10)
+        repo2.setGoToBedTimeMinutes(9999)
+        assertEquals(0, repo2.wakeUpTimeMinutes.first())
+        assertEquals(23 * 60 + 59, repo2.goToBedTimeMinutes.first())
     }
 }
 
