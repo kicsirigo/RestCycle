@@ -1,0 +1,27 @@
+# Gradle & Build outputs
+.gradle/
+.kotlin/
+build/
+app/build/
+captures/
+*.hprof
+
+# Local configuration & secrets
+local.properties
+*.jks
+*.keystore
+
+# Built APK / AAB artifacts (published via GitHub Releases)
+*.apk
+*.aab
+SHA256SUMS.txt
+
+# IDE & OS files
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Internal workspace notes
+AGENTS.md
+ins.md

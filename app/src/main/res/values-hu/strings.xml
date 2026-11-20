@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RestCycle</string>
+
+    <!-- Modes (ins.md:18-21) -->
+    <string name="mode_wake_up_at">Ébredés ekkor</string>
+    <string name="mode_sleep_now">Most fekszem le</string>
+    <string name="mode_go_to_bed_at">Lefekvés ekkor</string>
+    <string name="mode_power_nap">Szieszta</string>
+
+    <!-- Cycle Quality Labels -->
+    <string name="quality_optimal">Optimális</string>
+    <string name="quality_good">Jó</string>
+    <string name="quality_short">Rövid</string>
+
+    <!-- Power Nap Presets -->
+    <string name="nap_quick_title">Gyors frissítő</string>
+    <string name="nap_classic_title">Klasszikus szieszta</string>
+    <string name="nap_full_title">Teljes ciklusú szieszta</string>
+    <string name="nap_quick_desc">Azonnali frissesség, kábultság nélkül</string>
+    <string name="nap_classic_desc">Csúcsteljesítményű feltöltődés mélyalvás előtt</string>
+    <string name="nap_full_desc">Teljes REM és mélyalvási ciklus</string>
+    <string name="badge_suggested">Ajánlott</string>
+    <string name="nap_inertia_tooltip">Miért kerüld a 30–60 perces sziesztát? A mélyalvásból való ébredés alvási tehetetlenséget okoz.</string>
+
+    <!-- Alarms & Timers -->
+    <string name="alarm_label_wakeup">Ébresztő</string>
+    <string name="alarm_label_bedtime">Lefekvési emlékeztető</string>
+    <string name="alarm_label_nap">Szieszta ébresztő</string>
+    <string name="action_set_alarm">Ébresztő</string>
+    <string name="action_set_timer">Időzítő</string>
+    <string name="action_wake_alarm">Ébredési riasztás</string>
+    <string name="clock_app_unavailable">Nem található óra- vagy ébresztőalkalmazás az eszközön.</string>
+
+    <!-- Durations & Countdowns -->
+    <string name="cycles_count">%1$d ciklus</string>
+    <string name="cycles_count_single">%1$d ciklus</string>
+    <string name="duration_hours_minutes">%1$dó %2$sp</string>
+    <string name="duration_minutes_only">%1$d perc</string>
+    <string name="countdown_in_minutes">%1$d perc múlva</string>
+
+    <!-- Latency Controls -->
+    <string name="latency_sleep_label">Elalvási idő</string>
+    <string name="latency_nap_label">Szieszta elalvási idő</string>
+    <string name="latency_minutes_value">%1$d perc</string>
+
+    <!-- Time Wheel -->
+    <string name="wheel_am">AM</string>
+    <string name="wheel_pm">PM</string>
+
+    <!-- Header Subtitles & Sky Phases -->
+    <string name="header_subtitle_wake_up_at">Ideális lefekvési idők az ébredéshez</string>
+    <string name="header_subtitle_sleep_now">Ébredési ablakok azonnali elalváshoz</string>
+    <string name="header_subtitle_go_to_bed_at">Ébredési ablakok a tervezett lefekvéshez</string>
+    <string name="header_subtitle_power_nap">Nappali feltöltődés elalvási idővel</string>
+    <string name="sleep_now_current_time_label">Most: %1$s</string>
+    <string name="sky_phase_day">Nappal</string>
+    <string name="sky_phase_dawn_dusk">Aranyóra</string>
+    <string name="sky_phase_night">Csendes éj</string>
+
+    <!-- Accessibility & Guidance -->
+    <string name="cd_celestial_day">Nappali égbolt ragyogó nappal</string>
+    <string name="cd_celestial_dawn_dusk">Aranyóra égbolt a horizonton lévő nappal</string>
+    <string name="cd_celestial_night">Csendes éjszakai égbolt holdsarlóval és csillagokkal</string>
+    <string name="cd_time_wheel_hours">Óra</string>
+    <string name="cd_time_wheel_minutes">Perc</string>
+    <string name="cd_time_wheel_am_pm">Délelőtt vagy délután</string>
+    <string name="planned_bedtime_label">Lefekvés: %1$s</string>
+    <string name="sleep_now_hint">Az ébredési ablakok percenként automatikusan frissülnek</string>
+    <string name="power_nap_hint">Érints meg egy opciót az égbolt előnézetéhez, vagy állíts be ébresztőt</string>
+    <string name="cd_set_alarm_for_time">Ébresztő beállítása erre: %1$s</string>
+    <string name="cd_set_timer_for_nap">Időzítő beállítása ehhez: %1$s</string>
+
+    <!-- Settings & Credits -->
+    <string name="settings_title">Beállítások</string>
+    <string name="settings_time_format_label">Időformátum</string>
+    <string name="settings_time_format_system">Rendszer</string>
+    <string name="settings_time_format_24h">24 órás</string>
+    <string name="settings_time_format_12h">12 órás</string>
+    <string name="settings_theme_label">Téma</string>
+    <string name="settings_theme_dynamic">Dinamikus égbolt</string>
+    <string name="settings_theme_nord">Nord</string>
+    <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
+    <string name="settings_made_by">made by: kicsirigo</string>
+    <string name="action_close">Bezárás</string>
+</resources>

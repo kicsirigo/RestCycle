@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RestCycle</string>
+
+    <!-- Modes (ins.md:18-21) -->
+    <string name="mode_wake_up_at">Wake Up At</string>
+    <string name="mode_sleep_now">Sleep Now</string>
+    <string name="mode_go_to_bed_at">Go to Bed At</string>
+    <string name="mode_power_nap">Power Nap</string>
+
+    <!-- Cycle Quality Labels -->
+    <string name="quality_optimal">Optimal</string>
+    <string name="quality_good">Good</string>
+    <string name="quality_short">Short</string>
+
+    <!-- Power Nap Presets -->
+    <string name="nap_quick_title">Quick Boost</string>
+    <string name="nap_classic_title">Classic Power Nap</string>
+    <string name="nap_full_title">Full Cycle Nap</string>
+    <string name="nap_quick_desc">Instant alertness, zero grogginess</string>
+    <string name="nap_classic_desc">Peak cognitive recharge before deep sleep</string>
+    <string name="nap_full_desc">Complete REM and deep sleep cycle</string>
+    <string name="badge_suggested">Suggested</string>
+    <string name="nap_inertia_tooltip">Why skip 30–60 min naps? Waking during deep slow-wave sleep causes groggy sleep inertia.</string>
+
+    <!-- Alarms & Timers -->
+    <string name="alarm_label_wakeup">Wake up alarm</string>
+    <string name="alarm_label_bedtime">Bedtime reminder</string>
+    <string name="alarm_label_nap">Power nap wake alarm</string>
+    <string name="action_set_alarm">Set Alarm</string>
+    <string name="action_set_timer">Set Timer</string>
+    <string name="action_wake_alarm">Wake Alarm</string>
+    <string name="clock_app_unavailable">No clock or alarm app is available on this device.</string>
+
+    <!-- Durations & Countdowns -->
+    <string name="cycles_count">%1$d cycles</string>
+    <string name="cycles_count_single">%1$d cycle</string>
+    <string name="duration_hours_minutes">%1$dh %2$sm</string>
+    <string name="duration_minutes_only">%1$d min</string>
+    <string name="countdown_in_minutes">In %1$d min</string>
+
+    <!-- Latency Controls -->
+    <string name="latency_sleep_label">Fall-asleep time</string>
+    <string name="latency_nap_label">Nap fall-asleep time</string>
+    <string name="latency_minutes_value">%1$d min</string>
+
+    <!-- Time Wheel -->
+    <string name="wheel_am">AM</string>
+    <string name="wheel_pm">PM</string>
+
+    <!-- Header Subtitles & Sky Phases -->
+    <string name="header_subtitle_wake_up_at">Ideal bedtimes for your wake target</string>
+    <string name="header_subtitle_sleep_now">Wake windows if you fall asleep soon</string>
+    <string name="header_subtitle_go_to_bed_at">Wake windows for your planned bedtime</string>
+    <string name="header_subtitle_power_nap">Daytime recovery presets with nap latency</string>
+    <string name="sleep_now_current_time_label">Now: %1$s</string>
+    <string name="sky_phase_day">Daylight</string>
+    <string name="sky_phase_dawn_dusk">Golden Hour</string>
+    <string name="sky_phase_night">Quiet Night</string>
+
+    <!-- Accessibility & Guidance -->
+    <string name="cd_celestial_day">Daylight sky with radiant sun</string>
+    <string name="cd_celestial_dawn_dusk">Golden hour sky with sun at the horizon</string>
+    <string name="cd_celestial_night">Quiet night sky with crescent moon and stars</string>
+    <string name="cd_time_wheel_hours">Hours</string>
+    <string name="cd_time_wheel_minutes">Minutes</string>
+    <string name="cd_time_wheel_am_pm">AM or PM</string>
+    <string name="planned_bedtime_label">Bedtime: %1$s</string>
+    <string name="sleep_now_hint">Wake windows update automatically every minute</string>
+    <string name="power_nap_hint">Tap a preset to preview sky phase, or set an alarm or timer</string>
+    <string name="cd_set_alarm_for_time">Set alarm for %1$s</string>
+    <string name="cd_set_timer_for_nap">Set timer for %1$s</string>
+
+    <!-- Settings & Credits -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_time_format_label">Time Format</string>
+    <string name="settings_time_format_system">System</string>
+    <string name="settings_time_format_24h">24-hour</string>
+    <string name="settings_time_format_12h">12-hour</string>
+    <string name="settings_theme_label">Theme</string>
+    <string name="settings_theme_dynamic">Dynamic Sky</string>
+    <string name="settings_theme_nord">Nord</string>
+    <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
+    <string name="settings_made_by">made by: kicsirigo</string>
+    <string name="action_close">Close</string>
+</resources>
