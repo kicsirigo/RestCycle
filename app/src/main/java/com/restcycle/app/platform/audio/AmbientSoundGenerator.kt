@@ -21,12 +21,12 @@ enum class AmbientSoundMode(
     val useOffsetTextureLayer: Boolean = false
 ) {
     OFF(R.string.ambient_sound_off, "🔇", null),
-    BROWN_NOISE(R.string.ambient_sound_brown, "🌊", R.raw.ambient_brown_noise, useOffsetTextureLayer = true),
-    STREAM_RAIN(R.string.ambient_sound_rain, "🌧️", R.raw.ambient_stream_rain, useOffsetTextureLayer = true),
-    CAMPFIRE(R.string.ambient_sound_campfire, "🔥", R.raw.ambient_campfire, useOffsetTextureLayer = true),
-    NIGHT_CRICKETS(R.string.ambient_sound_crickets, "🦗", R.raw.ambient_night_crickets, useOffsetTextureLayer = true),
-    AMBIENT_PAD(R.string.ambient_sound_pad_432, "🎵", R.raw.ambient_pad_432, useOffsetTextureLayer = false),
-    SINGING_BOWL(R.string.ambient_sound_singing_bowl, "🔔", R.raw.ambient_singing_bowl, useOffsetTextureLayer = false);
+    BROWN_NOISE(R.string.ambient_sound_brown, "🌊", R.raw.ambient_brown_noise),
+    STREAM_RAIN(R.string.ambient_sound_rain, "🌧️", R.raw.ambient_stream_rain),
+    CAMPFIRE(R.string.ambient_sound_campfire, "🔥", R.raw.ambient_campfire),
+    NIGHT_CRICKETS(R.string.ambient_sound_crickets, "🦗", R.raw.ambient_night_crickets),
+    AMBIENT_PAD(R.string.ambient_sound_pad_432, "🎵", R.raw.ambient_pad_432),
+    SINGING_BOWL(R.string.ambient_sound_singing_bowl, "🔔", R.raw.ambient_singing_bowl);
 
     fun next(): AmbientSoundMode {
         val all = entries
