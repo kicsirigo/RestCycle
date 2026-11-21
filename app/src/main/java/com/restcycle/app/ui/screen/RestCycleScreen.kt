@@ -186,17 +186,15 @@ fun RestCycleScreen(
             }
         }
 
-        LaunchedEffect(ambientSoundMode, uiState.sleepLatencyMinutes) {
+        LaunchedEffect(ambientSoundMode) {
             if (ambientSoundMode == AmbientSoundMode.OFF) {
                 ambientSoundController.stop()
             } else {
                 ambientSoundController.start(
+                    context = baseContext,
                     scope = coroutineScope,
-                    mode = ambientSoundMode,
-                    fadeOutMinutes = uiState.sleepLatencyMinutes
-                ) {
-                    ambientSoundMode = AmbientSoundMode.OFF
-                }
+                    mode = ambientSoundMode
+                )
             }
         }
 
@@ -897,8 +895,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.5.0"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.5.1"
     } catch (_: Exception) {
-        "1.5.0"
+        "1.5.1"
     }
 }

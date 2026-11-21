@@ -112,49 +112,49 @@ private val NordNightLandscapeColors = LandscapeColors(
     waterShimmer = Color(0xFF88C0D0)
 )
 
-private val CatppuccinDayLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFDF8E1D),
-    celestialDisc = Color(0xFFFE640B),
-    farMountain = Color(0xFF9CA0B0),
-    midMountain = Color(0xFF7287FD),
-    midMountainHighlight = Color(0xFFB4BEFE),
-    foothill = Color(0xFF40A02B),
-    treeBack = Color(0xFF378828),
-    treeFront = Color(0xFF28691E),
-    lakeTop = Color(0xFF74C7EC),
-    lakeBottom = Color(0xFF1E66F5),
-    streamColor = Color(0xFF89DCEB),
-    waterShimmer = Color(0xFFEFF1F5)
+private val EverforestDayLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFDFA000),
+    celestialDisc = Color(0xFFF57D26),
+    farMountain = Color(0xFF939F91),
+    midMountain = Color(0xFF7FBBB3),
+    midMountainHighlight = Color(0xFFA7C080),
+    foothill = Color(0xFF5D7A58),
+    treeBack = Color(0xFF486446),
+    treeFront = Color(0xFF354F38),
+    lakeTop = Color(0xFF7FBBB3),
+    lakeBottom = Color(0xFF3A94C5),
+    streamColor = Color(0xFF83C092),
+    waterShimmer = Color(0xFFFDF6E3)
 )
 
-private val CatppuccinDawnDuskLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFF5A97F),
-    celestialDisc = Color(0xFFEED49F),
-    farMountain = Color(0xFF5B6078),
-    midMountain = Color(0xFF494D64),
-    midMountainHighlight = Color(0xFFF5A97F),
-    foothill = Color(0xFF2C3047),
-    treeBack = Color(0xFF24273A),
-    treeFront = Color(0xFF1B1D2C),
-    lakeTop = Color(0xFF6E738D),
-    lakeBottom = Color(0xFF24273A),
-    streamColor = Color(0xFF91D7E3),
-    waterShimmer = Color(0xFFF5A97F)
+private val EverforestDawnDuskLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFE69875),
+    celestialDisc = Color(0xFFDBBC7F),
+    farMountain = Color(0xFF4F5B58),
+    midMountain = Color(0xFF3D484D),
+    midMountainHighlight = Color(0xFFE69875),
+    foothill = Color(0xFF2D353B),
+    treeBack = Color(0xFF262D32),
+    treeFront = Color(0xFF1E2326),
+    lakeTop = Color(0xFF51706D),
+    lakeBottom = Color(0xFF272E33),
+    streamColor = Color(0xFF83C092),
+    waterShimmer = Color(0xFFDBBC7F)
 )
 
-private val CatppuccinNightLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFC6A0F6),
-    celestialDisc = Color(0xFFB7BDF8),
-    farMountain = Color(0xFF363A4F),
-    midMountain = Color(0xFF24273A),
-    midMountainHighlight = Color(0xFF8AADF4),
-    foothill = Color(0xFF181926),
-    treeBack = Color(0xFF161824),
-    treeFront = Color(0xFF10111A),
-    lakeTop = Color(0xFF3B4261),
-    lakeBottom = Color(0xFF12131D),
-    streamColor = Color(0xFF7DC4E4),
-    waterShimmer = Color(0xFFC6A0F6)
+private val EverforestNightLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFA7C080),
+    celestialDisc = Color(0xFFD3C6AA),
+    farMountain = Color(0xFF323C41),
+    midMountain = Color(0xFF272E33),
+    midMountainHighlight = Color(0xFF5C6A72),
+    foothill = Color(0xFF1E2326),
+    treeBack = Color(0xFF191E21),
+    treeFront = Color(0xFF131719),
+    lakeTop = Color(0xFF384B55),
+    lakeBottom = Color(0xFF161A1D),
+    streamColor = Color(0xFF7FBBB3),
+    waterShimmer = Color(0xFFA7C080)
 )
 
 private val TokyoNightDayLandscapeColors = LandscapeColors(
@@ -351,10 +351,10 @@ private fun landscapeColorsFor(
         SkyPhase.DAWN_DUSK -> NordDawnDuskLandscapeColors
         SkyPhase.NIGHT -> NordNightLandscapeColors
     }
-    AppThemeStyle.CATPPUCCIN_MACCHIATO -> when (skyPhase) {
-        SkyPhase.DAY -> CatppuccinDayLandscapeColors
-        SkyPhase.DAWN_DUSK -> CatppuccinDawnDuskLandscapeColors
-        SkyPhase.NIGHT -> CatppuccinNightLandscapeColors
+    AppThemeStyle.EVERFOREST -> when (skyPhase) {
+        SkyPhase.DAY -> EverforestDayLandscapeColors
+        SkyPhase.DAWN_DUSK -> EverforestDawnDuskLandscapeColors
+        SkyPhase.NIGHT -> EverforestNightLandscapeColors
     }
     AppThemeStyle.GRUVBOX -> when (skyPhase) {
         SkyPhase.DAY -> GruvboxDayLandscapeColors

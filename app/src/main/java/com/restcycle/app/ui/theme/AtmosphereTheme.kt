@@ -45,7 +45,7 @@ data class AtmospherePalette(
 enum class AppThemeStyle {
     TOKYO_NIGHT,
     NORD,
-    CATPPUCCIN_MACCHIATO,
+    EVERFOREST,
     GRUVBOX,
     DRACULA,
     ROSE_PINE
@@ -122,57 +122,57 @@ val NordNightAtmospherePalette = AtmospherePalette(
     isLightSystemBars = false
 )
 
-val CatppuccinDayAtmospherePalette = AtmospherePalette(
+val EverforestDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
-    backgroundGlow = Color(0xFFECEFF5),
-    backgroundTop = Color(0xFFE6E9EF),
-    backgroundMid = Color(0xFFE1E5ED),
-    backgroundBottom = Color(0xFFDCE0E8),
-    cardSurface = Color(0xFFEFF1F5),
-    cardSurfaceHighlighted = Color(0xFFE6E9EF),
-    accent = Color(0xFF8839EF),
-    accentText = Color(0xFF722ED1),
-    onAccent = Color(0xFFEFF1F5),
-    textPrimary = Color(0xFF4C4F69),
-    textSecondary = Color(0xFF5C5F77),
-    borderSubtle = Color(0xFFCCD0DA),
-    pillContainer = Color(0xFFDCE0E8),
+    backgroundGlow = Color(0xFFFDF6E3),
+    backgroundTop = Color(0xFFF4F0D9),
+    backgroundMid = Color(0xFFEFEBD4),
+    backgroundBottom = Color(0xFFE6E2CC),
+    cardSurface = Color(0xFFF8F5E4),
+    cardSurfaceHighlighted = Color(0xFFEDEADA),
+    accent = Color(0xFF8DA101),
+    accentText = Color(0xFF536A00),
+    onAccent = Color(0xFFFDF6E3),
+    textPrimary = Color(0xFF5C6A72),
+    textSecondary = Color(0xFF708089),
+    borderSubtle = Color(0xFFBEC5B2),
+    pillContainer = Color(0xFFE5E1CB),
     isLightSystemBars = true
 )
 
-val CatppuccinDawnDuskAtmospherePalette = AtmospherePalette(
+val EverforestDawnDuskAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAWN_DUSK,
-    backgroundGlow = Color(0xFFF5A97F),
-    backgroundTop = Color(0xFF3B3952),
-    backgroundMid = Color(0xFF2B2D42),
-    backgroundBottom = Color(0xFF24273A),
-    cardSurface = Color(0xFF363A4F),
-    cardSurfaceHighlighted = Color(0xFF494D64),
-    accent = Color(0xFFF5A97F),
-    accentText = Color(0xFFF5A97F),
-    onAccent = Color(0xFF24273A),
-    textPrimary = Color(0xFFCAD3F5),
-    textSecondary = Color(0xFFB8C0E0),
-    borderSubtle = Color(0xFF5B6078),
-    pillContainer = Color(0xFF30344A),
+    backgroundGlow = Color(0xFFE69875),
+    backgroundTop = Color(0xFF423D33),
+    backgroundMid = Color(0xFF323936),
+    backgroundBottom = Color(0xFF272E33),
+    cardSurface = Color(0xFF2E383C),
+    cardSurfaceHighlighted = Color(0xFF374145),
+    accent = Color(0xFFDBBC7F),
+    accentText = Color(0xFFDBBC7F),
+    onAccent = Color(0xFF272E33),
+    textPrimary = Color(0xFFD3C6AA),
+    textSecondary = Color(0xFFB9C0AB),
+    borderSubtle = Color(0xFF4F5B58),
+    pillContainer = Color(0xFF2B3438),
     isLightSystemBars = false
 )
 
-val CatppuccinNightAtmospherePalette = AtmospherePalette(
+val EverforestNightAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.NIGHT,
-    backgroundGlow = Color(0xFF1E2030),
-    backgroundTop = Color(0xFF181926),
-    backgroundMid = Color(0xFF151622),
-    backgroundBottom = Color(0xFF12131D),
-    cardSurface = Color(0xFF24273A),
-    cardSurfaceHighlighted = Color(0xFF363A4F),
-    accent = Color(0xFFC6A0F6),
-    accentText = Color(0xFFC6A0F6),
-    onAccent = Color(0xFF12131D),
-    textPrimary = Color(0xFFCAD3F5),
-    textSecondary = Color(0xFFA5ADCB),
-    borderSubtle = Color(0xFF494D64),
-    pillContainer = Color(0xFF202336),
+    backgroundGlow = Color(0xFF232A2E),
+    backgroundTop = Color(0xFF1E2326),
+    backgroundMid = Color(0xFF1A1F22),
+    backgroundBottom = Color(0xFF161A1D),
+    cardSurface = Color(0xFF272E33),
+    cardSurfaceHighlighted = Color(0xFF323C41),
+    accent = Color(0xFFA7C080),
+    accentText = Color(0xFFA7C080),
+    onAccent = Color(0xFF1E2326),
+    textPrimary = Color(0xFFD3C6AA),
+    textSecondary = Color(0xFF9DA9A0),
+    borderSubtle = Color(0xFF414B50),
+    pillContainer = Color(0xFF232A2E),
     isLightSystemBars = false
 )
 
@@ -408,10 +408,10 @@ fun paletteForTheme(
             SkyPhase.DAWN_DUSK -> NordDawnDuskAtmospherePalette
             SkyPhase.NIGHT -> NordNightAtmospherePalette
         }
-        AppThemeStyle.CATPPUCCIN_MACCHIATO -> when (skyPhase) {
-            SkyPhase.DAY -> CatppuccinDayAtmospherePalette
-            SkyPhase.DAWN_DUSK -> CatppuccinDawnDuskAtmospherePalette
-            SkyPhase.NIGHT -> CatppuccinNightAtmospherePalette
+        AppThemeStyle.EVERFOREST -> when (skyPhase) {
+            SkyPhase.DAY -> EverforestDayAtmospherePalette
+            SkyPhase.DAWN_DUSK -> EverforestDawnDuskAtmospherePalette
+            SkyPhase.NIGHT -> EverforestNightAtmospherePalette
         }
         AppThemeStyle.GRUVBOX -> when (skyPhase) {
             SkyPhase.DAY -> GruvboxDayAtmospherePalette

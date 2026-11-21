@@ -47,12 +47,12 @@ import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
-import com.restcycle.app.ui.theme.CatppuccinDawnDuskAtmospherePalette
-import com.restcycle.app.ui.theme.CatppuccinDayAtmospherePalette
-import com.restcycle.app.ui.theme.CatppuccinNightAtmospherePalette
 import com.restcycle.app.ui.theme.DraculaDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.DraculaDayAtmospherePalette
 import com.restcycle.app.ui.theme.DraculaNightAtmospherePalette
+import com.restcycle.app.ui.theme.EverforestDawnDuskAtmospherePalette
+import com.restcycle.app.ui.theme.EverforestDayAtmospherePalette
+import com.restcycle.app.ui.theme.EverforestNightAtmospherePalette
 import com.restcycle.app.ui.theme.GruvboxDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.GruvboxDayAtmospherePalette
 import com.restcycle.app.ui.theme.GruvboxNightAtmospherePalette
@@ -82,7 +82,7 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.5.0",
+    installedVersionName: String = "1.5.1",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {}
@@ -373,9 +373,9 @@ private val THEME_OPTIONS = listOf(
         listOf(NordDayAtmospherePalette.accent, NordDawnDuskAtmospherePalette.backgroundGlow, NordNightAtmospherePalette.accent)
     ),
     Triple(
-        AppThemeStyle.CATPPUCCIN_MACCHIATO,
-        R.string.settings_theme_catppuccin_macchiato,
-        listOf(CatppuccinDayAtmospherePalette.accent, CatppuccinDawnDuskAtmospherePalette.backgroundGlow, CatppuccinNightAtmospherePalette.accent)
+        AppThemeStyle.EVERFOREST,
+        R.string.settings_theme_everforest,
+        listOf(EverforestDayAtmospherePalette.accent, EverforestDawnDuskAtmospherePalette.backgroundGlow, EverforestNightAtmospherePalette.accent)
     ),
     Triple(
         AppThemeStyle.GRUVBOX,

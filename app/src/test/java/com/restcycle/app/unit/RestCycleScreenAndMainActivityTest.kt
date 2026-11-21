@@ -201,12 +201,12 @@ class RestCycleScreenAndMainActivityTest {
         composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_DIALOG).assertIsDisplayed()
         composeRule.onNodeWithText("made by: kicsirigo").assertIsDisplayed()
         composeRule.onNodeWithText("Nord").assertIsDisplayed()
-        composeRule.onNodeWithText("Catppuccin Macchiato").assertIsDisplayed()
+        composeRule.onNodeWithText("Everforest").assertIsDisplayed()
 
-        // Switch to 12-hour format and Nord -> Catppuccin Macchiato theme
+        // Switch to 12-hour format and Nord -> Everforest theme
         composeRule.onNodeWithText("12-hour").performClick()
         composeRule.onNodeWithText("Nord").performClick()
-        composeRule.onNodeWithText("Catppuccin Macchiato").performClick()
+        composeRule.onNodeWithText("Everforest").performClick()
         composeRule.onNodeWithText("Close").performClick()
         composeRule.waitForIdle()
 

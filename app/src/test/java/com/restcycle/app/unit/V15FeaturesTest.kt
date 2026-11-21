@@ -11,11 +11,13 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.restcycle.app.MainActivity
+import com.restcycle.app.R
 import com.restcycle.app.domain.model.SkyPhase
 import com.restcycle.app.domain.model.SleepHistoryCodec
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepQualityMood
 import com.restcycle.app.domain.model.SleepSessionRecord
+import com.restcycle.app.platform.audio.AmbientSoundController
 import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppThemeStyle
@@ -39,10 +41,10 @@ class V15FeaturesTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun tokyoNightIsDefaultTheme_dynamicSkyIsRemoved_draculaAndRosePineWork() {
+    fun tokyoNightIsDefaultTheme_everforestReplacesCatppuccin_draculaAndRosePineWork() {
         assertEquals(AppThemeStyle.TOKYO_NIGHT, LocalAppThemeStyle.let { AppThemeStyle.entries.first() })
 
-        listOf(AppThemeStyle.DRACULA, AppThemeStyle.ROSE_PINE).forEach { style ->
+        listOf(AppThemeStyle.EVERFOREST, AppThemeStyle.DRACULA, AppThemeStyle.ROSE_PINE).forEach { style ->
             val day = paletteForTheme(SkyPhase.DAY, style, pureAmoledNight = false)
             val night = paletteForTheme(SkyPhase.NIGHT, style, pureAmoledNight = false)
             val amoled = paletteForTheme(SkyPhase.NIGHT, style, pureAmoledNight = true)
@@ -54,10 +56,12 @@ class V15FeaturesTest {
             assertEquals(Color(0xFF000000), amoled.backgroundBottom)
         }
 
-        // Settings shows Dracula & Rosé Pine and no longer contains Dynamic Sky
+        // Settings shows Everforest, Dracula & Rosé Pine and removes Dynamic Sky & Catppuccin Macchiato
         composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_BUTTON).performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Dynamic Sky").assertDoesNotExist()
+        composeRule.onNodeWithText("Catppuccin Macchiato").assertDoesNotExist()
+        composeRule.onNodeWithText("Everforest").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Dracula").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Rosé Pine").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Tokyo Night").assertIsDisplayed().performClick()
@@ -66,7 +70,25 @@ class V15FeaturesTest {
     }
 
     @Test
-    fun ambientSoundPill_cyclesThroughAllSynthesizedSoundModes() {
+    fun ambientSoundPill_andMp3RawTracks_andTwoAndHalfHourMixCycleWork() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        listOf(
+            R.raw.ambient_brown_noise,
+            R.raw.ambient_stream_rain,
+            R.raw.ambient_campfire
+        ).forEach { rawId ->
+            val sizeBytes = context.resources.openRawResource(rawId).use { it.readBytes().size }
+            assertTrue("Expected non-empty MP3 raw asset $rawId, got $sizeBytes", sizeBytes > 500_000)
+        }
+
+        assertEquals(9000.0, AmbientSoundController.MIX_CYCLE_DURATION_SECONDS, 0.01)
+        listOf(0.0, 45.0, 1800.0, 4500.0, 8999.0).forEach { t ->
+            val (l, r, under) = AmbientSoundController.computeMixGains(t)
+            assertTrue("Left gain out of bounds at $t: $l", l in 0.50f..0.96f)
+            assertTrue("Right gain out of bounds at $t: $r", r in 0.50f..0.96f)
+            assertTrue("Under gain out of bounds at $t: $under", under in 0.08f..0.38f)
+        }
+
         assertEquals(AmbientSoundMode.BROWN_NOISE, AmbientSoundMode.OFF.next())
         assertEquals(AmbientSoundMode.STREAM_RAIN, AmbientSoundMode.BROWN_NOISE.next())
         assertEquals(AmbientSoundMode.CAMPFIRE, AmbientSoundMode.STREAM_RAIN.next())

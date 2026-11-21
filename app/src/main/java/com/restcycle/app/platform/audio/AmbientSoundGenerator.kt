@@ -1,23 +1,29 @@
 package com.restcycle.app.platform.audio
 
+import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioFormat
-import android.media.AudioTrack
+import android.media.MediaPlayer
 import com.restcycle.app.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.random.Random
 
-enum class AmbientSoundMode(val labelResId: Int, val emoji: String) {
-    OFF(R.string.ambient_sound_off, "🔇"),
-    BROWN_NOISE(R.string.ambient_sound_brown, "🌊"),
-    STREAM_RAIN(R.string.ambient_sound_rain, "🌧️"),
-    CAMPFIRE(R.string.ambient_sound_campfire, "🔥");
+enum class AmbientSoundMode(
+    val labelResId: Int,
+    val emoji: String,
+    val primaryRawResId: Int?,
+    val secondaryRawResId: Int?
+) {
+    OFF(R.string.ambient_sound_off, "🔇", null, null),
+    BROWN_NOISE(R.string.ambient_sound_brown, "🌊", R.raw.ambient_brown_noise, R.raw.ambient_stream_rain),
+    STREAM_RAIN(R.string.ambient_sound_rain, "🌧️", R.raw.ambient_stream_rain, R.raw.ambient_brown_noise),
+    CAMPFIRE(R.string.ambient_sound_campfire, "🔥", R.raw.ambient_campfire, R.raw.ambient_stream_rain);
 
     fun next(): AmbientSoundMode {
         val all = entries
@@ -25,109 +31,120 @@ enum class AmbientSoundMode(val labelResId: Int, val emoji: String) {
     }
 }
 
+/**
+ * Plays seamless 60s stereo `.mp3` base tracks via Android [MediaPlayer] and dynamically
+ * cross-blends primary and complementary layers across a 2.5-hour (150-minute) macro mix cycle
+ * that repeats cleanly without noticeable loops or high-frequency hiss.
+ */
 class AmbientSoundController {
-    private var playbackJob: Job? = null
+    private var mixJob: Job? = null
+    private var primaryPlayer: MediaPlayer? = null
+    private var secondaryPlayer: MediaPlayer? = null
 
     fun start(
+        context: Context,
         scope: CoroutineScope,
-        mode: AmbientSoundMode,
-        fadeOutMinutes: Int = 20,
-        onAutoStopped: () -> Unit = {}
+        mode: AmbientSoundMode
     ) {
         stop()
-        if (mode == AmbientSoundMode.OFF) return
+        val primaryResId = mode.primaryRawResId ?: return
+        val secondaryResId = mode.secondaryRawResId ?: primaryResId
+        val appContext = context.applicationContext
 
-        val sampleRate = 22050
-        val totalFadeSeconds = (fadeOutMinutes.coerceAtLeast(10)) * 60
-        val totalSamples = sampleRate.toLong() * totalFadeSeconds
-
-        playbackJob = scope.launch(Dispatchers.Default) {
-            var track: AudioTrack? = null
+        mixJob = scope.launch(Dispatchers.Default) {
+            var p1: MediaPlayer? = null
+            var p2: MediaPlayer? = null
             try {
-                val minBufBytes = AudioTrack.getMinBufferSize(
-                    sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT
-                )
-                val bufferFrames = (if (minBufBytes > 0) minBufBytes / 2 else sampleRate / 10).coerceAtLeast(2048)
-                track = AudioTrack.Builder()
-                    .setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build()
-                    )
-                    .setAudioFormat(
-                        AudioFormat.Builder()
-                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                            .setSampleRate(sampleRate)
-                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                            .build()
-                    )
-                    .setBufferSizeInBytes(bufferFrames * 2)
-                    .setTransferMode(AudioTrack.MODE_STREAM)
-                    .build()
+                p1 = createLoopingPlayer(appContext, primaryResId, initialVolume = 0.78f)
+                p2 = createLoopingPlayer(appContext, secondaryResId, initialVolume = 0.14f)
+                primaryPlayer = p1
+                secondaryPlayer = p2
 
-                track.play()
+                p1?.start()
+                p2?.start()
 
-                val pcm = ShortArray(bufferFrames)
-                val rng = Random(System.nanoTime())
-                var brownLast = 0f
-                var pinkB0 = 0f
-                var pinkB1 = 0f
-                var pinkB2 = 0f
-                var lpFire = 0f
-                var phase = 0.0
-                var writtenSamples = 0L
+                var elapsedSeconds = 0.0
+                while (isActive) {
+                    val (leftGain, rightGain, underGain) = computeMixGains(elapsedSeconds)
+                    p1?.setVolume(leftGain, rightGain)
+                    p2?.setVolume(underGain, underGain * 0.92f)
 
-                while (isActive && writtenSamples < totalSamples) {
-                    for (i in 0 until bufferFrames) {
-                        val fadeProgress = (writtenSamples.toFloat() / totalSamples.toFloat()).coerceIn(0f, 1f)
-                        val envelope = 1f - fadeProgress * fadeProgress
-                        val white = rng.nextFloat() * 2f - 1f
-
-                        val sample = when (mode) {
-                            AmbientSoundMode.BROWN_NOISE -> {
-                                brownLast = (brownLast + 0.032f * white) / 1.032f
-                                (brownLast * 2.8f).coerceIn(-0.9f, 0.9f)
-                            }
-                            AmbientSoundMode.STREAM_RAIN -> {
-                                pinkB0 = 0.997f * pinkB0 + white * 0.029f
-                                pinkB1 = 0.985f * pinkB1 + white * 0.032f
-                                pinkB2 = 0.950f * pinkB2 + white * 0.048f
-                                val lfo = 0.72f + 0.28f * sin(phase).toFloat()
-                                phase += 2.0 * PI * 0.16 / sampleRate
-                                ((pinkB0 + pinkB1 + pinkB2) * 0.45f * lfo).coerceIn(-0.85f, 0.85f)
-                            }
-                            AmbientSoundMode.CAMPFIRE -> {
-                                lpFire = lpFire * 0.97f + white * 0.03f
-                                val crackle = if (rng.nextFloat() < 0.0022f) (rng.nextFloat() * 2f - 1f) * 0.55f else 0f
-                                (lpFire * 2.2f + crackle).coerceIn(-0.85f, 0.85f)
-                            }
-                            AmbientSoundMode.OFF -> 0f
-                        }
-
-                        pcm[i] = (sample * envelope * Short.MAX_VALUE * 0.35f).toInt().toShort()
-                        writtenSamples++
-                    }
-                    track.write(pcm, 0, bufferFrames)
-                }
-                if (isActive) {
-                    onAutoStopped()
+                    delay(MIX_STEP_MS)
+                    elapsedSeconds = (elapsedSeconds + MIX_STEP_MS / 1000.0) % MIX_CYCLE_DURATION_SECONDS
                 }
             } catch (_: Throwable) {
-                // Gracefully no-op in headless/Robolectric environments without audio hardware
+                // Gracefully ignore on environments without hardware media codecs
             } finally {
-                runCatching {
-                    track?.stop()
-                    track?.release()
-                }
+                releasePlayers(p1, p2)
+                primaryPlayer = null
+                secondaryPlayer = null
             }
         }
     }
 
     fun stop() {
-        playbackJob?.cancel()
-        playbackJob = null
+        mixJob?.cancel()
+        mixJob = null
+        releasePlayers(primaryPlayer, secondaryPlayer)
+        primaryPlayer = null
+        secondaryPlayer = null
+    }
+
+    private fun createLoopingPlayer(
+        context: Context,
+        rawResId: Int,
+        initialVolume: Float
+    ): MediaPlayer? {
+        return runCatching {
+            MediaPlayer.create(context, rawResId)?.apply {
+                isLooping = true
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
+                setVolume(initialVolume, initialVolume)
+            }
+        }.getOrNull()
+    }
+
+    private fun releasePlayers(p1: MediaPlayer?, p2: MediaPlayer?) {
+        listOf(p1, p2).forEach { player ->
+            runCatching {
+                if (player?.isPlaying == true) {
+                    player.stop()
+                }
+            }
+            runCatching {
+                player?.release()
+            }
+        }
+    }
+
+    companion object {
+        // 2.5 hours (150 minutes = 9000 seconds) per macro mix cycle before seamless repeat
+        const val MIX_CYCLE_DURATION_SECONDS = 150 * 60.0
+        private const val MIX_STEP_MS = 500L
+
+        /**
+         * Computes gently breathing stereo and layer-blend gains for [elapsedSeconds] inside
+         * the 2.5-hour mix cycle using incommensurate slow LFO waves so transitions feel organic.
+         */
+        fun computeMixGains(elapsedSeconds: Double): Triple<Float, Float, Float> {
+            val cyclePhase = 2.0 * PI * (elapsedSeconds % MIX_CYCLE_DURATION_SECONDS) / MIX_CYCLE_DURATION_SECONDS
+            val waveSlow = sin(2.0 * PI * elapsedSeconds / 173.0)
+            val wavePan = sin(2.0 * PI * elapsedSeconds / 89.0)
+            val waveDeep = cos(cyclePhase * 3.0)
+
+            val primaryBase = (0.76 + 0.12 * waveSlow + 0.06 * waveDeep).coerceIn(0.60, 0.94)
+            val leftGain = (primaryBase * (1.0 + 0.06 * wavePan)).toFloat().coerceIn(0.50f, 0.96f)
+            val rightGain = (primaryBase * (1.0 - 0.06 * wavePan)).toFloat().coerceIn(0.50f, 0.96f)
+            val underGain = (0.20 + 0.11 * (-waveSlow) + 0.05 * cos(2.0 * PI * elapsedSeconds / 311.0))
+                .toFloat()
+                .coerceIn(0.08f, 0.38f)
+
+            return Triple(leftGain, rightGain, underGain)
+        }
     }
 }
