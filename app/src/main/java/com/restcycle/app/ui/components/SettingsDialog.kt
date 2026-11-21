@@ -50,15 +50,18 @@ import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.theme.CatppuccinDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.CatppuccinDayAtmospherePalette
 import com.restcycle.app.ui.theme.CatppuccinNightAtmospherePalette
-import com.restcycle.app.ui.theme.DawnDuskAtmospherePalette
-import com.restcycle.app.ui.theme.DayAtmospherePalette
+import com.restcycle.app.ui.theme.DraculaDawnDuskAtmospherePalette
+import com.restcycle.app.ui.theme.DraculaDayAtmospherePalette
+import com.restcycle.app.ui.theme.DraculaNightAtmospherePalette
 import com.restcycle.app.ui.theme.GruvboxDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.GruvboxDayAtmospherePalette
 import com.restcycle.app.ui.theme.GruvboxNightAtmospherePalette
-import com.restcycle.app.ui.theme.NightAtmospherePalette
 import com.restcycle.app.ui.theme.NordDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.NordDayAtmospherePalette
 import com.restcycle.app.ui.theme.NordNightAtmospherePalette
+import com.restcycle.app.ui.theme.RosePineDawnDuskAtmospherePalette
+import com.restcycle.app.ui.theme.RosePineDayAtmospherePalette
+import com.restcycle.app.ui.theme.RosePineNightAtmospherePalette
 import com.restcycle.app.ui.theme.TimeFormatPreference
 import com.restcycle.app.ui.theme.TokyoNightDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.TokyoNightDayAtmospherePalette
@@ -79,7 +82,7 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.4.1",
+    installedVersionName: String = "1.5.0",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {}
@@ -360,9 +363,9 @@ fun SettingsDialog(
 
 private val THEME_OPTIONS = listOf(
     Triple(
-        AppThemeStyle.DYNAMIC,
-        R.string.settings_theme_dynamic,
-        listOf(DayAtmospherePalette.accent, DawnDuskAtmospherePalette.backgroundGlow, NightAtmospherePalette.backgroundBottom)
+        AppThemeStyle.TOKYO_NIGHT,
+        R.string.settings_theme_tokyo_night,
+        listOf(TokyoNightDayAtmospherePalette.accent, TokyoNightDawnDuskAtmospherePalette.backgroundGlow, TokyoNightNightAtmospherePalette.accent)
     ),
     Triple(
         AppThemeStyle.NORD,
@@ -375,14 +378,19 @@ private val THEME_OPTIONS = listOf(
         listOf(CatppuccinDayAtmospherePalette.accent, CatppuccinDawnDuskAtmospherePalette.backgroundGlow, CatppuccinNightAtmospherePalette.accent)
     ),
     Triple(
-        AppThemeStyle.TOKYO_NIGHT,
-        R.string.settings_theme_tokyo_night,
-        listOf(TokyoNightDayAtmospherePalette.accent, TokyoNightDawnDuskAtmospherePalette.backgroundGlow, TokyoNightNightAtmospherePalette.accent)
-    ),
-    Triple(
         AppThemeStyle.GRUVBOX,
         R.string.settings_theme_gruvbox,
         listOf(GruvboxDayAtmospherePalette.accent, GruvboxDawnDuskAtmospherePalette.backgroundGlow, GruvboxNightAtmospherePalette.accent)
+    ),
+    Triple(
+        AppThemeStyle.DRACULA,
+        R.string.settings_theme_dracula,
+        listOf(DraculaDayAtmospherePalette.accent, DraculaDawnDuskAtmospherePalette.backgroundGlow, DraculaNightAtmospherePalette.accent)
+    ),
+    Triple(
+        AppThemeStyle.ROSE_PINE,
+        R.string.settings_theme_rose_pine,
+        listOf(RosePineDayAtmospherePalette.accent, RosePineDawnDuskAtmospherePalette.backgroundGlow, RosePineNightAtmospherePalette.accent)
     )
 )
 

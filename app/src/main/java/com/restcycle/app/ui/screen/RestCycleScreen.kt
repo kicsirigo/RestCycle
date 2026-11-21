@@ -49,11 +49,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,11 +72,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.restcycle.app.R
 import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepOption
+import com.restcycle.app.domain.model.SleepQualityMood
+import com.restcycle.app.domain.model.SleepSessionRecord
 import com.restcycle.app.domain.model.SleepUiState
+import com.restcycle.app.platform.audio.AmbientSoundController
+import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.platform.reminder.BedtimeReminderScheduler
 import com.restcycle.app.platform.update.GitHubUpdateChecker
 import com.restcycle.app.platform.update.UpdateUiState
@@ -91,6 +100,7 @@ import com.restcycle.app.ui.components.PowerNapPresetCard
 import com.restcycle.app.ui.components.RestCycleIcons
 import com.restcycle.app.ui.components.SettingsDialog
 import com.restcycle.app.ui.components.SleepOptionCard
+import com.restcycle.app.ui.components.SleepTrackerDialog
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
@@ -114,7 +124,7 @@ fun RestCycleScreen(
     onLaunchAlarm: (time: LocalTime, message: String) -> Boolean,
     onLaunchTimer: (durationSeconds: Int, message: String) -> Boolean,
     modifier: Modifier = Modifier,
-    themeStyle: AppThemeStyle = AppThemeStyle.DYNAMIC,
+    themeStyle: AppThemeStyle = AppThemeStyle.TOKYO_NIGHT,
     timeFormatPreference: TimeFormatPreference = TimeFormatPreference.SYSTEM,
     onSelectThemeStyle: (AppThemeStyle) -> Unit = {},
     onSelectTimeFormatPreference: (TimeFormatPreference) -> Unit = {},
@@ -125,7 +135,13 @@ fun RestCycleScreen(
     caffeineCutoffHours: Int = 8,
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
-    onToggleBedtimeReminder: (Boolean) -> Unit = {}
+    onToggleBedtimeReminder: (Boolean) -> Unit = {},
+    activeSleepStartMillis: Long = 0L,
+    sleepHistory: List<SleepSessionRecord> = emptyList(),
+    onStartSleepSession: () -> Unit = {},
+    onCompleteSleepSession: (SleepQualityMood) -> Unit = {},
+    onCancelSleepSession: () -> Unit = {},
+    openBreathingTrigger: Int = 0
 ) {
     val baseContext = LocalContext.current
     val baseConfiguration = LocalConfiguration.current
@@ -157,9 +173,59 @@ fun RestCycleScreen(
         var snackbarJob by remember { mutableStateOf<Job?>(null) }
         var showSettings by remember { mutableStateOf(false) }
         var showBreathing by remember { mutableStateOf(false) }
+        var showSleepTracker by remember { mutableStateOf(false) }
+        var ambientSoundMode by remember { mutableStateOf(AmbientSoundMode.OFF) }
+        val ambientSoundController = remember { AmbientSoundController() }
         var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
         val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
         val clockUnavailableMessage = stringResource(R.string.clock_app_unavailable)
+
+        LaunchedEffect(openBreathingTrigger) {
+            if (openBreathingTrigger > 0) {
+                showBreathing = true
+            }
+        }
+
+        LaunchedEffect(ambientSoundMode, uiState.sleepLatencyMinutes) {
+            if (ambientSoundMode == AmbientSoundMode.OFF) {
+                ambientSoundController.stop()
+            } else {
+                ambientSoundController.start(
+                    scope = coroutineScope,
+                    mode = ambientSoundMode,
+                    fadeOutMinutes = uiState.sleepLatencyMinutes
+                ) {
+                    ambientSoundMode = AmbientSoundMode.OFF
+                }
+            }
+        }
+
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val latestActiveSleepStart by rememberUpdatedState(activeSleepStartMillis)
+        var pausedWhileSleeping by remember { mutableStateOf(false) }
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_PAUSE -> {
+                        if (latestActiveSleepStart > 0L) {
+                            pausedWhileSleeping = true
+                        }
+                    }
+                    Lifecycle.Event.ON_RESUME -> {
+                        if (pausedWhileSleeping && latestActiveSleepStart > 0L) {
+                            showSleepTracker = true
+                            pausedWhileSleeping = false
+                        }
+                    }
+                    else -> Unit
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                ambientSoundController.stop()
+            }
+        }
 
         val activeBedtimeForHelpers: LocalTime? = when (uiState.mode) {
             SleepMode.WAKE_UP_AT -> uiState.options.firstOrNull { it.id == uiState.highlightedOptionId }?.targetTime
@@ -323,7 +389,16 @@ fun RestCycleScreen(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Top context action / status pill (+ Caffeine Cutoff pill) inside thumb zone
+                // Top context action / status pill (+ Caffeine Cutoff, Sleep Tracker & History pills) inside thumb zone
+                val isSleeping = activeSleepStartMillis > 0L
+                val onSleepActionClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    if (isSleeping) {
+                        showSleepTracker = true
+                    } else {
+                        onStartSleepSession()
+                    }
+                }
                 when (uiState.mode) {
                     SleepMode.WAKE_UP_AT -> {
                         val formattedWake = formatClockTime(uiState.selectedTime, uiState.is24HourFormat)
@@ -331,7 +406,8 @@ fun RestCycleScreen(
                             ?.takeIf { caffeineCutoffHours > 0 }
                             ?.minusHours(caffeineCutoffHours.toLong())
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             FilledTonalButton(
@@ -341,7 +417,7 @@ fun RestCycleScreen(
                                     notifyMissingClockIfFailed(onLaunchAlarm(uiState.selectedTime, message))
                                 },
                                 shape = RoundedCornerShape(50),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                 colors = ButtonDefaults.filledTonalButtonColors(
                                     containerColor = palette.pillContainer,
                                     contentColor = palette.textPrimary
@@ -375,6 +451,17 @@ fun RestCycleScreen(
                                     is24HourFormat = uiState.is24HourFormat
                                 )
                             }
+                            SleepSessionPill(
+                                isSleeping = isSleeping,
+                                compact = true,
+                                onClick = onSleepActionClick
+                            )
+                            SleepHistoryPill(
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    showSleepTracker = true
+                                }
+                            )
                         }
                     }
 
@@ -384,7 +471,8 @@ fun RestCycleScreen(
                             .takeIf { caffeineCutoffHours > 0 }
                             ?.minusHours(caffeineCutoffHours.toLong())
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
@@ -396,7 +484,7 @@ fun RestCycleScreen(
                                     text = stringResource(R.string.planned_bedtime_label, formattedBedtime),
                                     style = TabularTextStyles.headerLiveClock,
                                     color = palette.textPrimary,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                 )
                             }
                             if (caffeineCutoffTime != null) {
@@ -405,21 +493,49 @@ fun RestCycleScreen(
                                     is24HourFormat = uiState.is24HourFormat
                                 )
                             }
+                            SleepSessionPill(
+                                isSleeping = isSleeping,
+                                compact = true,
+                                onClick = onSleepActionClick
+                            )
+                            SleepHistoryPill(
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    showSleepTracker = true
+                                }
+                            )
                         }
                     }
 
                     SleepMode.SLEEP_NOW, SleepMode.POWER_NAP -> {
                         val formattedNow = formatClockTime(currentClockTime, uiState.is24HourFormat)
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = palette.pillContainer,
-                            border = BorderStroke(1.dp, palette.borderSubtle)
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = stringResource(R.string.sleep_now_current_time_label, formattedNow),
-                                style = TabularTextStyles.headerLiveClock,
-                                color = palette.textPrimary,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = palette.pillContainer,
+                                border = BorderStroke(1.dp, palette.borderSubtle)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.sleep_now_current_time_label, formattedNow),
+                                    style = TabularTextStyles.headerLiveClock,
+                                    color = palette.textPrimary,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                            SleepSessionPill(
+                                isSleeping = isSleeping,
+                                compact = false,
+                                onClick = onSleepActionClick
+                            )
+                            SleepHistoryPill(
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    showSleepTracker = true
+                                }
                             )
                         }
                     }
@@ -491,6 +607,8 @@ fun RestCycleScreen(
                             skyPhase = uiState.activeSkyPhase,
                             hintText = stringResource(id = hintRes),
                             onOpenBreathing = { showBreathing = true },
+                            ambientSoundMode = ambientSoundMode,
+                            onCycleAmbientSound = { ambientSoundMode = ambientSoundMode.next() },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(vertical = 4.dp)
@@ -592,7 +710,28 @@ fun RestCycleScreen(
 
         if (showBreathing) {
             BreathingExerciseDialog(
-                onDismiss = { showBreathing = false }
+                onDismiss = { showBreathing = false },
+                ambientSoundMode = ambientSoundMode,
+                onCycleAmbientSound = { ambientSoundMode = ambientSoundMode.next() }
+            )
+        }
+
+        if (showSleepTracker) {
+            SleepTrackerDialog(
+                activeSleepStartMillis = activeSleepStartMillis,
+                sleepHistory = sleepHistory,
+                is24HourFormat = uiState.is24HourFormat,
+                onStartSleep = {
+                    onStartSleepSession()
+                },
+                onCompleteSleepWithMood = { mood ->
+                    onCompleteSleepSession(mood)
+                    showSleepTracker = false
+                },
+                onCancelSleep = {
+                    onCancelSleepSession()
+                },
+                onDismiss = { showSleepTracker = false }
             )
         }
     }
@@ -600,6 +739,64 @@ fun RestCycleScreen(
 }
 
 private const val REQ_POST_NOTIFICATIONS = 5211
+
+@Composable
+private fun SleepSessionPill(
+    isSleeping: Boolean,
+    compact: Boolean,
+    onClick: () -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    val emoji = if (isSleeping) "☀️" else "🌙"
+    val label = if (compact) {
+        emoji
+    } else {
+        "$emoji ${stringResource(if (isSleeping) R.string.action_woke_up else R.string.action_start_sleep)}"
+    }
+    val shape = RoundedCornerShape(50)
+    Surface(
+        shape = shape,
+        color = if (isSleeping) palette.accent else palette.pillContainer,
+        border = BorderStroke(1.dp, if (isSleeping) palette.accent else palette.borderSubtle),
+        modifier = Modifier
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .testTag(RestCycleTestTags.SLEEP_TRACKER_BUTTON)
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isSleeping) palette.onAccent else palette.textPrimary,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = if (compact) 9.dp else 11.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun SleepHistoryPill(
+    onClick: () -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    val shape = RoundedCornerShape(50)
+    Surface(
+        shape = shape,
+        color = palette.pillContainer,
+        border = BorderStroke(1.dp, palette.borderSubtle),
+        modifier = Modifier
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .testTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON)
+    ) {
+        Text(
+            text = "📊",
+            fontSize = 12.sp,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
+        )
+    }
+}
 
 @Composable
 private fun CaffeineCutoffPill(
@@ -700,8 +897,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.4.1"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.5.0"
     } catch (_: Exception) {
-        "1.4.1"
+        "1.5.0"
     }
 }

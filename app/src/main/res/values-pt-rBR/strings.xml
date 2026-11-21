@@ -81,11 +81,12 @@
     <string name="settings_time_format_24h">24 horas</string>
     <string name="settings_time_format_12h">12 horas</string>
     <string name="settings_theme_label">Tema</string>
-    <string name="settings_theme_dynamic">Céu dinâmico</string>
     <string name="settings_theme_nord">Nord</string>
     <string name="settings_theme_catppuccin_macchiato">Catppuccin Macchiato</string>
     <string name="settings_theme_tokyo_night">Tokyo Night</string>
     <string name="settings_theme_gruvbox">Gruvbox</string>
+    <string name="settings_theme_dracula">Dracula</string>
+    <string name="settings_theme_rose_pine">Rosé Pine</string>
     <string name="settings_amoled_night">Preto AMOLED</string>
     <string name="settings_caffeine_label">Limite de cafeína</string>
     <string name="settings_caffeine_off">Desl.</string>
@@ -120,4 +121,35 @@
     <string name="reminder_channel_name">Lembretes de sono</string>
     <string name="reminder_notification_title">Hora de desacelerar</string>
     <string name="reminder_notification_body">O horário ideal para dormir é %1$s — prepare-se para uma boa noite de sono.</string>
+
+    <!-- Ambient Soundscape -->
+    <string name="ambient_sound_button">Sons</string>
+    <string name="ambient_sound_off">Desl.</string>
+    <string name="ambient_sound_brown">Ruído marrom</string>
+    <string name="ambient_sound_rain">Riacho</string>
+    <string name="ambient_sound_campfire">Fogueira</string>
+
+    <!-- App Shortcuts -->
+    <string name="shortcut_sleep_now_short">Dormir agora</string>
+    <string name="shortcut_sleep_now_long">Janelas para acordar dormindo agora</string>
+    <string name="shortcut_power_nap_short">Cochilo</string>
+    <string name="shortcut_power_nap_long">Abrir cochilo clássico de 20 min</string>
+    <string name="shortcut_breathe_short">Respirar 4-7-8</string>
+    <string name="shortcut_breathe_long">Iniciar exercício de respiração 4-7-8</string>
+
+    <!-- Sleep Tracker & 7-Day History -->
+    <string name="action_start_sleep">Dormir</string>
+    <string name="action_woke_up">Acordei</string>
+    <string name="sleep_tracker_title">Diário do sono</string>
+    <string name="sleep_wakeup_question">Como você dormiu?</string>
+    <string name="sleep_mood_exhausted">Exausto</string>
+    <string name="sleep_mood_fair">Razoável</string>
+    <string name="sleep_mood_rested">Descansado</string>
+    <string name="sleep_mood_energized">Energizado</string>
+    <string name="sleep_history_title">Últimas 7 noites</string>
+    <string name="sleep_history_empty">Toque em Dormir ao deitar para acompanhar seu descanso aqui.</string>
+    <string name="sleep_history_avg_cycles">Média: %1$s ciclos</string>
+    <string name="sleep_sleeping_since">Dormindo desde %1$s</string>
+    <string name="sleep_cancel_session">Cancelar sessão</string>
+    <string name="sleep_history_entry_meta">%1$d ciclos • %2$s</string>
 </resources>

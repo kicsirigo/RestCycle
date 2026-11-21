@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.restcycle.app.R
 import com.restcycle.app.domain.model.SkyPhase
+import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.ATMOSPHERE_TRANSITION_DURATION_MS
 import com.restcycle.app.ui.theme.AppThemeStyle
@@ -64,51 +65,6 @@ private data class LandscapeColors(
     val lakeBottom: Color,
     val streamColor: Color,
     val waterShimmer: Color
-)
-
-private val DayLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFF3C66E),
-    celestialDisc = Color(0xFFF6D67B),
-    farMountain = Color(0xFF9EB0B3),
-    midMountain = Color(0xFF728A8B),
-    midMountainHighlight = Color(0xFF9FB8AD),
-    foothill = Color(0xFF5D7A67),
-    treeBack = Color(0xFF425F4D),
-    treeFront = Color(0xFF314B3C),
-    lakeTop = Color(0xFF7BA2B5),
-    lakeBottom = Color(0xFF9AB8C2),
-    streamColor = Color(0xFF8FB8C7),
-    waterShimmer = Color(0xFFF6E8C3)
-)
-
-private val DawnDuskLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFE68345),
-    celestialDisc = Color(0xFFFFC178),
-    farMountain = Color(0xFF5A313A),
-    midMountain = Color(0xFF3E222D),
-    midMountainHighlight = Color(0xFF8C493F),
-    foothill = Color(0xFF281922),
-    treeBack = Color(0xFF23151D),
-    treeFront = Color(0xFF190E16),
-    lakeTop = Color(0xFF6B3E3E),
-    lakeBottom = Color(0xFF271724),
-    streamColor = Color(0xFFB3694F),
-    waterShimmer = Color(0xFFFFB56B)
-)
-
-private val NightLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFE6C687),
-    celestialDisc = Color(0xFFE6C687),
-    farMountain = Color(0xFF192038),
-    midMountain = Color(0xFF11172A),
-    midMountainHighlight = Color(0xFF293352),
-    foothill = Color(0xFF0A0F1D),
-    treeBack = Color(0xFF090F1A),
-    treeFront = Color(0xFF050810),
-    lakeTop = Color(0xFF121F38),
-    lakeBottom = Color(0xFF040710),
-    streamColor = Color(0xFF233759),
-    waterShimmer = Color(0xFFE6C687)
 )
 
 private val NordDayLandscapeColors = LandscapeColors(
@@ -291,10 +247,105 @@ private val GruvboxNightLandscapeColors = LandscapeColors(
     waterShimmer = Color(0xFFB8BB26)
 )
 
+private val DraculaDayLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFF9580FF),
+    celestialDisc = Color(0xFFFFB86C),
+    farMountain = Color(0xFF8C86B8),
+    midMountain = Color(0xFF6272A4),
+    midMountainHighlight = Color(0xFFBD93F9),
+    foothill = Color(0xFF436B63),
+    treeBack = Color(0xFF345650),
+    treeFront = Color(0xFF25413D),
+    lakeTop = Color(0xFF8BE9FD),
+    lakeBottom = Color(0xFF6272A4),
+    streamColor = Color(0xFF8BE9FD),
+    waterShimmer = Color(0xFFF8F8F2)
+)
+
+private val DraculaDawnDuskLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFFF79C6),
+    celestialDisc = Color(0xFFFFB86C),
+    farMountain = Color(0xFF564B75),
+    midMountain = Color(0xFF44475A),
+    midMountainHighlight = Color(0xFFFF79C6),
+    foothill = Color(0xFF282A36),
+    treeBack = Color(0xFF232530),
+    treeFront = Color(0xFF191A24),
+    lakeTop = Color(0xFF6272A4),
+    lakeBottom = Color(0xFF282A36),
+    streamColor = Color(0xFFBD93F9),
+    waterShimmer = Color(0xFFFFB86C)
+)
+
+private val DraculaNightLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFBD93F9),
+    celestialDisc = Color(0xFFF8F8F2),
+    farMountain = Color(0xFF383A4A),
+    midMountain = Color(0xFF282A36),
+    midMountainHighlight = Color(0xFF6272A4),
+    foothill = Color(0xFF1E1F29),
+    treeBack = Color(0xFF191A22),
+    treeFront = Color(0xFF12131A),
+    lakeTop = Color(0xFF44475A),
+    lakeBottom = Color(0xFF12131A),
+    streamColor = Color(0xFF8BE9FD),
+    waterShimmer = Color(0xFFBD93F9)
+)
+
+private val RosePineDayLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFEA9D34),
+    celestialDisc = Color(0xFFD7827E),
+    farMountain = Color(0xFFB4A8BA),
+    midMountain = Color(0xFF907AA9),
+    midMountainHighlight = Color(0xFFD7827E),
+    foothill = Color(0xFF56949F),
+    treeBack = Color(0xFF3E7884),
+    treeFront = Color(0xFF286983),
+    lakeTop = Color(0xFF9CCFD8),
+    lakeBottom = Color(0xFF56949F),
+    streamColor = Color(0xFF9CCFD8),
+    waterShimmer = Color(0xFFFFFAF3)
+)
+
+private val RosePineDawnDuskLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFEA9A97),
+    celestialDisc = Color(0xFFF6C177),
+    farMountain = Color(0xFF524F67),
+    midMountain = Color(0xFF393552),
+    midMountainHighlight = Color(0xFFEA9A97),
+    foothill = Color(0xFF2A273F),
+    treeBack = Color(0xFF232136),
+    treeFront = Color(0xFF191724),
+    lakeTop = Color(0xFF3E8FB0),
+    lakeBottom = Color(0xFF232136),
+    streamColor = Color(0xFF9CCFD8),
+    waterShimmer = Color(0xFFF6C177)
+)
+
+private val RosePineNightLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFEBBCBA),
+    celestialDisc = Color(0xFFE0DEF4),
+    farMountain = Color(0xFF393552),
+    midMountain = Color(0xFF26233A),
+    midMountainHighlight = Color(0xFFC4A7E7),
+    foothill = Color(0xFF1F1D2E),
+    treeBack = Color(0xFF191724),
+    treeFront = Color(0xFF100E18),
+    lakeTop = Color(0xFF31748F),
+    lakeBottom = Color(0xFF100E18),
+    streamColor = Color(0xFF9CCFD8),
+    waterShimmer = Color(0xFFEBBCBA)
+)
+
 private fun landscapeColorsFor(
     skyPhase: SkyPhase,
     themeStyle: AppThemeStyle
 ): LandscapeColors = when (themeStyle) {
+    AppThemeStyle.TOKYO_NIGHT -> when (skyPhase) {
+        SkyPhase.DAY -> TokyoNightDayLandscapeColors
+        SkyPhase.DAWN_DUSK -> TokyoNightDawnDuskLandscapeColors
+        SkyPhase.NIGHT -> TokyoNightNightLandscapeColors
+    }
     AppThemeStyle.NORD -> when (skyPhase) {
         SkyPhase.DAY -> NordDayLandscapeColors
         SkyPhase.DAWN_DUSK -> NordDawnDuskLandscapeColors
@@ -305,20 +356,20 @@ private fun landscapeColorsFor(
         SkyPhase.DAWN_DUSK -> CatppuccinDawnDuskLandscapeColors
         SkyPhase.NIGHT -> CatppuccinNightLandscapeColors
     }
-    AppThemeStyle.TOKYO_NIGHT -> when (skyPhase) {
-        SkyPhase.DAY -> TokyoNightDayLandscapeColors
-        SkyPhase.DAWN_DUSK -> TokyoNightDawnDuskLandscapeColors
-        SkyPhase.NIGHT -> TokyoNightNightLandscapeColors
-    }
     AppThemeStyle.GRUVBOX -> when (skyPhase) {
         SkyPhase.DAY -> GruvboxDayLandscapeColors
         SkyPhase.DAWN_DUSK -> GruvboxDawnDuskLandscapeColors
         SkyPhase.NIGHT -> GruvboxNightLandscapeColors
     }
-    AppThemeStyle.DYNAMIC -> when (skyPhase) {
-        SkyPhase.DAY -> DayLandscapeColors
-        SkyPhase.DAWN_DUSK -> DawnDuskLandscapeColors
-        SkyPhase.NIGHT -> NightLandscapeColors
+    AppThemeStyle.DRACULA -> when (skyPhase) {
+        SkyPhase.DAY -> DraculaDayLandscapeColors
+        SkyPhase.DAWN_DUSK -> DraculaDawnDuskLandscapeColors
+        SkyPhase.NIGHT -> DraculaNightLandscapeColors
+    }
+    AppThemeStyle.ROSE_PINE -> when (skyPhase) {
+        SkyPhase.DAY -> RosePineDayLandscapeColors
+        SkyPhase.DAWN_DUSK -> RosePineDawnDuskLandscapeColors
+        SkyPhase.NIGHT -> RosePineNightLandscapeColors
     }
 }
 
@@ -368,7 +419,9 @@ fun CelestialLandscapeScene(
     skyPhase: SkyPhase,
     hintText: String,
     modifier: Modifier = Modifier,
-    onOpenBreathing: (() -> Unit)? = null
+    onOpenBreathing: (() -> Unit)? = null,
+    ambientSoundMode: AmbientSoundMode = AmbientSoundMode.OFF,
+    onCycleAmbientSound: (() -> Unit)? = null
 ) {
     val palette = AtmosphereTheme.palette
     val themeStyle = AtmosphereTheme.themeStyle
@@ -701,6 +754,43 @@ fun CelestialLandscapeScene(
                 ),
                 blendMode = BlendMode.DstIn
             )
+        }
+
+        if (onCycleAmbientSound != null) {
+            val soundActive = ambientSoundMode != AmbientSoundMode.OFF
+            val soundLabel = if (soundActive) {
+                "${ambientSoundMode.emoji} ${stringResource(ambientSoundMode.labelResId)}"
+            } else {
+                "🌧️ ${stringResource(R.string.ambient_sound_button)}"
+            }
+            val shape = RoundedCornerShape(50)
+            Surface(
+                shape = shape,
+                color = if (soundActive) {
+                    palette.accent.copy(alpha = 0.24f)
+                } else {
+                    palette.pillContainer.copy(alpha = 0.85f)
+                },
+                border = BorderStroke(1.dp, if (soundActive) palette.accent else palette.borderSubtle),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = 4.dp, start = 4.dp)
+                    .clip(shape)
+                    .testTag(RestCycleTestTags.AMBIENT_SOUND_BUTTON)
+                    .clickable {
+                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        onCycleAmbientSound()
+                    }
+            ) {
+                Text(
+                    text = soundLabel,
+                    color = if (soundActive) palette.accentText else palette.textPrimary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                )
+            }
         }
 
         if (onOpenBreathing != null) {

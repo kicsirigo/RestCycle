@@ -8,7 +8,10 @@ import com.restcycle.app.data.preferences.LatencyPreferencesRepository
 import com.restcycle.app.domain.calculator.SkyPhaseResolver
 import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.calculator.SleepOptionLabels
+import com.restcycle.app.domain.model.SleepHistoryCodec
 import com.restcycle.app.domain.model.SleepMode
+import com.restcycle.app.domain.model.SleepQualityMood
+import com.restcycle.app.domain.model.SleepSessionRecord
 import com.restcycle.app.domain.model.SleepUiState
 import com.restcycle.app.platform.time.AndroidTimeFormatProvider
 import com.restcycle.app.ui.theme.AppLanguage
@@ -28,6 +31,7 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.coroutineContext
+import kotlin.math.roundToInt
 
 class SleepViewModel(
     private val repository: LatencyPreferencesRepository,
@@ -64,7 +68,7 @@ class SleepViewModel(
     private val _uiState = MutableStateFlow(buildUiState())
     val uiState: StateFlow<SleepUiState> = _uiState.asStateFlow()
 
-    private val _themeStyle = MutableStateFlow(AppThemeStyle.DYNAMIC)
+    private val _themeStyle = MutableStateFlow(AppThemeStyle.TOKYO_NIGHT)
     val themeStyle: StateFlow<AppThemeStyle> = _themeStyle.asStateFlow()
 
     private val _timeFormatPreference = MutableStateFlow(TimeFormatPreference.SYSTEM)
@@ -81,6 +85,12 @@ class SleepViewModel(
 
     private val _bedtimeReminderEnabled = MutableStateFlow(false)
     val bedtimeReminderEnabled: StateFlow<Boolean> = _bedtimeReminderEnabled.asStateFlow()
+
+    private val _activeSleepStartMillis = MutableStateFlow(0L)
+    val activeSleepStartMillis: StateFlow<Long> = _activeSleepStartMillis.asStateFlow()
+
+    private val _sleepHistory = MutableStateFlow<List<SleepSessionRecord>>(emptyList())
+    val sleepHistory: StateFlow<List<SleepSessionRecord>> = _sleepHistory.asStateFlow()
 
     init {
         collectPref(repository.sleepLatencyMinutes, sleepWritesInFlight) { stored ->
@@ -130,6 +140,8 @@ class SleepViewModel(
         collectPref(repository.pureAmoledNight, genericWritesInFlight) { _pureAmoledNight.value = it }
         collectPref(repository.caffeineCutoffHours, genericWritesInFlight) { _caffeineCutoffHours.value = it }
         collectPref(repository.bedtimeReminderEnabled, genericWritesInFlight) { _bedtimeReminderEnabled.value = it }
+        collectPref(repository.activeSleepStartMillis, genericWritesInFlight) { _activeSleepStartMillis.value = it }
+        collectPref(repository.sleepHistory, genericWritesInFlight) { _sleepHistory.value = it }
         collectPref(repository.timeFormatPreference, genericWritesInFlight) { stored ->
             if (stored != currentTimeFormatPref) {
                 currentTimeFormatPref = stored
@@ -291,6 +303,54 @@ class SleepViewModel(
         if (_bedtimeReminderEnabled.value == enabled) return
         _bedtimeReminderEnabled.value = enabled
         persistPref { repository.setBedtimeReminderEnabled(enabled) }
+    }
+
+    fun startSleepSession(nowEpochMillis: Long = System.currentTimeMillis()) {
+        val safeStart = nowEpochMillis.coerceAtLeast(1L)
+        _activeSleepStartMillis.value = safeStart
+        persistPref { repository.setActiveSleepStartMillis(safeStart) }
+    }
+
+    fun completeSleepSession(
+        mood: SleepQualityMood,
+        nowEpochMillis: Long = System.currentTimeMillis()
+    ) {
+        val existingStart = _activeSleepStartMillis.value
+        val start = if (existingStart > 0L) {
+            existingStart
+        } else {
+            nowEpochMillis - SleepHistoryCodec.DEFAULT_FALLBACK_SLEEP_MINUTES * 60_000L
+        }
+        val elapsedMinutes = ((nowEpochMillis - start) / 60_000L).toInt()
+        val durationMinutes = if (elapsedMinutes < 15) {
+            SleepHistoryCodec.DEFAULT_FALLBACK_SLEEP_MINUTES
+        } else {
+            elapsedMinutes.coerceAtMost(14 * 60)
+        }
+        val cycles = ((durationMinutes - sleepLatencyMinutes).coerceAtLeast(90) / 90.0)
+            .roundToInt()
+            .coerceIn(1, 7)
+        val record = SleepSessionRecord(
+            startEpochMillis = start,
+            endEpochMillis = nowEpochMillis,
+            durationMinutes = durationMinutes,
+            cycles = cycles,
+            mood = mood
+        )
+        val updated = (listOf(record) + _sleepHistory.value)
+            .take(SleepHistoryCodec.MAX_HISTORY_RECORDS)
+        _sleepHistory.value = updated
+        _activeSleepStartMillis.value = 0L
+        persistPref {
+            repository.setActiveSleepStartMillis(0L)
+            repository.setSleepHistory(updated)
+        }
+    }
+
+    fun cancelSleepSession() {
+        if (_activeSleepStartMillis.value == 0L) return
+        _activeSleepStartMillis.value = 0L
+        persistPref { repository.setActiveSleepStartMillis(0L) }
     }
 
     fun refreshTimeFormat(is24Hour: Boolean) {

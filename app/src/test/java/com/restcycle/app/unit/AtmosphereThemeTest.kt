@@ -27,11 +27,11 @@ import com.restcycle.app.domain.model.SkyPhase
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
-import com.restcycle.app.ui.theme.DawnDuskAtmospherePalette
-import com.restcycle.app.ui.theme.DayAtmospherePalette
-import com.restcycle.app.ui.theme.NightAtmospherePalette
 import com.restcycle.app.ui.theme.RestCycleTypography
 import com.restcycle.app.ui.theme.TabularTextStyles
+import com.restcycle.app.ui.theme.TokyoNightDawnDuskAtmospherePalette
+import com.restcycle.app.ui.theme.TokyoNightDayAtmospherePalette
+import com.restcycle.app.ui.theme.TokyoNightNightAtmospherePalette
 import com.restcycle.app.ui.theme.paletteForTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -51,27 +51,27 @@ class AtmosphereThemeUnitTest {
 
     @Test
     fun palettesMatchExactSpecificationTokens() {
-        assertEquals(Color(0xFFE8E0CE), DayAtmospherePalette.backgroundGlow)
-        assertEquals(Color(0xFFD5DDD8), DayAtmospherePalette.backgroundBottom)
-        assertEquals(Color(0xFFEDE8DC), DayAtmospherePalette.cardSurface)
-        assertEquals(Color(0xFFF59E0B), DayAtmospherePalette.accent)
-        assertEquals(Color(0xFF1A1C22), DayAtmospherePalette.textPrimary)
-        assertTrue(DayAtmospherePalette.isLightSystemBars)
+        assertEquals(Color(0xFFECEEF5), TokyoNightDayAtmospherePalette.backgroundGlow)
+        assertEquals(Color(0xFFD8DCEB), TokyoNightDayAtmospherePalette.backgroundBottom)
+        assertEquals(Color(0xFFF0F2F8), TokyoNightDayAtmospherePalette.cardSurface)
+        assertEquals(Color(0xFF2E7DE9), TokyoNightDayAtmospherePalette.accent)
+        assertEquals(Color(0xFF24283B), TokyoNightDayAtmospherePalette.textPrimary)
+        assertTrue(TokyoNightDayAtmospherePalette.isLightSystemBars)
 
-        assertEquals(Color(0xFFD96B27), DawnDuskAtmospherePalette.backgroundGlow)
-        assertEquals(Color(0xFF4A2525), DawnDuskAtmospherePalette.backgroundTop)
-        assertEquals(Color(0xFF1F1523), DawnDuskAtmospherePalette.backgroundBottom)
-        assertEquals(Color(0xFF261B20), DawnDuskAtmospherePalette.cardSurface)
-        assertEquals(Color(0xFFFF8C42), DawnDuskAtmospherePalette.accent)
-        assertEquals(Color(0xFFF2E4D4), DawnDuskAtmospherePalette.textPrimary)
-        assertFalse(DawnDuskAtmospherePalette.isLightSystemBars)
+        assertEquals(Color(0xFFFF9E64), TokyoNightDawnDuskAtmospherePalette.backgroundGlow)
+        assertEquals(Color(0xFF3E2A3D), TokyoNightDawnDuskAtmospherePalette.backgroundTop)
+        assertEquals(Color(0xFF1A1B26), TokyoNightDawnDuskAtmospherePalette.backgroundBottom)
+        assertEquals(Color(0xFF24283B), TokyoNightDawnDuskAtmospherePalette.cardSurface)
+        assertEquals(Color(0xFFFF9E64), TokyoNightDawnDuskAtmospherePalette.accent)
+        assertEquals(Color(0xFFE5E9F8), TokyoNightDawnDuskAtmospherePalette.textPrimary)
+        assertFalse(TokyoNightDawnDuskAtmospherePalette.isLightSystemBars)
 
-        assertEquals(Color(0xFF000000), NightAtmospherePalette.backgroundTop)
-        assertEquals(Color(0xFF000000), NightAtmospherePalette.backgroundBottom)
-        assertEquals(Color(0xFF11131A), NightAtmospherePalette.cardSurface)
-        assertEquals(Color(0xFFE6C687), NightAtmospherePalette.accent)
-        assertEquals(Color(0xFFE4E0D8), NightAtmospherePalette.textPrimary)
-        assertFalse(NightAtmospherePalette.isLightSystemBars)
+        assertEquals(Color(0xFF020204), TokyoNightNightAtmospherePalette.backgroundTop)
+        assertEquals(Color(0xFF010102), TokyoNightNightAtmospherePalette.backgroundBottom)
+        assertEquals(Color(0xFF1F2335), TokyoNightNightAtmospherePalette.cardSurface)
+        assertEquals(Color(0xFF7AA2F7), TokyoNightNightAtmospherePalette.accent)
+        assertEquals(Color(0xFFC0CAF5), TokyoNightNightAtmospherePalette.textPrimary)
+        assertFalse(TokyoNightNightAtmospherePalette.isLightSystemBars)
     }
 
     @Test
@@ -112,7 +112,7 @@ class AtmosphereThemeUnitTest {
         }
 
         composeRule.waitForIdle()
-        assertEquals(Color(0xFF000000).toArgb(), sampledBg.toArgb())
+        assertEquals(TokyoNightNightAtmospherePalette.backgroundBottom.toArgb(), sampledBg.toArgb())
 
         composeRule.mainClock.autoAdvance = false
         composeRule.runOnUiThread {
@@ -124,13 +124,13 @@ class AtmosphereThemeUnitTest {
         composeRule.waitForIdle()
 
         assertTrue(
-            "Expected mid-morph red in 0.15..0.91, was ${sampledBg.red}",
-            sampledBg.red in 0.15f..0.91f
+            "Expected mid-morph red in 0.15..0.85, was ${sampledBg.red}",
+            sampledBg.red in 0.15f..0.85f
         )
 
         composeRule.mainClock.advanceTimeBy(400L)
         composeRule.waitForIdle()
-        assertEquals(DayAtmospherePalette.backgroundBottom.toArgb(), sampledBg.toArgb())
+        assertEquals(TokyoNightDayAtmospherePalette.backgroundBottom.toArgb(), sampledBg.toArgb())
     }
 
     @Test
@@ -143,48 +143,48 @@ class AtmosphereThemeUnitTest {
             return (lighter + 0.05f) / (darker + 0.05f)
         }
 
-        // DAY accent = #F59E0B preserved; accentText achieves >= 4.5:1 across all DAY surfaces
-        assertEquals(Color(0xFFF59E0B), DayAtmospherePalette.accent)
+        // Default Tokyo Night DAY accentText achieves >= 4.5:1 across all DAY surfaces
+        assertEquals(Color(0xFF2E7DE9), TokyoNightDayAtmospherePalette.accent)
         listOf(
-            DayAtmospherePalette.cardSurface,
-            DayAtmospherePalette.cardSurfaceHighlighted,
-            DayAtmospherePalette.backgroundBottom,
-            DayAtmospherePalette.pillContainer
+            TokyoNightDayAtmospherePalette.cardSurface,
+            TokyoNightDayAtmospherePalette.cardSurfaceHighlighted,
+            TokyoNightDayAtmospherePalette.backgroundBottom,
+            TokyoNightDayAtmospherePalette.pillContainer
         ).forEach { surface ->
-            val cr = contrastRatio(DayAtmospherePalette.accentText, surface)
+            val cr = contrastRatio(TokyoNightDayAtmospherePalette.accentText, surface)
             assertTrue("Expected DAY accentText CR >= 4.5 on $surface, got $cr", cr >= 4.5f)
         }
 
         // DAWN_DUSK & NIGHT accentText >= 4.5:1 on card/pill surfaces
         listOf(
-            DawnDuskAtmospherePalette.cardSurface,
-            DawnDuskAtmospherePalette.cardSurfaceHighlighted,
-            DawnDuskAtmospherePalette.pillContainer
+            TokyoNightDawnDuskAtmospherePalette.cardSurface,
+            TokyoNightDawnDuskAtmospherePalette.cardSurfaceHighlighted,
+            TokyoNightDawnDuskAtmospherePalette.pillContainer
         ).forEach { surface ->
-            val cr = contrastRatio(DawnDuskAtmospherePalette.accentText, surface)
+            val cr = contrastRatio(TokyoNightDawnDuskAtmospherePalette.accentText, surface)
             assertTrue("Expected DAWN_DUSK accentText CR >= 4.5 on $surface, got $cr", cr >= 4.5f)
         }
         listOf(
-            NightAtmospherePalette.cardSurface,
-            NightAtmospherePalette.cardSurfaceHighlighted,
-            NightAtmospherePalette.pillContainer
+            TokyoNightNightAtmospherePalette.cardSurface,
+            TokyoNightNightAtmospherePalette.cardSurfaceHighlighted,
+            TokyoNightNightAtmospherePalette.pillContainer
         ).forEach { surface ->
-            val cr = contrastRatio(NightAtmospherePalette.accentText, surface)
+            val cr = contrastRatio(TokyoNightNightAtmospherePalette.accentText, surface)
             assertTrue("Expected NIGHT accentText CR >= 4.5 on $surface, got $cr", cr >= 4.5f)
         }
 
-        // DAWN_DUSK CelestialHeader subtitle over translucent dark scrim (0.68f) atop top #D96B27 glow
-        val headerScrimBg = Color(0xFF1F1523).copy(alpha = 0.68f)
-            .compositeOver(DawnDuskAtmospherePalette.backgroundGlow)
-        val subtitleCr = contrastRatio(DawnDuskAtmospherePalette.textSecondary, headerScrimBg)
+        // DAWN_DUSK CelestialHeader subtitle over translucent dark scrim (0.68f) atop top #FF9E64 glow
+        val headerScrimBg = TokyoNightDawnDuskAtmospherePalette.backgroundBottom.copy(alpha = 0.68f)
+            .compositeOver(TokyoNightDawnDuskAtmospherePalette.backgroundGlow)
+        val subtitleCr = contrastRatio(TokyoNightDawnDuskAtmospherePalette.textSecondary, headerScrimBg)
         assertTrue("Expected DAWN_DUSK header subtitle CR >= 4.5, got $subtitleCr", subtitleCr >= 4.5f)
-        val titleCr = contrastRatio(DawnDuskAtmospherePalette.textPrimary, headerScrimBg)
+        val titleCr = contrastRatio(TokyoNightDawnDuskAtmospherePalette.textPrimary, headerScrimBg)
         assertTrue("Expected DAWN_DUSK header title CR >= 4.5, got $titleCr", titleCr >= 4.5f)
     }
 
     @Test
-    fun nordAndCatppuccinThemes_adaptAcrossAllThreeSkyPhases() {
-        listOf(AppThemeStyle.NORD, AppThemeStyle.CATPPUCCIN_MACCHIATO).forEach { style ->
+    fun allThemeStyles_adaptAcrossAllThreeSkyPhases() {
+        AppThemeStyle.entries.forEach { style ->
             val day = paletteForTheme(SkyPhase.DAY, style)
             val dawn = paletteForTheme(SkyPhase.DAWN_DUSK, style)
             val night = paletteForTheme(SkyPhase.NIGHT, style)

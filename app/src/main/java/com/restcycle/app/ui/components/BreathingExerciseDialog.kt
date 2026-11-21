@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.restcycle.app.R
+import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.theme.TabularTextStyles
@@ -58,7 +59,9 @@ private enum class BreathingPhase(val durationSeconds: Int, val labelResId: Int)
 
 @Composable
 fun BreathingExerciseDialog(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    ambientSoundMode: AmbientSoundMode = AmbientSoundMode.OFF,
+    onCycleAmbientSound: (() -> Unit)? = null
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
@@ -218,25 +221,58 @@ fun BreathingExerciseDialog(
                     color = palette.textSecondary
                 )
 
-                FilledTonalButton(
-                    onClick = {
-                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                        isRunning = !isRunning
-                    },
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = palette.pillContainer,
-                        contentColor = palette.textPrimary
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = stringResource(
-                            if (isRunning) R.string.breathing_pause else R.string.breathing_resume
-                        ),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
-                    )
+                    FilledTonalButton(
+                        onClick = {
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            isRunning = !isRunning
+                        },
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = palette.pillContainer,
+                            contentColor = palette.textPrimary
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(
+                                if (isRunning) R.string.breathing_pause else R.string.breathing_resume
+                            ),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                    if (onCycleAmbientSound != null) {
+                        val soundActive = ambientSoundMode != AmbientSoundMode.OFF
+                        val soundText = if (soundActive) {
+                            "${ambientSoundMode.emoji} ${stringResource(ambientSoundMode.labelResId)}"
+                        } else {
+                            "🌧️ ${stringResource(R.string.ambient_sound_button)}"
+                        }
+                        FilledTonalButton(
+                            onClick = {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onCycleAmbientSound()
+                            },
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = if (soundActive) palette.accent else palette.pillContainer,
+                                contentColor = if (soundActive) palette.onAccent else palette.textPrimary
+                            )
+                        ) {
+                            Text(
+                                text = soundText,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

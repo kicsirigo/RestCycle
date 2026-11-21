@@ -9,10 +9,13 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.restcycle.app.domain.calculator.SleepCycleCalculator
+import com.restcycle.app.domain.model.SleepHistoryCodec
 import com.restcycle.app.domain.model.SleepMode
+import com.restcycle.app.domain.model.SleepSessionRecord
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.TimeFormatPreference
@@ -29,7 +32,7 @@ import java.io.IOException
 interface LatencyPreferencesRepository {
     val sleepLatencyMinutes: Flow<Int>
     val napLatencyMinutes: Flow<Int>
-    val themeStyle: Flow<AppThemeStyle> get() = flowOf(AppThemeStyle.DYNAMIC)
+    val themeStyle: Flow<AppThemeStyle> get() = flowOf(AppThemeStyle.TOKYO_NIGHT)
     val timeFormatPreference: Flow<TimeFormatPreference> get() = flowOf(TimeFormatPreference.SYSTEM)
     val appLanguage: Flow<AppLanguage> get() = flowOf(AppLanguage.SYSTEM)
     val wakeUpTimeMinutes: Flow<Int> get() = flowOf(DEFAULT_WAKE_UP_TIME_MINUTES)
@@ -38,6 +41,8 @@ interface LatencyPreferencesRepository {
     val pureAmoledNight: Flow<Boolean> get() = flowOf(false)
     val caffeineCutoffHours: Flow<Int> get() = flowOf(DEFAULT_CAFFEINE_CUTOFF_HOURS)
     val bedtimeReminderEnabled: Flow<Boolean> get() = flowOf(false)
+    val activeSleepStartMillis: Flow<Long> get() = flowOf(0L)
+    val sleepHistory: Flow<List<SleepSessionRecord>> get() = flowOf(emptyList())
 
     suspend fun setSleepLatency(minutes: Int)
     suspend fun setNapLatency(minutes: Int)
@@ -50,6 +55,8 @@ interface LatencyPreferencesRepository {
     suspend fun setPureAmoledNight(enabled: Boolean) {}
     suspend fun setCaffeineCutoffHours(hours: Int) {}
     suspend fun setBedtimeReminderEnabled(enabled: Boolean) {}
+    suspend fun setActiveSleepStartMillis(epochMillis: Long) {}
+    suspend fun setSleepHistory(records: List<SleepSessionRecord>) {}
 
     companion object {
         const val PREFS_NAME = "restcycle_prefs"
@@ -88,6 +95,8 @@ class DataStoreLatencyPreferencesRepository(
         val PURE_AMOLED_NIGHT = booleanPreferencesKey("pure_amoled_night")
         val CAFFEINE_CUTOFF_HOURS = intPreferencesKey("caffeine_cutoff_hours")
         val BEDTIME_REMINDER_ENABLED = booleanPreferencesKey("bedtime_reminder_enabled")
+        val ACTIVE_SLEEP_START_MILLIS = longPreferencesKey("active_sleep_start_millis")
+        val SLEEP_HISTORY_RECORDS = stringPreferencesKey("sleep_history_records")
     }
 
     private val safeData: Flow<Preferences> = dataStore.data.catch { exception ->
@@ -112,7 +121,7 @@ class DataStoreLatencyPreferencesRepository(
     }
 
     override val themeStyle: Flow<AppThemeStyle> = readPref { prefs ->
-        AppThemeStyle.entries.firstOrNull { it.name == prefs[Keys.APP_THEME_STYLE] } ?: AppThemeStyle.DYNAMIC
+        AppThemeStyle.entries.firstOrNull { it.name == prefs[Keys.APP_THEME_STYLE] } ?: AppThemeStyle.TOKYO_NIGHT
     }
 
     override val timeFormatPreference: Flow<TimeFormatPreference> = readPref { prefs ->
@@ -146,6 +155,14 @@ class DataStoreLatencyPreferencesRepository(
     }
 
     override val bedtimeReminderEnabled: Flow<Boolean> = readPref { it[Keys.BEDTIME_REMINDER_ENABLED] ?: false }
+
+    override val activeSleepStartMillis: Flow<Long> = readPref {
+        (it[Keys.ACTIVE_SLEEP_START_MILLIS] ?: 0L).coerceAtLeast(0L)
+    }
+
+    override val sleepHistory: Flow<List<SleepSessionRecord>> = readPref {
+        SleepHistoryCodec.decode(it[Keys.SLEEP_HISTORY_RECORDS])
+    }
 
     override suspend fun setSleepLatency(minutes: Int) = writePref(
         Keys.SLEEP_LATENCY_MINUTES,
@@ -189,6 +206,12 @@ class DataStoreLatencyPreferencesRepository(
 
     override suspend fun setBedtimeReminderEnabled(enabled: Boolean) =
         writePref(Keys.BEDTIME_REMINDER_ENABLED, enabled)
+
+    override suspend fun setActiveSleepStartMillis(epochMillis: Long) =
+        writePref(Keys.ACTIVE_SLEEP_START_MILLIS, epochMillis.coerceAtLeast(0L))
+
+    override suspend fun setSleepHistory(records: List<SleepSessionRecord>) =
+        writePref(Keys.SLEEP_HISTORY_RECORDS, SleepHistoryCodec.encode(records))
 
     companion object {
         fun createDataStore(

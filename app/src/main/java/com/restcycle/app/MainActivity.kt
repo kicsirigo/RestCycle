@@ -1,11 +1,14 @@
 package com.restcycle.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.platform.widget.RestCycleWidgetProvider
@@ -18,10 +21,13 @@ class MainActivity : ComponentActivity() {
     private val viewModel: SleepViewModel by viewModels {
         (application as RestCycleApplication).container.sleepViewModelFactory
     }
+    private var openBreathingTrigger by mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        handleShortcutIntent(intent)
 
         val container = (application as RestCycleApplication).container
 
@@ -33,6 +39,8 @@ class MainActivity : ComponentActivity() {
             val pureAmoledNight by viewModel.pureAmoledNight.collectAsStateWithLifecycle()
             val caffeineCutoffHours by viewModel.caffeineCutoffHours.collectAsStateWithLifecycle()
             val bedtimeReminderEnabled by viewModel.bedtimeReminderEnabled.collectAsStateWithLifecycle()
+            val activeSleepStartMillis by viewModel.activeSleepStartMillis.collectAsStateWithLifecycle()
+            val sleepHistory by viewModel.sleepHistory.collectAsStateWithLifecycle()
             val liveClockTime by viewModel.clockTime.collectAsStateWithLifecycle()
             val syncedClockTime = uiState.options.firstOrNull()
                 ?.takeIf {
@@ -73,10 +81,40 @@ class MainActivity : ComponentActivity() {
                     caffeineCutoffHours = caffeineCutoffHours,
                     onSelectCaffeineCutoffHours = viewModel::setCaffeineCutoffHours,
                     bedtimeReminderEnabled = bedtimeReminderEnabled,
-                    onToggleBedtimeReminder = viewModel::setBedtimeReminderEnabled
+                    onToggleBedtimeReminder = viewModel::setBedtimeReminderEnabled,
+                    activeSleepStartMillis = activeSleepStartMillis,
+                    sleepHistory = sleepHistory,
+                    onStartSleepSession = viewModel::startSleepSession,
+                    onCompleteSleepSession = viewModel::completeSleepSession,
+                    onCancelSleepSession = viewModel::cancelSleepSession,
+                    openBreathingTrigger = openBreathingTrigger
                 )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleShortcutIntent(intent)
+    }
+
+    private fun handleShortcutIntent(intent: Intent?) {
+        when (intent?.getStringExtra(EXTRA_SHORTCUT_ACTION)) {
+            SHORTCUT_SLEEP_NOW -> viewModel.selectMode(SleepMode.SLEEP_NOW)
+            SHORTCUT_POWER_NAP -> viewModel.selectMode(SleepMode.POWER_NAP)
+            SHORTCUT_BREATHE -> {
+                viewModel.selectMode(SleepMode.SLEEP_NOW)
+                openBreathingTrigger += 1
+            }
+        }
+    }
+
+    companion object {
+        const val EXTRA_SHORTCUT_ACTION = "extra_shortcut_action"
+        const val SHORTCUT_SLEEP_NOW = "SLEEP_NOW"
+        const val SHORTCUT_POWER_NAP = "POWER_NAP"
+        const val SHORTCUT_BREATHE = "BREATHE"
     }
 
     override fun onResume() {

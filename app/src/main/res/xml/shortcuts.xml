@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="shortcut_sleep_now"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher_round"
+        android:shortcutShortLabel="@string/shortcut_sleep_now_short"
+        android:shortcutLongLabel="@string/shortcut_sleep_now_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.restcycle.app"
+            android:targetClass="com.restcycle.app.MainActivity">
+            <extra
+                android:name="extra_shortcut_action"
+                android:value="SLEEP_NOW" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shortcut_power_nap"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher_round"
+        android:shortcutShortLabel="@string/shortcut_power_nap_short"
+        android:shortcutLongLabel="@string/shortcut_power_nap_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.restcycle.app"
+            android:targetClass="com.restcycle.app.MainActivity">
+            <extra
+                android:name="extra_shortcut_action"
+                android:value="POWER_NAP" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shortcut_breathe"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher_round"
+        android:shortcutShortLabel="@string/shortcut_breathe_short"
+        android:shortcutLongLabel="@string/shortcut_breathe_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.restcycle.app"
+            android:targetClass="com.restcycle.app.MainActivity">
+            <extra
+                android:name="extra_shortcut_action"
+                android:value="BREATHE" />
+        </intent>
+    </shortcut>
+</shortcuts>

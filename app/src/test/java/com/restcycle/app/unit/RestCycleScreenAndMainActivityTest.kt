@@ -214,11 +214,11 @@ class RestCycleScreenAndMainActivityTest {
         composeRule.onNodeWithTag(RestCycleTestTags.WAKE_ALARM_BTN)
             .assertTextContains("6:50 AM", substring = true)
 
-        // Switch explicitly to 24-hour, verify, and restore System + Dynamic Sky cleanly
+        // Switch explicitly to 24-hour, verify, and restore System + Tokyo Night cleanly
         composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_BUTTON).performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("24-hour").performClick()
-        composeRule.onNodeWithText("Dynamic Sky").performClick()
+        composeRule.onNodeWithText("Tokyo Night").performClick()
         composeRule.onNodeWithText("Close").performClick()
         composeRule.waitForIdle()
 
