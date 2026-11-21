@@ -12,27 +12,20 @@ import java.time.Clock
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
-interface TimeFormatProvider {
-    fun is24HourFormat(): Boolean
-    fun currentTime(): LocalTime
-    fun minuteTickFlow(): Flow<LocalTime>
-}
-
 class AndroidTimeFormatProvider(
     context: Context,
     private val clock: Clock? = null
-) : TimeFormatProvider {
-
+) {
     private val appContext: Context = context.applicationContext
 
     private fun activeClock(): Clock = clock ?: Clock.systemDefaultZone()
 
-    override fun is24HourFormat(): Boolean = DateFormat.is24HourFormat(appContext)
+    fun is24HourFormat(): Boolean = DateFormat.is24HourFormat(appContext)
 
-    override fun currentTime(): LocalTime =
+    fun currentTime(): LocalTime =
         LocalTime.now(activeClock()).truncatedTo(ChronoUnit.MINUTES)
 
-    override fun minuteTickFlow(): Flow<LocalTime> = flow {
+    fun minuteTickFlow(): Flow<LocalTime> = flow {
         while (currentCoroutineContext().isActive) {
             val rawNow = LocalTime.now(activeClock())
             emit(rawNow.truncatedTo(ChronoUnit.MINUTES))

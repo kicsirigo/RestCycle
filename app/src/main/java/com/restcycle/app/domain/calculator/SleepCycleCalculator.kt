@@ -49,58 +49,30 @@ class SleepCycleCalculator {
         napLatencyMinutes: Int,
         labels: SleepOptionLabels
     ): List<SleepOption> = when (mode) {
-        SleepMode.WAKE_UP_AT -> {
-            val latency = clampSleepLatency(sleepLatencyMinutes)
-            (MAX_CYCLES downTo MIN_CYCLES).map { cycles ->
-                val sleepDuration = cycles * CYCLE_MINUTES
-                val quality = qualityForCycles(cycles)
-                SleepOption(
-                    id = "wake_$cycles",
-                    targetTime = anchorTime.minusMinutes(sleepDuration.toLong() + latency),
-                    cycles = cycles,
-                    durationMinutes = sleepDuration,
-                    quality = quality,
-                    labelResId = labelForQuality(quality, labels),
-                    countdownMinutesFromNow = null
-                )
-            }
-        }
-
-        SleepMode.SLEEP_NOW -> {
-            val latency = clampSleepLatency(sleepLatencyMinutes)
-            (MAX_CYCLES downTo MIN_CYCLES).map { cycles ->
-                val sleepDuration = cycles * CYCLE_MINUTES
-                val totalMinutes = sleepDuration.toLong() + latency
-                val quality = qualityForCycles(cycles)
-                SleepOption(
-                    id = "sleep_now_$cycles",
-                    targetTime = anchorTime.plusMinutes(totalMinutes),
-                    cycles = cycles,
-                    durationMinutes = sleepDuration,
-                    quality = quality,
-                    labelResId = labelForQuality(quality, labels),
-                    countdownMinutesFromNow = totalMinutes
-                )
-            }
-        }
-
-        SleepMode.GO_TO_BED_AT -> {
-            val latency = clampSleepLatency(sleepLatencyMinutes)
-            (MAX_CYCLES downTo MIN_CYCLES).map { cycles ->
-                val sleepDuration = cycles * CYCLE_MINUTES
-                val quality = qualityForCycles(cycles)
-                SleepOption(
-                    id = "bed_$cycles",
-                    targetTime = anchorTime.plusMinutes(sleepDuration.toLong() + latency),
-                    cycles = cycles,
-                    durationMinutes = sleepDuration,
-                    quality = quality,
-                    labelResId = labelForQuality(quality, labels),
-                    countdownMinutesFromNow = null
-                )
-            }
-        }
-
+        SleepMode.WAKE_UP_AT -> buildCycleOptions(
+            prefix = "wake",
+            anchorTime = anchorTime,
+            latency = clampSleepLatency(sleepLatencyMinutes),
+            forward = false,
+            includeCountdown = false,
+            labels = labels
+        )
+        SleepMode.SLEEP_NOW -> buildCycleOptions(
+            prefix = "sleep_now",
+            anchorTime = anchorTime,
+            latency = clampSleepLatency(sleepLatencyMinutes),
+            forward = true,
+            includeCountdown = true,
+            labels = labels
+        )
+        SleepMode.GO_TO_BED_AT -> buildCycleOptions(
+            prefix = "bed",
+            anchorTime = anchorTime,
+            latency = clampSleepLatency(sleepLatencyMinutes),
+            forward = true,
+            includeCountdown = false,
+            labels = labels
+        )
         SleepMode.POWER_NAP -> {
             val latency = clampNapLatency(napLatencyMinutes)
             napPresets.map { preset ->
@@ -116,6 +88,28 @@ class SleepCycleCalculator {
                 )
             }
         }
+    }
+
+    private fun buildCycleOptions(
+        prefix: String,
+        anchorTime: LocalTime,
+        latency: Int,
+        forward: Boolean,
+        includeCountdown: Boolean,
+        labels: SleepOptionLabels
+    ): List<SleepOption> = (MAX_CYCLES downTo MIN_CYCLES).map { cycles ->
+        val sleepDuration = cycles * CYCLE_MINUTES
+        val totalMinutes = sleepDuration.toLong() + latency
+        val quality = qualityForCycles(cycles)
+        SleepOption(
+            id = "${prefix}_$cycles",
+            targetTime = if (forward) anchorTime.plusMinutes(totalMinutes) else anchorTime.minusMinutes(totalMinutes),
+            cycles = cycles,
+            durationMinutes = sleepDuration,
+            quality = quality,
+            labelResId = labelForQuality(quality, labels),
+            countdownMinutesFromNow = if (includeCountdown) totalMinutes else null
+        )
     }
 
     fun defaultHighlightedOptionId(
@@ -137,13 +131,12 @@ class SleepCycleCalculator {
             ?: options.first().id
     }
 
-    private fun labelForQuality(quality: CycleQuality, labels: SleepOptionLabels): Int =
-        when (quality) {
-            CycleQuality.OPTIMAL -> labels.optimal
-            CycleQuality.GOOD -> labels.good
-            CycleQuality.SHORT -> labels.short
-            CycleQuality.POWER_NAP -> labels.napClassic
-        }
+    private fun labelForQuality(quality: CycleQuality, labels: SleepOptionLabels): Int = when (quality) {
+        CycleQuality.OPTIMAL -> labels.optimal
+        CycleQuality.GOOD -> labels.good
+        CycleQuality.SHORT -> labels.short
+        CycleQuality.POWER_NAP -> labels.napClassic
+    }
 
     companion object {
         const val CYCLE_MINUTES = 90

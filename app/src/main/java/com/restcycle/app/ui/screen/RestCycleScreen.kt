@@ -148,102 +148,48 @@ fun RestCycleScreen(
         LocalConfiguration provides localizedContext.resources.configuration,
         LocalResources provides localizedContext.resources
     ) {
-        RestCycleScreenContent(
-            uiState = uiState,
-            currentClockTime = currentClockTime,
-            onSelectMode = onSelectMode,
-            onSelectTime = onSelectTime,
-            onUpdateSleepLatency = onUpdateSleepLatency,
-            onUpdateNapLatency = onUpdateNapLatency,
-            onHighlightOption = onHighlightOption,
-            onLaunchAlarm = onLaunchAlarm,
-            onLaunchTimer = onLaunchTimer,
-            modifier = modifier,
-            baseActivityContext = baseContext,
-            themeStyle = themeStyle,
-            timeFormatPreference = timeFormatPreference,
-            onSelectThemeStyle = onSelectThemeStyle,
-            onSelectTimeFormatPreference = onSelectTimeFormatPreference,
-            appLanguage = appLanguage,
-            onSelectAppLanguage = onSelectAppLanguage,
-            pureAmoledNight = pureAmoledNight,
-            onTogglePureAmoledNight = onTogglePureAmoledNight,
-            caffeineCutoffHours = caffeineCutoffHours,
-            onSelectCaffeineCutoffHours = onSelectCaffeineCutoffHours,
-            bedtimeReminderEnabled = bedtimeReminderEnabled,
-            onToggleBedtimeReminder = onToggleBedtimeReminder
-        )
-    }
-}
+        val palette = AtmosphereTheme.palette
+        val context = LocalContext.current
+        val resources = LocalResources.current
+        val view = LocalView.current
+        val coroutineScope = rememberCoroutineScope()
+        val snackbarHostState = remember { SnackbarHostState() }
+        var snackbarJob by remember { mutableStateOf<Job?>(null) }
+        var showSettings by remember { mutableStateOf(false) }
+        var showBreathing by remember { mutableStateOf(false) }
+        var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
+        val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
+        val clockUnavailableMessage = stringResource(R.string.clock_app_unavailable)
 
-@Composable
-private fun RestCycleScreenContent(
-    uiState: SleepUiState,
-    currentClockTime: LocalTime,
-    onSelectMode: (SleepMode) -> Unit,
-    onSelectTime: (LocalTime) -> Unit,
-    onUpdateSleepLatency: (Int) -> Unit,
-    onUpdateNapLatency: (Int) -> Unit,
-    onHighlightOption: (String) -> Unit,
-    onLaunchAlarm: (time: LocalTime, message: String) -> Boolean,
-    onLaunchTimer: (durationSeconds: Int, message: String) -> Boolean,
-    modifier: Modifier,
-    baseActivityContext: Context,
-    themeStyle: AppThemeStyle,
-    timeFormatPreference: TimeFormatPreference,
-    onSelectThemeStyle: (AppThemeStyle) -> Unit,
-    onSelectTimeFormatPreference: (TimeFormatPreference) -> Unit,
-    appLanguage: AppLanguage,
-    onSelectAppLanguage: (AppLanguage) -> Unit,
-    pureAmoledNight: Boolean,
-    onTogglePureAmoledNight: (Boolean) -> Unit,
-    caffeineCutoffHours: Int,
-    onSelectCaffeineCutoffHours: (Int) -> Unit,
-    bedtimeReminderEnabled: Boolean,
-    onToggleBedtimeReminder: (Boolean) -> Unit
-) {
-    val palette = AtmosphereTheme.palette
-    val context = LocalContext.current
-    val resources = LocalResources.current
-    val view = LocalView.current
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    var snackbarJob by remember { mutableStateOf<Job?>(null) }
-    var showSettings by remember { mutableStateOf(false) }
-    var showBreathing by remember { mutableStateOf(false) }
-    var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
-    val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
-    val clockUnavailableMessage = stringResource(R.string.clock_app_unavailable)
-
-    val activeBedtimeForHelpers: LocalTime? = when (uiState.mode) {
-        SleepMode.WAKE_UP_AT -> uiState.options.firstOrNull { it.id == uiState.highlightedOptionId }?.targetTime
-            ?: uiState.options.firstOrNull()?.targetTime
-        SleepMode.GO_TO_BED_AT -> uiState.selectedTime
-        SleepMode.SLEEP_NOW, SleepMode.POWER_NAP -> null
-    }
-
-    LaunchedEffect(bedtimeReminderEnabled, activeBedtimeForHelpers, uiState.is24HourFormat) {
-        if (bedtimeReminderEnabled && activeBedtimeForHelpers != null) {
-            val formatted = formatClockTime(activeBedtimeForHelpers, uiState.is24HourFormat)
-            BedtimeReminderScheduler.scheduleReminder(
-                context = baseActivityContext,
-                bedtime = activeBedtimeForHelpers,
-                formattedBedtime = formatted
-            )
-        } else if (!bedtimeReminderEnabled) {
-            BedtimeReminderScheduler.cancelReminder(baseActivityContext)
+        val activeBedtimeForHelpers: LocalTime? = when (uiState.mode) {
+            SleepMode.WAKE_UP_AT -> uiState.options.firstOrNull { it.id == uiState.highlightedOptionId }?.targetTime
+                ?: uiState.options.firstOrNull()?.targetTime
+            SleepMode.GO_TO_BED_AT -> uiState.selectedTime
+            SleepMode.SLEEP_NOW, SleepMode.POWER_NAP -> null
         }
-    }
 
-    LaunchedEffect(uiState.sleepLatencyMinutes, uiState.is24HourFormat) {
-        runCatching {
-            RestCycleWidgetProvider.refreshAllWidgets(
-                context = baseActivityContext,
-                sleepLatencyMinutes = uiState.sleepLatencyMinutes,
-                is24HourFormat = uiState.is24HourFormat
-            )
+        LaunchedEffect(bedtimeReminderEnabled, activeBedtimeForHelpers, uiState.is24HourFormat) {
+            if (bedtimeReminderEnabled && activeBedtimeForHelpers != null) {
+                val formatted = formatClockTime(activeBedtimeForHelpers, uiState.is24HourFormat)
+                BedtimeReminderScheduler.scheduleReminder(
+                    context = baseContext,
+                    bedtime = activeBedtimeForHelpers,
+                    formattedBedtime = formatted
+                )
+            } else if (!bedtimeReminderEnabled) {
+                BedtimeReminderScheduler.cancelReminder(baseContext)
+            }
         }
-    }
+
+        LaunchedEffect(uiState.sleepLatencyMinutes, uiState.is24HourFormat) {
+            runCatching {
+                RestCycleWidgetProvider.refreshAllWidgets(
+                    context = baseContext,
+                    sleepLatencyMinutes = uiState.sleepLatencyMinutes,
+                    is24HourFormat = uiState.is24HourFormat
+                )
+            }
+        }
 
     fun notifyMissingClockIfFailed(launched: Boolean) {
         if (!launched) {
@@ -612,11 +558,11 @@ private fun RestCycleScreenContent(
                 onToggleBedtimeReminder = { enabled ->
                     if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         val granted = ContextCompat.checkSelfPermission(
-                            baseActivityContext,
+                            baseContext,
                             Manifest.permission.POST_NOTIFICATIONS
                         ) == PackageManager.PERMISSION_GRANTED
                         if (!granted) {
-                            (baseActivityContext as? Activity)?.let { activity ->
+                            (baseContext as? Activity)?.let { activity ->
                                 ActivityCompat.requestPermissions(
                                     activity,
                                     arrayOf(Manifest.permission.POST_NOTIFICATIONS),
@@ -649,6 +595,7 @@ private fun RestCycleScreenContent(
                 onDismiss = { showBreathing = false }
             )
         }
+    }
     }
 }
 
@@ -753,8 +700,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.4.0"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.4.1"
     } catch (_: Exception) {
-        "1.4.0"
+        "1.4.1"
     }
 }

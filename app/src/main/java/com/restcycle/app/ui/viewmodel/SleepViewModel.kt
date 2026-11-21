@@ -10,6 +10,7 @@ import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.calculator.SleepOptionLabels
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepUiState
+import com.restcycle.app.platform.time.AndroidTimeFormatProvider
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.TimeFormatPreference
@@ -51,15 +52,7 @@ class SleepViewModel(
 
     internal val sleepWritesInFlight = AtomicInteger(0)
     internal val napWritesInFlight = AtomicInteger(0)
-    internal val themeWritesInFlight = AtomicInteger(0)
-    internal val timeFormatWritesInFlight = AtomicInteger(0)
-    internal val languageWritesInFlight = AtomicInteger(0)
-    internal val wakeUpTimeWritesInFlight = AtomicInteger(0)
-    internal val goToBedTimeWritesInFlight = AtomicInteger(0)
-    internal val modeWritesInFlight = AtomicInteger(0)
-    internal val amoledWritesInFlight = AtomicInteger(0)
-    internal val caffeineWritesInFlight = AtomicInteger(0)
-    internal val reminderWritesInFlight = AtomicInteger(0)
+    private val genericWritesInFlight = AtomicInteger(0)
 
     private var hasUserSelectedModeInSession = false
     private var hasUserSelectedWakeTimeInSession = false
@@ -90,150 +83,63 @@ class SleepViewModel(
     val bedtimeReminderEnabled: StateFlow<Boolean> = _bedtimeReminderEnabled.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            repository.sleepLatencyMinutes
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (sleepWritesInFlight.get() == 0) {
-                        val clamped = stored.coerceIn(MIN_LATENCY, MAX_SLEEP_LATENCY)
-                        if (clamped != sleepLatencyMinutes) {
-                            sleepLatencyMinutes = clamped
-                            emitState()
-                        }
-                    }
-                }
+        collectPref(repository.sleepLatencyMinutes, sleepWritesInFlight) { stored ->
+            val clamped = stored.coerceIn(MIN_LATENCY, MAX_SLEEP_LATENCY)
+            if (clamped != sleepLatencyMinutes) {
+                sleepLatencyMinutes = clamped
+                emitState()
+            }
         }
-
-        viewModelScope.launch {
-            repository.napLatencyMinutes
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (napWritesInFlight.get() == 0) {
-                        val clamped = stored.coerceIn(MIN_LATENCY, MAX_NAP_LATENCY)
-                        if (clamped != napLatencyMinutes) {
-                            napLatencyMinutes = clamped
-                            emitState()
-                        }
-                    }
-                }
+        collectPref(repository.napLatencyMinutes, napWritesInFlight) { stored ->
+            val clamped = stored.coerceIn(MIN_LATENCY, MAX_NAP_LATENCY)
+            if (clamped != napLatencyMinutes) {
+                napLatencyMinutes = clamped
+                emitState()
+            }
         }
-
-        viewModelScope.launch {
-            repository.wakeUpTimeMinutes
-                .distinctUntilChanged()
-                .collect { storedMinutes ->
-                    if (wakeUpTimeWritesInFlight.get() == 0 && !hasUserSelectedWakeTimeInSession) {
-                        val clamped = storedMinutes.coerceIn(
-                            LatencyPreferencesRepository.MIN_TIME_MINUTES_OF_DAY,
-                            LatencyPreferencesRepository.MAX_TIME_MINUTES_OF_DAY
-                        )
-                        val restoredTime = LocalTime.of(clamped / 60, clamped % 60)
-                        if (restoredTime != wakeUpSelectedTime) {
-                            wakeUpSelectedTime = restoredTime
-                            emitState()
-                        }
-                    }
+        collectPref(repository.wakeUpTimeMinutes, genericWritesInFlight) { storedMinutes ->
+            if (!hasUserSelectedWakeTimeInSession) {
+                val restored = minutesOfDayToTime(storedMinutes)
+                if (restored != wakeUpSelectedTime) {
+                    wakeUpSelectedTime = restored
+                    emitState()
                 }
+            }
         }
-
-        viewModelScope.launch {
-            repository.goToBedTimeMinutes
-                .distinctUntilChanged()
-                .collect { storedMinutes ->
-                    if (goToBedTimeWritesInFlight.get() == 0 && !hasUserSelectedBedTimeInSession) {
-                        val clamped = storedMinutes.coerceIn(
-                            LatencyPreferencesRepository.MIN_TIME_MINUTES_OF_DAY,
-                            LatencyPreferencesRepository.MAX_TIME_MINUTES_OF_DAY
-                        )
-                        val restoredTime = LocalTime.of(clamped / 60, clamped % 60)
-                        if (restoredTime != goToBedSelectedTime) {
-                            goToBedSelectedTime = restoredTime
-                            emitState()
-                        }
-                    }
+        collectPref(repository.goToBedTimeMinutes, genericWritesInFlight) { storedMinutes ->
+            if (!hasUserSelectedBedTimeInSession) {
+                val restored = minutesOfDayToTime(storedMinutes)
+                if (restored != goToBedSelectedTime) {
+                    goToBedSelectedTime = restored
+                    emitState()
                 }
+            }
         }
-
-        viewModelScope.launch {
-            repository.lastWheelMode
-                .distinctUntilChanged()
-                .collect { storedMode ->
-                    if (modeWritesInFlight.get() == 0 && !hasUserSelectedModeInSession) {
-                        if ((storedMode == SleepMode.WAKE_UP_AT || storedMode == SleepMode.GO_TO_BED_AT) &&
-                            storedMode != currentMode
-                        ) {
-                            currentMode = storedMode
-                            explicitHighlightedOptionId = null
-                            emitState()
-                        }
-                    }
-                }
+        collectPref(repository.lastWheelMode, genericWritesInFlight) { storedMode ->
+            if (!hasUserSelectedModeInSession &&
+                (storedMode == SleepMode.WAKE_UP_AT || storedMode == SleepMode.GO_TO_BED_AT) &&
+                storedMode != currentMode
+            ) {
+                currentMode = storedMode
+                explicitHighlightedOptionId = null
+                emitState()
+            }
         }
-
-        viewModelScope.launch {
-            repository.themeStyle
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (themeWritesInFlight.get() == 0 && stored != _themeStyle.value) {
-                        _themeStyle.value = stored
-                    }
+        collectPref(repository.themeStyle, genericWritesInFlight) { _themeStyle.value = it }
+        collectPref(repository.appLanguage, genericWritesInFlight) { _appLanguage.value = it }
+        collectPref(repository.pureAmoledNight, genericWritesInFlight) { _pureAmoledNight.value = it }
+        collectPref(repository.caffeineCutoffHours, genericWritesInFlight) { _caffeineCutoffHours.value = it }
+        collectPref(repository.bedtimeReminderEnabled, genericWritesInFlight) { _bedtimeReminderEnabled.value = it }
+        collectPref(repository.timeFormatPreference, genericWritesInFlight) { stored ->
+            if (stored != currentTimeFormatPref) {
+                currentTimeFormatPref = stored
+                _timeFormatPreference.value = stored
+                val effective24h = resolveIs24Hour(systemIs24HourFormat, stored)
+                if (effective24h != is24HourFormat) {
+                    is24HourFormat = effective24h
+                    emitState()
                 }
-        }
-
-        viewModelScope.launch {
-            repository.timeFormatPreference
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (timeFormatWritesInFlight.get() == 0 && stored != currentTimeFormatPref) {
-                        currentTimeFormatPref = stored
-                        _timeFormatPreference.value = stored
-                        val effective24h = resolveIs24Hour(systemIs24HourFormat, stored)
-                        if (effective24h != is24HourFormat) {
-                            is24HourFormat = effective24h
-                            emitState()
-                        }
-                    }
-                }
-        }
-
-        viewModelScope.launch {
-            repository.appLanguage
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (languageWritesInFlight.get() == 0 && stored != _appLanguage.value) {
-                        _appLanguage.value = stored
-                    }
-                }
-        }
-
-        viewModelScope.launch {
-            repository.pureAmoledNight
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (amoledWritesInFlight.get() == 0 && stored != _pureAmoledNight.value) {
-                        _pureAmoledNight.value = stored
-                    }
-                }
-        }
-
-        viewModelScope.launch {
-            repository.caffeineCutoffHours
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (caffeineWritesInFlight.get() == 0 && stored != _caffeineCutoffHours.value) {
-                        _caffeineCutoffHours.value = stored
-                    }
-                }
-        }
-
-        viewModelScope.launch {
-            repository.bedtimeReminderEnabled
-                .distinctUntilChanged()
-                .collect { stored ->
-                    if (reminderWritesInFlight.get() == 0 && stored != _bedtimeReminderEnabled.value) {
-                        _bedtimeReminderEnabled.value = stored
-                    }
-                }
+            }
         }
 
         viewModelScope.launch {
@@ -250,6 +156,35 @@ class SleepViewModel(
         }
     }
 
+    private fun <T> collectPref(flow: Flow<T>, counter: AtomicInteger, onValue: (T) -> Unit) {
+        viewModelScope.launch {
+            flow.distinctUntilChanged().collect { stored ->
+                if (counter.get() == 0) onValue(stored)
+            }
+        }
+    }
+
+    private fun persistPref(counter: AtomicInteger = genericWritesInFlight, write: suspend () -> Unit) {
+        counter.incrementAndGet()
+        viewModelScope.launch {
+            try {
+                write()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+            } finally {
+                counter.decrementAndGet()
+            }
+        }
+    }
+
+    private fun minutesOfDayToTime(minutes: Int): LocalTime {
+        val clamped = minutes.coerceIn(
+            LatencyPreferencesRepository.MIN_TIME_MINUTES_OF_DAY,
+            LatencyPreferencesRepository.MAX_TIME_MINUTES_OF_DAY
+        )
+        return LocalTime.of(clamped / 60, clamped % 60)
+    }
+
     fun selectMode(mode: SleepMode) {
         hasUserSelectedModeInSession = true
         currentClockTime = nowProvider().truncatedTo(ChronoUnit.MINUTES)
@@ -262,55 +197,27 @@ class SleepViewModel(
         explicitHighlightedOptionId = null
         emitState()
         if (mode == SleepMode.WAKE_UP_AT || mode == SleepMode.GO_TO_BED_AT) {
-            modeWritesInFlight.incrementAndGet()
-            viewModelScope.launch {
-                try {
-                    repository.setLastWheelMode(mode)
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                } finally {
-                    modeWritesInFlight.decrementAndGet()
-                }
-            }
+            persistPref { repository.setLastWheelMode(mode) }
         }
     }
 
     fun selectTime(time: LocalTime) {
         val truncated = time.truncatedTo(ChronoUnit.MINUTES)
+        val minutesOfDay = truncated.hour * 60 + truncated.minute
         when (currentMode) {
             SleepMode.WAKE_UP_AT -> {
                 hasUserSelectedWakeTimeInSession = true
                 if (truncated == wakeUpSelectedTime) return
                 wakeUpSelectedTime = truncated
                 emitState()
-                val minutesOfDay = truncated.hour * 60 + truncated.minute
-                wakeUpTimeWritesInFlight.incrementAndGet()
-                viewModelScope.launch {
-                    try {
-                        repository.setWakeUpTimeMinutes(minutesOfDay)
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                    } finally {
-                        wakeUpTimeWritesInFlight.decrementAndGet()
-                    }
-                }
+                persistPref { repository.setWakeUpTimeMinutes(minutesOfDay) }
             }
             SleepMode.GO_TO_BED_AT -> {
                 hasUserSelectedBedTimeInSession = true
                 if (truncated == goToBedSelectedTime) return
                 goToBedSelectedTime = truncated
                 emitState()
-                val minutesOfDay = truncated.hour * 60 + truncated.minute
-                goToBedTimeWritesInFlight.incrementAndGet()
-                viewModelScope.launch {
-                    try {
-                        repository.setGoToBedTimeMinutes(minutesOfDay)
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                    } finally {
-                        goToBedTimeWritesInFlight.decrementAndGet()
-                    }
-                }
+                persistPref { repository.setGoToBedTimeMinutes(minutesOfDay) }
             }
             SleepMode.SLEEP_NOW, SleepMode.POWER_NAP -> return
         }
@@ -321,16 +228,7 @@ class SleepViewModel(
         if (clamped == sleepLatencyMinutes) return
         sleepLatencyMinutes = clamped
         emitState()
-        sleepWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setSleepLatency(clamped)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                sleepWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref(sleepWritesInFlight) { repository.setSleepLatency(clamped) }
     }
 
     fun updateNapLatency(minutes: Int) {
@@ -338,16 +236,7 @@ class SleepViewModel(
         if (clamped == napLatencyMinutes) return
         napLatencyMinutes = clamped
         emitState()
-        napWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setNapLatency(clamped)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                napWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref(napWritesInFlight) { repository.setNapLatency(clamped) }
     }
 
     fun highlightOption(optionId: String) {
@@ -361,16 +250,7 @@ class SleepViewModel(
     fun selectThemeStyle(style: AppThemeStyle) {
         if (_themeStyle.value == style) return
         _themeStyle.value = style
-        themeWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setThemeStyle(style)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                themeWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref { repository.setThemeStyle(style) }
     }
 
     fun selectTimeFormatPreference(pref: TimeFormatPreference) {
@@ -382,46 +262,19 @@ class SleepViewModel(
             is24HourFormat = effective24h
             emitState()
         }
-        timeFormatWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setTimeFormatPreference(pref)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                timeFormatWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref { repository.setTimeFormatPreference(pref) }
     }
 
     fun selectAppLanguage(language: AppLanguage) {
         if (_appLanguage.value == language) return
         _appLanguage.value = language
-        languageWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setAppLanguage(language)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                languageWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref { repository.setAppLanguage(language) }
     }
 
     fun setPureAmoledNight(enabled: Boolean) {
         if (_pureAmoledNight.value == enabled) return
         _pureAmoledNight.value = enabled
-        amoledWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setPureAmoledNight(enabled)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                amoledWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref { repository.setPureAmoledNight(enabled) }
     }
 
     fun setCaffeineCutoffHours(hours: Int) {
@@ -431,31 +284,13 @@ class SleepViewModel(
         )
         if (_caffeineCutoffHours.value == clamped) return
         _caffeineCutoffHours.value = clamped
-        caffeineWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setCaffeineCutoffHours(clamped)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                caffeineWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref { repository.setCaffeineCutoffHours(clamped) }
     }
 
     fun setBedtimeReminderEnabled(enabled: Boolean) {
         if (_bedtimeReminderEnabled.value == enabled) return
         _bedtimeReminderEnabled.value = enabled
-        reminderWritesInFlight.incrementAndGet()
-        viewModelScope.launch {
-            try {
-                repository.setBedtimeReminderEnabled(enabled)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-            } finally {
-                reminderWritesInFlight.decrementAndGet()
-            }
-        }
+        persistPref { repository.setBedtimeReminderEnabled(enabled) }
     }
 
     fun refreshTimeFormat(is24Hour: Boolean) {
@@ -544,11 +379,7 @@ class SleepViewModel(
 
         fun minuteAlignedClockFlow(nowProvider: () -> LocalTime): Flow<LocalTime> = flow {
             while (coroutineContext.isActive) {
-                val now = nowProvider()
-                val nanosIntoMinute = now.second * 1_000_000_000L + now.nano
-                val remainingNanos = 60_000_000_000L - nanosIntoMinute
-                val delayMs = ((remainingNanos + 999_999L) / 1_000_000L).coerceIn(1L, 60_000L)
-                delay(delayMs)
+                delay(AndroidTimeFormatProvider.millisUntilNextMinute(nowProvider()).coerceAtMost(60_000L))
                 emit(nowProvider().truncatedTo(ChronoUnit.MINUTES))
             }
         }

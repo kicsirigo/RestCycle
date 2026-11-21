@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -36,6 +35,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -78,7 +79,7 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.4.0",
+    installedVersionName: String = "1.4.1",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {}
@@ -87,9 +88,7 @@ fun SettingsDialog(
     val view = LocalView.current
 
     LaunchedEffect(Unit) {
-        if (updateUiState is UpdateUiState.Idle) {
-            onCheckForUpdates()
-        }
+        if (updateUiState is UpdateUiState.Idle) onCheckForUpdates()
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -136,115 +135,35 @@ fun SettingsDialog(
                     }
                 }
 
-                // Time Format Selector
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = stringResource(R.string.settings_time_format_label),
-                        color = palette.textSecondary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                // Time Format
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SettingsSectionTitle(stringResource(R.string.settings_time_format_label))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val formatOptions = listOf(
+                        listOf(
                             TimeFormatPreference.SYSTEM to R.string.settings_time_format_system,
                             TimeFormatPreference.HOURS_24 to R.string.settings_time_format_24h,
                             TimeFormatPreference.HOURS_12 to R.string.settings_time_format_12h
-                        )
-                        formatOptions.forEach { (pref, labelRes) ->
+                        ).forEach { (pref, labelRes) ->
                             val selected = timeFormatPreference == pref
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .clickable(role = Role.RadioButton) {
-                                        if (!selected) {
-                                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                            onSelectTimeFormat(pref)
-                                        }
-                                    },
-                                shape = RoundedCornerShape(14.dp),
-                                color = if (selected) palette.accent else palette.pillContainer,
-                                border = BorderStroke(
-                                    width = 1.dp,
-                                    color = if (selected) palette.accent else palette.borderSubtle
-                                )
-                            ) {
-                                Text(
-                                    text = stringResource(labelRes),
-                                    color = if (selected) palette.onAccent else palette.textPrimary,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 9.dp)
-                                )
-                            }
+                            SettingsOptionPill(
+                                label = stringResource(labelRes),
+                                selected = selected,
+                                fontSize = 12.sp,
+                                verticalPadding = 9.dp,
+                                onClick = { if (!selected) onSelectTimeFormat(pref) },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }
 
-                // Theme Selector (2-column compact grid for all 5 themes)
+                // Theme + AMOLED & Reminder Toggles
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = stringResource(R.string.settings_theme_label),
-                        color = palette.textSecondary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    val themeOptions = listOf(
-                        Triple(
-                            AppThemeStyle.DYNAMIC,
-                            R.string.settings_theme_dynamic,
-                            listOf(
-                                DayAtmospherePalette.accent,
-                                DawnDuskAtmospherePalette.backgroundGlow,
-                                NightAtmospherePalette.backgroundBottom
-                            )
-                        ),
-                        Triple(
-                            AppThemeStyle.NORD,
-                            R.string.settings_theme_nord,
-                            listOf(
-                                NordDayAtmospherePalette.accent,
-                                NordDawnDuskAtmospherePalette.backgroundGlow,
-                                NordNightAtmospherePalette.accent
-                            )
-                        ),
-                        Triple(
-                            AppThemeStyle.CATPPUCCIN_MACCHIATO,
-                            R.string.settings_theme_catppuccin_macchiato,
-                            listOf(
-                                CatppuccinDayAtmospherePalette.accent,
-                                CatppuccinDawnDuskAtmospherePalette.backgroundGlow,
-                                CatppuccinNightAtmospherePalette.accent
-                            )
-                        ),
-                        Triple(
-                            AppThemeStyle.TOKYO_NIGHT,
-                            R.string.settings_theme_tokyo_night,
-                            listOf(
-                                TokyoNightDayAtmospherePalette.accent,
-                                TokyoNightDawnDuskAtmospherePalette.backgroundGlow,
-                                TokyoNightNightAtmospherePalette.accent
-                            )
-                        ),
-                        Triple(
-                            AppThemeStyle.GRUVBOX,
-                            R.string.settings_theme_gruvbox,
-                            listOf(
-                                GruvboxDayAtmospherePalette.accent,
-                                GruvboxDawnDuskAtmospherePalette.backgroundGlow,
-                                GruvboxNightAtmospherePalette.accent
-                            )
-                        )
-                    )
-
-                    themeOptions.chunked(2).forEach { rowThemes ->
+                    SettingsSectionTitle(stringResource(R.string.settings_theme_label))
+                    THEME_OPTIONS.chunked(2).forEach { rowThemes ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -297,83 +216,38 @@ fun SettingsDialog(
                                     }
                                 }
                             }
-                            if (rowThemes.size == 1) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
+                            if (rowThemes.size == 1) Spacer(modifier = Modifier.weight(1f))
                         }
                     }
 
-                    // Compact 2-column quick toggles: Pure AMOLED Black + Bedtime Reminder
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Surface(
+                        SettingsOptionPill(
+                            label = "🖤 ${stringResource(R.string.settings_amoled_night)}",
+                            selected = pureAmoledNight,
+                            role = Role.Switch,
+                            onClick = { onTogglePureAmoledNight(!pureAmoledNight) },
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(14.dp))
                                 .testTag(RestCycleTestTags.AMOLED_NIGHT_TOGGLE)
-                                .clickable(role = Role.Switch) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    onTogglePureAmoledNight(!pureAmoledNight)
-                                },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (pureAmoledNight) palette.accent else palette.pillContainer,
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = if (pureAmoledNight) palette.accent else palette.borderSubtle
-                            )
-                        ) {
-                            Text(
-                                text = "🖤 ${stringResource(R.string.settings_amoled_night)}",
-                                color = if (pureAmoledNight) palette.onAccent else palette.textPrimary,
-                                fontSize = 11.sp,
-                                fontWeight = if (pureAmoledNight) FontWeight.Bold else FontWeight.Medium,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
-                            )
-                        }
-
-                        Surface(
+                        )
+                        SettingsOptionPill(
+                            label = "🔔 ${stringResource(R.string.settings_reminder_toggle)}",
+                            selected = bedtimeReminderEnabled,
+                            role = Role.Switch,
+                            onClick = { onToggleBedtimeReminder(!bedtimeReminderEnabled) },
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(14.dp))
                                 .testTag(RestCycleTestTags.BEDTIME_REMINDER_TOGGLE)
-                                .clickable(role = Role.Switch) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    onToggleBedtimeReminder(!bedtimeReminderEnabled)
-                                },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (bedtimeReminderEnabled) palette.accent else palette.pillContainer,
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = if (bedtimeReminderEnabled) palette.accent else palette.borderSubtle
-                            )
-                        ) {
-                            Text(
-                                text = "🔔 ${stringResource(R.string.settings_reminder_toggle)}",
-                                color = if (bedtimeReminderEnabled) palette.onAccent else palette.textPrimary,
-                                fontSize = 11.sp,
-                                fontWeight = if (bedtimeReminderEnabled) FontWeight.Bold else FontWeight.Medium,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
-                            )
-                        }
+                        )
                     }
                 }
 
-                // Caffeine Cutoff Selector
+                // Caffeine Cutoff
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = stringResource(R.string.settings_caffeine_label),
-                        color = palette.textSecondary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    SettingsSectionTitle(stringResource(R.string.settings_caffeine_label))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -385,47 +259,21 @@ fun SettingsDialog(
                             } else {
                                 stringResource(R.string.settings_caffeine_hours, hours)
                             }
-                            Surface(
+                            SettingsOptionPill(
+                                label = label,
+                                selected = selected,
+                                onClick = { if (!selected) onSelectCaffeineCutoffHours(hours) },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(14.dp))
                                     .testTag(RestCycleTestTags.caffeineOption(hours))
-                                    .clickable(role = Role.RadioButton) {
-                                        if (!selected) {
-                                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                            onSelectCaffeineCutoffHours(hours)
-                                        }
-                                    },
-                                shape = RoundedCornerShape(14.dp),
-                                color = if (selected) palette.accent else palette.pillContainer,
-                                border = BorderStroke(
-                                    width = 1.dp,
-                                    color = if (selected) palette.accent else palette.borderSubtle
-                                )
-                            ) {
-                                Text(
-                                    text = label,
-                                    color = if (selected) palette.onAccent else palette.textPrimary,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
-                                )
-                            }
+                            )
                         }
                     }
                 }
 
-                // Language Selector
+                // Language
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = stringResource(R.string.settings_language_label),
-                        color = palette.textSecondary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
+                    SettingsSectionTitle(stringResource(R.string.settings_language_label))
                     AppLanguage.entries.chunked(2).forEach { rowLanguages ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -438,54 +286,28 @@ fun SettingsDialog(
                                 } else {
                                     lang.nativeLabel
                                 }
-                                val label = "${lang.flagEmoji} $baseLabel"
-                                Surface(
+                                SettingsOptionPill(
+                                    label = "${lang.flagEmoji} $baseLabel",
+                                    selected = selected,
+                                    fontSize = 12.sp,
+                                    onClick = { if (!selected) onSelectLanguage(lang) },
                                     modifier = Modifier
                                         .weight(1f)
-                                        .clip(RoundedCornerShape(14.dp))
                                         .testTag(RestCycleTestTags.languageOption(lang.name))
-                                        .clickable(role = Role.RadioButton) {
-                                            if (!selected) {
-                                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                                onSelectLanguage(lang)
-                                            }
-                                        },
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = if (selected) palette.accent else palette.pillContainer,
-                                    border = BorderStroke(
-                                        width = 1.dp,
-                                        color = if (selected) palette.accent else palette.borderSubtle
-                                    )
-                                ) {
-                                    Text(
-                                        text = label,
-                                        color = if (selected) palette.onAccent else palette.textPrimary,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 7.dp)
-                                    )
-                                }
+                                )
                             }
                         }
                     }
                 }
 
-                // Updates Section (non-intrusive check & optional user download)
+                // Updates
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(R.string.settings_update_label),
-                            color = palette.textSecondary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        SettingsSectionTitle(stringResource(R.string.settings_update_label))
                         Text(
                             text = "v$installedVersionName",
                             color = palette.textSecondary,
@@ -493,58 +315,32 @@ fun SettingsDialog(
                             fontWeight = FontWeight.Medium
                         )
                     }
-
-                    val isUpdateAvailable = updateUiState is UpdateUiState.UpdateAvailable
-                    val isChecking = updateUiState is UpdateUiState.Checking
                     val updateButtonText = when (updateUiState) {
                         UpdateUiState.Idle -> stringResource(R.string.settings_update_check)
                         UpdateUiState.Checking -> stringResource(R.string.settings_update_checking)
-                        is UpdateUiState.UpToDate -> stringResource(
-                            R.string.settings_update_up_to_date,
-                            "v$installedVersionName"
-                        )
-                        is UpdateUiState.UpdateAvailable -> stringResource(
-                            R.string.settings_update_available_download,
-                            "v${updateUiState.info.latestVersion}"
-                        )
-                        is UpdateUiState.Downloading -> stringResource(
-                            R.string.settings_update_downloading,
-                            "v${updateUiState.info.latestVersion}"
-                        )
+                        is UpdateUiState.UpToDate -> stringResource(R.string.settings_update_up_to_date, "v$installedVersionName")
+                        is UpdateUiState.UpdateAvailable -> stringResource(R.string.settings_update_available_download, "v${updateUiState.info.latestVersion}")
+                        is UpdateUiState.Downloading -> stringResource(R.string.settings_update_downloading, "v${updateUiState.info.latestVersion}")
                         UpdateUiState.Error -> stringResource(R.string.settings_update_error_retry)
                     }
-
-                    Surface(
+                    SettingsOptionPill(
+                        label = updateButtonText,
+                        selected = updateUiState is UpdateUiState.UpdateAvailable,
+                        enabled = updateUiState !is UpdateUiState.Checking,
+                        role = Role.Button,
+                        fontSize = 12.sp,
+                        verticalPadding = 9.dp,
+                        onClick = {
+                            when (updateUiState) {
+                                is UpdateUiState.UpdateAvailable -> onDownloadUpdate(updateUiState.info)
+                                is UpdateUiState.Downloading -> onDownloadUpdate(updateUiState.info)
+                                else -> onCheckForUpdates()
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
                             .testTag(RestCycleTestTags.UPDATE_ACTION_BTN)
-                            .clickable(enabled = !isChecking, role = Role.Button) {
-                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                when (updateUiState) {
-                                    is UpdateUiState.UpdateAvailable -> onDownloadUpdate(updateUiState.info)
-                                    is UpdateUiState.Downloading -> onDownloadUpdate(updateUiState.info)
-                                    else -> onCheckForUpdates()
-                                }
-                            },
-                        shape = RoundedCornerShape(14.dp),
-                        color = if (isUpdateAvailable) palette.accent else palette.pillContainer,
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = if (isUpdateAvailable) palette.accent else palette.borderSubtle
-                        )
-                    ) {
-                        Text(
-                            text = updateButtonText,
-                            color = if (isUpdateAvailable) palette.onAccent else palette.textPrimary,
-                            fontSize = 12.sp,
-                            fontWeight = if (isUpdateAvailable) FontWeight.Bold else FontWeight.SemiBold,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 9.dp)
-                        )
-                    }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -559,5 +355,83 @@ fun SettingsDialog(
                 )
             }
         }
+    }
+}
+
+private val THEME_OPTIONS = listOf(
+    Triple(
+        AppThemeStyle.DYNAMIC,
+        R.string.settings_theme_dynamic,
+        listOf(DayAtmospherePalette.accent, DawnDuskAtmospherePalette.backgroundGlow, NightAtmospherePalette.backgroundBottom)
+    ),
+    Triple(
+        AppThemeStyle.NORD,
+        R.string.settings_theme_nord,
+        listOf(NordDayAtmospherePalette.accent, NordDawnDuskAtmospherePalette.backgroundGlow, NordNightAtmospherePalette.accent)
+    ),
+    Triple(
+        AppThemeStyle.CATPPUCCIN_MACCHIATO,
+        R.string.settings_theme_catppuccin_macchiato,
+        listOf(CatppuccinDayAtmospherePalette.accent, CatppuccinDawnDuskAtmospherePalette.backgroundGlow, CatppuccinNightAtmospherePalette.accent)
+    ),
+    Triple(
+        AppThemeStyle.TOKYO_NIGHT,
+        R.string.settings_theme_tokyo_night,
+        listOf(TokyoNightDayAtmospherePalette.accent, TokyoNightDawnDuskAtmospherePalette.backgroundGlow, TokyoNightNightAtmospherePalette.accent)
+    ),
+    Triple(
+        AppThemeStyle.GRUVBOX,
+        R.string.settings_theme_gruvbox,
+        listOf(GruvboxDayAtmospherePalette.accent, GruvboxDawnDuskAtmospherePalette.backgroundGlow, GruvboxNightAtmospherePalette.accent)
+    )
+)
+
+@Composable
+private fun SettingsSectionTitle(text: String) {
+    Text(
+        text = text,
+        color = AtmosphereTheme.palette.textSecondary,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold
+    )
+}
+
+@Composable
+private fun SettingsOptionPill(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    role: Role = Role.RadioButton,
+    fontSize: TextUnit = 11.sp,
+    verticalPadding: Dp = 7.dp
+) {
+    val palette = AtmosphereTheme.palette
+    val view = LocalView.current
+    Surface(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(enabled = enabled, role = role) {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                onClick()
+            },
+        shape = RoundedCornerShape(14.dp),
+        color = if (selected) palette.accent else palette.pillContainer,
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected) palette.accent else palette.borderSubtle
+        )
+    ) {
+        Text(
+            text = label,
+            color = if (selected) palette.onAccent else palette.textPrimary,
+            fontSize = fontSize,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = verticalPadding)
+        )
     }
 }

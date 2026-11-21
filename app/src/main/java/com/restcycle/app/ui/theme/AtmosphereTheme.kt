@@ -175,8 +175,6 @@ val NordNightAtmospherePalette = AtmospherePalette(
     isLightSystemBars = false
 )
 
-val NordAtmospherePalette = NordNightAtmospherePalette
-
 val CatppuccinDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
     backgroundGlow = Color(0xFFECEFF5),
@@ -230,8 +228,6 @@ val CatppuccinNightAtmospherePalette = AtmospherePalette(
     pillContainer = Color(0xFF202336),
     isLightSystemBars = false
 )
-
-val CatppuccinMacchiatoAtmospherePalette = CatppuccinNightAtmospherePalette
 
 val TokyoNightDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
@@ -341,19 +337,17 @@ val GruvboxNightAtmospherePalette = AtmospherePalette(
     isLightSystemBars = false
 )
 
-fun paletteForSkyPhase(skyPhase: SkyPhase): AtmospherePalette = when (skyPhase) {
-    SkyPhase.DAY -> DayAtmospherePalette
-    SkyPhase.DAWN_DUSK -> DawnDuskAtmospherePalette
-    SkyPhase.NIGHT -> NightAtmospherePalette
-}
-
 fun paletteForTheme(
     skyPhase: SkyPhase,
     themeStyle: AppThemeStyle = AppThemeStyle.DYNAMIC,
     pureAmoledNight: Boolean = false
 ): AtmospherePalette {
     val base = when (themeStyle) {
-        AppThemeStyle.DYNAMIC -> paletteForSkyPhase(skyPhase)
+        AppThemeStyle.DYNAMIC -> when (skyPhase) {
+            SkyPhase.DAY -> DayAtmospherePalette
+            SkyPhase.DAWN_DUSK -> DawnDuskAtmospherePalette
+            SkyPhase.NIGHT -> NightAtmospherePalette
+        }
         AppThemeStyle.NORD -> when (skyPhase) {
             SkyPhase.DAY -> NordDayAtmospherePalette
             SkyPhase.DAWN_DUSK -> NordDawnDuskAtmospherePalette
@@ -514,7 +508,7 @@ fun AtmosphereTheme(
     }
 }
 
-private tailrec fun Context?.findActivity(): Activity? = when (this) {
+internal tailrec fun Context?.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
