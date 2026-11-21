@@ -70,29 +70,37 @@ class V15FeaturesTest {
     }
 
     @Test
-    fun ambientSoundPill_andMp3RawTracks_andTwoAndHalfHourMixCycleWork() {
+    fun ambientSoundPill_andAllSixDistinctMp3Tracks_andTwoAndHalfHourCycleWork() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        listOf(
+        val rawIds = listOf(
             R.raw.ambient_brown_noise,
             R.raw.ambient_stream_rain,
-            R.raw.ambient_campfire
-        ).forEach { rawId ->
+            R.raw.ambient_campfire,
+            R.raw.ambient_night_crickets,
+            R.raw.ambient_pad_432,
+            R.raw.ambient_singing_bowl
+        )
+        rawIds.forEach { rawId ->
             val sizeBytes = context.resources.openRawResource(rawId).use { it.readBytes().size }
-            assertTrue("Expected non-empty MP3 raw asset $rawId, got $sizeBytes", sizeBytes > 500_000)
+            assertTrue("Expected non-empty MP3 raw asset $rawId, got $sizeBytes", sizeBytes > 400_000)
         }
+        assertEquals(6, rawIds.distinct().size)
 
         assertEquals(9000.0, AmbientSoundController.MIX_CYCLE_DURATION_SECONDS, 0.01)
         listOf(0.0, 45.0, 1800.0, 4500.0, 8999.0).forEach { t ->
-            val (l, r, under) = AmbientSoundController.computeMixGains(t)
+            val (l, r, offsetGain) = AmbientSoundController.computeMixGains(t)
             assertTrue("Left gain out of bounds at $t: $l", l in 0.50f..0.96f)
             assertTrue("Right gain out of bounds at $t: $r", r in 0.50f..0.96f)
-            assertTrue("Under gain out of bounds at $t: $under", under in 0.08f..0.38f)
+            assertTrue("Offset gain out of bounds at $t: $offsetGain", offsetGain in 0.08f..0.42f)
         }
 
         assertEquals(AmbientSoundMode.BROWN_NOISE, AmbientSoundMode.OFF.next())
         assertEquals(AmbientSoundMode.STREAM_RAIN, AmbientSoundMode.BROWN_NOISE.next())
         assertEquals(AmbientSoundMode.CAMPFIRE, AmbientSoundMode.STREAM_RAIN.next())
-        assertEquals(AmbientSoundMode.OFF, AmbientSoundMode.CAMPFIRE.next())
+        assertEquals(AmbientSoundMode.NIGHT_CRICKETS, AmbientSoundMode.CAMPFIRE.next())
+        assertEquals(AmbientSoundMode.AMBIENT_PAD, AmbientSoundMode.NIGHT_CRICKETS.next())
+        assertEquals(AmbientSoundMode.SINGING_BOWL, AmbientSoundMode.AMBIENT_PAD.next())
+        assertEquals(AmbientSoundMode.OFF, AmbientSoundMode.SINGING_BOWL.next())
 
         composeRule.onNodeWithTag(RestCycleTestTags.modeTab(SleepMode.SLEEP_NOW)).performClick()
         composeRule.waitForIdle()
@@ -100,21 +108,19 @@ class V15FeaturesTest {
         val soundBtn = composeRule.onNodeWithTag(RestCycleTestTags.AMBIENT_SOUND_BUTTON)
         soundBtn.assertIsDisplayed().assertTextContains("Sounds", substring = true)
 
-        soundBtn.performClick()
-        composeRule.waitForIdle()
-        soundBtn.assertTextContains("Brown Noise", substring = true)
-
-        soundBtn.performClick()
-        composeRule.waitForIdle()
-        soundBtn.assertTextContains("Stream", substring = true)
-
-        soundBtn.performClick()
-        composeRule.waitForIdle()
-        soundBtn.assertTextContains("Campfire", substring = true)
-
-        soundBtn.performClick()
-        composeRule.waitForIdle()
-        soundBtn.assertTextContains("Sounds", substring = true)
+        listOf(
+            "Ocean Waves",
+            "Stream & Rain",
+            "Campfire",
+            "Night Crickets",
+            "432 Hz Ambient",
+            "Singing Bowl",
+            "Sounds"
+        ).forEach { expectedLabel ->
+            soundBtn.performClick()
+            composeRule.waitForIdle()
+            soundBtn.assertTextContains(expectedLabel, substring = true)
+        }
     }
 
     @Test

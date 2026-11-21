@@ -82,7 +82,7 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.5.1",
+    installedVersionName: String = "1.5.2",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {}

@@ -125,9 +125,12 @@
     <!-- Ambient Soundscape -->
     <string name="ambient_sound_button">Sonidos</string>
     <string name="ambient_sound_off">No</string>
-    <string name="ambient_sound_brown">Ruido marrón</string>
-    <string name="ambient_sound_rain">Arroyo</string>
+    <string name="ambient_sound_brown">Océano</string>
+    <string name="ambient_sound_rain">Arroyo y lluvia</string>
     <string name="ambient_sound_campfire">Hoguera</string>
+    <string name="ambient_sound_crickets">Grillos</string>
+    <string name="ambient_sound_pad_432">Ambient 432 Hz</string>
+    <string name="ambient_sound_singing_bowl">Cuenco tibetano</string>
 
     <!-- App Shortcuts -->
     <string name="shortcut_sleep_now_short">Dormir ahora</string>

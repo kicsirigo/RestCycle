@@ -895,8 +895,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.5.1"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.5.2"
     } catch (_: Exception) {
-        "1.5.1"
+        "1.5.2"
     }
 }

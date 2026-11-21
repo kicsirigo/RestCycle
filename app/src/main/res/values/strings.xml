@@ -125,9 +125,12 @@
     <!-- Ambient Soundscape -->
     <string name="ambient_sound_button">Sounds</string>
     <string name="ambient_sound_off">Off</string>
-    <string name="ambient_sound_brown">Brown Noise</string>
-    <string name="ambient_sound_rain">Stream</string>
+    <string name="ambient_sound_brown">Ocean Waves</string>
+    <string name="ambient_sound_rain">Stream &amp; Rain</string>
     <string name="ambient_sound_campfire">Campfire</string>
+    <string name="ambient_sound_crickets">Night Crickets</string>
+    <string name="ambient_sound_pad_432">432 Hz Ambient</string>
+    <string name="ambient_sound_singing_bowl">Singing Bowl</string>
 
     <!-- App Shortcuts -->
     <string name="shortcut_sleep_now_short">Sleep Now</string>
