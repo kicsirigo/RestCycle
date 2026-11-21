@@ -111,7 +111,7 @@ class V15FeaturesTest {
         listOf(
             "Ocean Waves",
             "Stream & Rain",
-            "Campfire",
+            "Fireplace",
             "Night Crickets",
             "432 Hz Ambient",
             "Singing Bowl",
