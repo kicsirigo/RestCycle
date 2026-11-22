@@ -68,7 +68,11 @@ fun HapticTimeWheel(
     is24HourFormat: Boolean,
     onTimeChange: (LocalTime) -> Unit,
     modifier: Modifier = Modifier,
-    itemHeight: Dp = 42.dp
+    itemHeight: Dp = 42.dp,
+    wheelTestTag: String = RestCycleTestTags.TIME_WHEEL,
+    hourTestTag: String = RestCycleTestTags.WHEEL_HOUR,
+    minuteTestTag: String = RestCycleTestTags.WHEEL_MINUTE,
+    amPmTestTag: String = RestCycleTestTags.WHEEL_AM_PM
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
@@ -252,7 +256,7 @@ fun HapticTimeWheel(
         modifier = modifier
             .fillMaxWidth()
             .height(wheelHeight)
-            .testTag(RestCycleTestTags.TIME_WHEEL)
+            .testTag(wheelTestTag)
             .semantics {
                 stateDescription = formattedWheelTime
             },
@@ -299,7 +303,7 @@ fun HapticTimeWheel(
                 itemHeight = itemHeight,
                 wheelHeight = wheelHeight,
                 width = 76.dp,
-                testTag = RestCycleTestTags.WHEEL_HOUR,
+                testTag = hourTestTag,
                 stateDesc = displayedHourText,
                 contentDesc = hoursCd,
                 labelForIndex = { index ->
@@ -329,7 +333,7 @@ fun HapticTimeWheel(
                 itemHeight = itemHeight,
                 wheelHeight = wheelHeight,
                 width = 76.dp,
-                testTag = RestCycleTestTags.WHEEL_MINUTE,
+                testTag = minuteTestTag,
                 stateDesc = displayedMinuteText,
                 contentDesc = minutesCd,
                 labelForIndex = { index ->
@@ -348,7 +352,7 @@ fun HapticTimeWheel(
                     itemHeight = itemHeight,
                     wheelHeight = wheelHeight,
                     width = 68.dp,
-                    testTag = RestCycleTestTags.WHEEL_AM_PM,
+                    testTag = amPmTestTag,
                     stateDesc = displayedAmPmText,
                     contentDesc = amPmCd,
                     labelForIndex = { index -> if (index == 0) amLabel else pmLabel },

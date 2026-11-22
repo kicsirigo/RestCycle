@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -609,14 +611,8 @@ fun SleepTrackerDialog(
                         selectedMood = manualMood,
                         previewDurationMinutes = previewDuration,
                         previewCycles = previewCycles,
-                        onAdjustBedtime = { deltaMins ->
-                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                            manualBedtime = manualBedtime.plusMinutes(deltaMins.toLong())
-                        },
-                        onAdjustWaketime = { deltaMins ->
-                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                            manualWaketime = manualWaketime.plusMinutes(deltaMins.toLong())
-                        },
+                        onSetBedtime = { manualBedtime = it },
+                        onSetWaketime = { manualWaketime = it },
                         onSelectMood = {
                             view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                             manualMood = it
@@ -855,6 +851,8 @@ private fun formatDurationCompact(totalMinutes: Int): String {
     }
 }
 
+private enum class ManualTimeField { BEDTIME, WAKETIME }
+
 @Composable
 private fun ManualSleepEntryCard(
     bedtime: LocalTime,
@@ -863,12 +861,15 @@ private fun ManualSleepEntryCard(
     selectedMood: SleepQualityMood,
     previewDurationMinutes: Int,
     previewCycles: Int,
-    onAdjustBedtime: (Int) -> Unit,
-    onAdjustWaketime: (Int) -> Unit,
+    onSetBedtime: (LocalTime) -> Unit,
+    onSetWaketime: (LocalTime) -> Unit,
     onSelectMood: (SleepQualityMood) -> Unit,
     onSave: () -> Unit
 ) {
     val palette = AtmosphereTheme.palette
+    val view = LocalView.current
+    var activeField by remember { mutableStateOf(ManualTimeField.BEDTIME) }
+
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = palette.pillContainer,
@@ -886,19 +887,66 @@ private fun ManualSleepEntryCard(
             ManualTimeStepperRow(
                 label = stringResource(R.string.calendar_manual_bedtime),
                 timeText = formatClockTime(bedtime, is24HourFormat),
+                selected = activeField == ManualTimeField.BEDTIME,
+                rowTag = RestCycleTestTags.MANUAL_BED_ROW,
                 minusTag = RestCycleTestTags.MANUAL_BED_MINUS,
                 plusTag = RestCycleTestTags.MANUAL_BED_PLUS,
-                onMinus = { onAdjustBedtime(-15) },
-                onPlus = { onAdjustBedtime(15) }
+                onSelectRow = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    activeField = ManualTimeField.BEDTIME
+                },
+                onMinus = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    activeField = ManualTimeField.BEDTIME
+                    onSetBedtime(bedtime.minusMinutes(1))
+                },
+                onPlus = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    activeField = ManualTimeField.BEDTIME
+                    onSetBedtime(bedtime.plusMinutes(1))
+                }
             )
             ManualTimeStepperRow(
                 label = stringResource(R.string.calendar_manual_waketime),
                 timeText = formatClockTime(waketime, is24HourFormat),
+                selected = activeField == ManualTimeField.WAKETIME,
+                rowTag = RestCycleTestTags.MANUAL_WAKE_ROW,
                 minusTag = RestCycleTestTags.MANUAL_WAKE_MINUS,
                 plusTag = RestCycleTestTags.MANUAL_WAKE_PLUS,
-                onMinus = { onAdjustWaketime(-15) },
-                onPlus = { onAdjustWaketime(15) }
+                onSelectRow = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    activeField = ManualTimeField.WAKETIME
+                },
+                onMinus = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    activeField = ManualTimeField.WAKETIME
+                    onSetWaketime(waketime.minusMinutes(1))
+                },
+                onPlus = {
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    activeField = ManualTimeField.WAKETIME
+                    onSetWaketime(waketime.plusMinutes(1))
+                }
             )
+
+            key(activeField) {
+                HapticTimeWheel(
+                    selectedTime = if (activeField == ManualTimeField.BEDTIME) bedtime else waketime,
+                    is24HourFormat = is24HourFormat,
+                    onTimeChange = { updated ->
+                        if (activeField == ManualTimeField.BEDTIME) {
+                            onSetBedtime(updated)
+                        } else {
+                            onSetWaketime(updated)
+                        }
+                    },
+                    itemHeight = 32.dp,
+                    wheelTestTag = RestCycleTestTags.MANUAL_TIME_WHEEL,
+                    hourTestTag = RestCycleTestTags.MANUAL_WHEEL_HOUR,
+                    minuteTestTag = RestCycleTestTags.MANUAL_WHEEL_MINUTE,
+                    amPmTestTag = RestCycleTestTags.MANUAL_WHEEL_AM_PM
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -977,59 +1025,79 @@ private fun ManualSleepEntryCard(
 private fun ManualTimeStepperRow(
     label: String,
     timeText: String,
+    selected: Boolean,
+    rowTag: String,
     minusTag: String,
     plusTag: String,
+    onSelectRow: () -> Unit,
     onMinus: () -> Unit,
     onPlus: () -> Unit
 ) {
     val palette = AtmosphereTheme.palette
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    val rowShape = RoundedCornerShape(10.dp)
+    Surface(
+        shape = rowShape,
+        color = if (selected) palette.accent.copy(alpha = 0.14f) else Color.Transparent,
+        border = BorderStroke(
+            1.dp,
+            if (selected) palette.accent else palette.borderSubtle.copy(alpha = 0.5f)
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(rowShape)
+            .clickable(role = Role.Button, onClick = onSelectRow)
+            .testTag(rowTag)
     ) {
-        Text(
-            text = label,
-            color = palette.textPrimary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
-        )
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = CircleShape,
-                color = palette.cardSurface,
-                border = BorderStroke(1.dp, palette.borderSubtle),
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .clickable(role = Role.Button, onClick = onMinus)
-                    .testTag(minusTag)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("−", color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-            }
             Text(
-                text = timeText,
-                style = TabularTextStyles.headerLiveClock,
-                color = palette.textPrimary,
-                textAlign = TextAlign.Center
+                text = label,
+                color = if (selected) palette.accentText else palette.textPrimary,
+                fontSize = 12.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
             )
-            Surface(
-                shape = CircleShape,
-                color = palette.cardSurface,
-                border = BorderStroke(1.dp, palette.borderSubtle),
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .clickable(role = Role.Button, onClick = onPlus)
-                    .testTag(plusTag)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("+", color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Surface(
+                    shape = CircleShape,
+                    color = palette.cardSurface,
+                    border = BorderStroke(1.dp, palette.borderSubtle),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = onMinus)
+                        .testTag(minusTag)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("−", color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Text(
+                    text = timeText,
+                    style = TabularTextStyles.headerLiveClock,
+                    color = palette.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = palette.cardSurface,
+                    border = BorderStroke(1.dp, palette.borderSubtle),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = onPlus)
+                        .testTag(plusTag)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("+", color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

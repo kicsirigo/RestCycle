@@ -1,7 +1,9 @@
 package com.restcycle.app.unit
 
 import android.content.Intent
+import android.provider.Settings
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.Lifecycle
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
@@ -353,16 +355,43 @@ class V15FeaturesTest {
         assertEquals(1, addedPlusOne)
 
         // 3. UI: Manual retroactive entry (#2) + Insight card appearance (#3) in All-Time Calendar
+        Settings.System.putString(
+            composeRule.activity.contentResolver,
+            Settings.System.TIME_12_24,
+            "24"
+        )
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        composeRule.waitForIdle()
+
         composeRule.onNodeWithTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON).performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_INSIGHT_CARD).assertDoesNotExist()
 
-        // Log first night manually on today
+        // Log first night manually on today with exact 1-minute selection & inline HapticTimeWheel
         composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_ADD_MANUAL_BTN)
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_MANUAL_FORM).assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_TIME_WHEEL).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_WHEEL_HOUR).assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_WHEEL_MINUTE).assertIsDisplayed()
+
+        // Step bedtime +1m (23:00 -> 23:01) and wake time -1m (06:45 -> 06:44) => 7h 43m
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_BED_PLUS).performScrollTo().performClick()
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_WAKE_MINUS).performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNode(
+            hasText("23:01", substring = true) and hasAnyAncestor(isDialog())
+        ).performScrollTo().assertIsDisplayed()
+        composeRule.onNode(
+            hasText("06:44", substring = true) and hasAnyAncestor(isDialog())
+        ).performScrollTo().assertIsDisplayed()
+        composeRule.onNode(
+            hasText("7h 43m", substring = true) and hasAnyAncestor(isDialog())
+        ).performScrollTo().assertIsDisplayed()
+
         composeRule.onNodeWithTag(RestCycleTestTags.manualMoodOption(SleepQualityMood.ENERGIZED.name))
             .performScrollTo()
             .performClick()
@@ -372,7 +401,7 @@ class V15FeaturesTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Energized •", substring = true).performScrollTo().assertIsDisplayed()
 
-        // Log a second night manually (2+ eligible sessions triggers Cycle Pattern Insight card)
+        // Log a second night manually (switch active wheel to Wake time & verify insight card appears)
         if (today.dayOfMonth > 1) {
             composeRule.onNodeWithTag(RestCycleTestTags.calendarDayCell(today.minusDays(1).toString()))
                 .performScrollTo()
@@ -383,6 +412,9 @@ class V15FeaturesTest {
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_WAKE_ROW).performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_TIME_WHEEL).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_WAKE_MINUS).performScrollTo().performClick()
         composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_MANUAL_SAVE_BTN)
             .performScrollTo()
