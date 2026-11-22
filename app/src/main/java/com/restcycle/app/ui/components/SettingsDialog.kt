@@ -82,10 +82,12 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.6.0",
+    installedVersionName: String = "1.7.0",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
-    onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {}
+    onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {},
+    onExportBackup: () -> Unit = {},
+    onImportBackup: () -> Unit = {}
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
@@ -344,6 +346,38 @@ fun SettingsDialog(
                             .fillMaxWidth()
                             .testTag(RestCycleTestTags.UPDATE_ACTION_BTN)
                     )
+                }
+
+                // Sleep data backup (#5)
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SettingsSectionTitle(stringResource(R.string.settings_backup_label))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SettingsOptionPill(
+                            label = "📤 ${stringResource(R.string.settings_backup_export)}",
+                            selected = false,
+                            role = Role.Button,
+                            fontSize = 12.sp,
+                            verticalPadding = 9.dp,
+                            onClick = onExportBackup,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag(RestCycleTestTags.BACKUP_EXPORT_BTN)
+                        )
+                        SettingsOptionPill(
+                            label = "📥 ${stringResource(R.string.settings_backup_import)}",
+                            selected = false,
+                            role = Role.Button,
+                            fontSize = 12.sp,
+                            verticalPadding = 9.dp,
+                            onClick = onImportBackup,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag(RestCycleTestTags.BACKUP_IMPORT_BTN)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(2.dp))

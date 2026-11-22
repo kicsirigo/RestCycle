@@ -164,4 +164,29 @@
     <string name="calendar_no_entries_for_day">Niciun somn înregistrat în această zi.</string>
     <string name="calendar_month_summary">%1$d nopți luna aceasta • Medie %2$s</string>
     <string name="calendar_delete_entry">Șterge înregistrarea</string>
+
+    <!-- v1.7.0 Sunete de somn, jurnal manual, tipar și backup JSON -->
+    <string name="sound_dialog_title">Sunete de somn</string>
+    <string name="sound_volume_label">Volum</string>
+    <string name="sound_timer_label">Cronometru</string>
+    <string name="sound_timer_endless">∞</string>
+    <string name="sound_timer_minutes">%1$d min</string>
+    <string name="sound_timer_remaining">Se oprește în %1$s</string>
+    <string name="sound_background_hint">Continuă să cânte cu ecranul oprit</string>
+    <string name="sound_close">Gata</string>
+    <string name="sound_notification_channel">Sunete de somn</string>
+    <string name="sound_notification_playing">Redare: %1$s</string>
+    <string name="sound_notification_stop">Oprește</string>
+    <string name="calendar_add_manual">+ Adaugă</string>
+    <string name="calendar_manual_bedtime">Culcare</string>
+    <string name="calendar_manual_waketime">Trezire</string>
+    <string name="calendar_manual_quality">Stare</string>
+    <string name="calendar_manual_save">Salvează</string>
+    <string name="calendar_cycle_insight">Odihnă optimă cu %1$d cicluri (%2$d%% odihnit în %3$d nopți)</string>
+    <string name="settings_backup_label">Copie de rezervă</string>
+    <string name="settings_backup_export">Export JSON</string>
+    <string name="settings_backup_import">Import JSON</string>
+    <string name="backup_export_success">%1$d nopți salvate în copie</string>
+    <string name="backup_import_success">%1$d nopți noi importate (%2$d în total)</string>
+    <string name="backup_error">Nu s-a putut procesa fișierul de rezervă</string>
 </resources>

@@ -164,4 +164,29 @@
     <string name="calendar_no_entries_for_day">Sem sono registado neste dia.</string>
     <string name="calendar_month_summary">%1$d noites neste mês • Média %2$s</string>
     <string name="calendar_delete_entry">Remover registo</string>
+
+    <!-- v1.7.0 Sons para dormir, registo manual, padrão e cópia JSON -->
+    <string name="sound_dialog_title">Sons para dormir</string>
+    <string name="sound_volume_label">Volume</string>
+    <string name="sound_timer_label">Temporizador</string>
+    <string name="sound_timer_endless">∞</string>
+    <string name="sound_timer_minutes">%1$d min</string>
+    <string name="sound_timer_remaining">Para em %1$s</string>
+    <string name="sound_background_hint">Continua a tocar com o ecrã desligado</string>
+    <string name="sound_close">Concluído</string>
+    <string name="sound_notification_channel">Sons para dormir</string>
+    <string name="sound_notification_playing">A reproduzir: %1$s</string>
+    <string name="sound_notification_stop">Parar</string>
+    <string name="calendar_add_manual">+ Registar</string>
+    <string name="calendar_manual_bedtime">Deitar</string>
+    <string name="calendar_manual_waketime">Acordar</string>
+    <string name="calendar_manual_quality">Sensação</string>
+    <string name="calendar_manual_save">Guardar</string>
+    <string name="calendar_cycle_insight">Melhor descanso com %1$d ciclos (%2$d%% revigorado em %3$d noites)</string>
+    <string name="settings_backup_label">Cópia de segurança</string>
+    <string name="settings_backup_export">Exportar JSON</string>
+    <string name="settings_backup_import">Importar JSON</string>
+    <string name="backup_export_success">%1$d noites guardadas na cópia</string>
+    <string name="backup_import_success">%1$d novas noites importadas (%2$d no total)</string>
+    <string name="backup_error">Não foi possível processar a cópia</string>
 </resources>

@@ -24,6 +24,8 @@ import com.restcycle.app.domain.model.SleepQualityMood
 import com.restcycle.app.domain.model.SleepSessionRecord
 import com.restcycle.app.platform.audio.AmbientSoundController
 import com.restcycle.app.platform.audio.AmbientSoundMode
+import com.restcycle.app.platform.audio.AmbientSoundService
+import com.restcycle.app.platform.audio.AmbientSoundStateHolder
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.LocalAppThemeStyle
@@ -35,7 +37,10 @@ import java.time.ZonedDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,6 +53,11 @@ class V15FeaturesTest {
 
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @Before
+    fun resetAmbientSoundState() {
+        AmbientSoundStateHolder.stopPlayback()
+    }
 
     @Test
     fun tokyoNightIsDefaultTheme_everforestReplacesCatppuccin_draculaAndRosePineWork() {
@@ -111,25 +121,57 @@ class V15FeaturesTest {
         assertEquals(AmbientSoundMode.SINGING_BOWL, AmbientSoundMode.AMBIENT_PAD.next())
         assertEquals(AmbientSoundMode.OFF, AmbientSoundMode.SINGING_BOWL.next())
 
-        composeRule.onNodeWithTag(RestCycleTestTags.modeTab(SleepMode.SLEEP_NOW)).performClick()
+        // Verify 30s sleep timer fade-out math & countdown formatting
+        assertEquals(1.0f, AmbientSoundController.computeFadeMultiplier(timerActive = false, remainingSeconds = 5L), 0.001f)
+        assertEquals(1.0f, AmbientSoundController.computeFadeMultiplier(timerActive = true, remainingSeconds = 45L), 0.001f)
+        assertEquals(0.5f, AmbientSoundController.computeFadeMultiplier(timerActive = true, remainingSeconds = 15L), 0.001f)
+        assertEquals(0.0f, AmbientSoundController.computeFadeMultiplier(timerActive = true, remainingSeconds = 0L), 0.001f)
+        assertEquals("15:05", AmbientSoundService.formatRemainingTime(905L))
+
+        // Sound picker pill is accessible right from WAKE_UP_AT as well as all other modes
+        composeRule.onNodeWithTag(RestCycleTestTags.SOUND_PICKER_PILL)
+            .assertIsDisplayed()
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.AMBIENT_SOUND_DIALOG).assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.SOUND_VOLUME_SLIDER).performScrollTo().assertIsDisplayed()
+
+        // All 6 sounds + Off + timer options are present in the dialog
+        AmbientSoundMode.entries.forEach { mode ->
+            composeRule.onNodeWithTag(RestCycleTestTags.ambientSoundOption(mode.name))
+                .performScrollTo()
+                .assertIsDisplayed()
+        }
+
+        // Choose Fireplace + 30 min sleep timer
+        composeRule.onNodeWithTag(RestCycleTestTags.ambientSoundOption(AmbientSoundMode.CAMPFIRE.name))
+            .performScrollTo()
+            .performClick()
+        composeRule.onNodeWithTag(RestCycleTestTags.soundTimerOption(30))
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+        assertEquals(AmbientSoundMode.CAMPFIRE, AmbientSoundStateHolder.state.value.mode)
+        assertEquals(30, AmbientSoundStateHolder.state.value.sleepTimerMinutes)
+        composeRule.onNodeWithText("Done").performClick()
         composeRule.waitForIdle()
 
-        val soundBtn = composeRule.onNodeWithTag(RestCycleTestTags.AMBIENT_SOUND_BUTTON)
-        soundBtn.assertIsDisplayed().assertTextContains("Sounds", substring = true)
-
-        listOf(
-            "Ocean Waves",
-            "Stream & Rain",
-            "Fireplace",
-            "Night Crickets",
-            "432 Hz Ambient",
-            "Singing Bowl",
-            "Sounds"
-        ).forEach { expectedLabel ->
-            soundBtn.performClick()
-            composeRule.waitForIdle()
-            soundBtn.assertTextContains(expectedLabel, substring = true)
-        }
+        // Switch to SLEEP_NOW: landscape sound button reflects active sound & opens picker dialog
+        composeRule.onNodeWithTag(RestCycleTestTags.modeTab(SleepMode.SLEEP_NOW)).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.AMBIENT_SOUND_BUTTON)
+            .assertIsDisplayed()
+            .assertTextContains("Fireplace", substring = true)
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.AMBIENT_SOUND_DIALOG).assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.ambientSoundOption(AmbientSoundMode.OFF.name))
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+        assertEquals(AmbientSoundMode.OFF, AmbientSoundStateHolder.state.value.mode)
+        composeRule.onNodeWithText("Done").performClick()
+        composeRule.waitForIdle()
     }
 
     @Test
@@ -265,5 +307,104 @@ class V15FeaturesTest {
             activity.intent.getStringExtra(MainActivity.EXTRA_SHORTCUT_ACTION)
         )
         controller.pause().stop().destroy()
+    }
+
+    @Test
+    fun manualSleepLog_cyclePatternInsight_andJsonBackupWorkEndToEnd() {
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+
+        // 1. Cycle Pattern Insight pure calculation (#3)
+        val singleNight = listOf(
+            SleepSessionRecord(1_700_000_000_000L, 1_700_027_000_000L, 450, 5, SleepQualityMood.RESTED)
+        )
+        assertNull(SleepHistoryCodec.computeBestCycleInsight(singleNight))
+
+        val mixedNights = listOf(
+            SleepSessionRecord(1_700_000_000_000L, 1_700_021_600_000L, 360, 4, SleepQualityMood.EXHAUSTED),
+            SleepSessionRecord(1_700_100_000_000L, 1_700_121_600_000L, 360, 4, SleepQualityMood.FAIR),
+            SleepSessionRecord(1_700_200_000_000L, 1_700_227_000_000L, 450, 5, SleepQualityMood.ENERGIZED),
+            SleepSessionRecord(1_700_300_000_000L, 1_700_327_000_000L, 450, 5, SleepQualityMood.RESTED)
+        )
+        val insight = SleepHistoryCodec.computeBestCycleInsight(mixedNights)
+        assertNotNull(insight)
+        assertEquals(5, insight!!.bestCycles)
+        assertEquals(100, insight.refreshedPercent)
+        assertEquals(2, insight.sampleCount)
+
+        // 2. JSON Export, Import & Merge deduplication (#5)
+        val exportedJson = SleepHistoryCodec.exportToJson(mixedNights, exportedAtEpochMillis = 1_700_400_000_000L)
+        assertTrue(exportedJson.contains("\"format\": \"restcycle_sleep_backup\""))
+        val reimported = SleepHistoryCodec.importFromJson(exportedJson)
+        assertNotNull(reimported)
+        assertEquals(4, reimported!!.size)
+        assertNull(SleepHistoryCodec.importFromJson("{ invalid json"))
+        assertNull(SleepHistoryCodec.importFromJson("{\"foo\":\"bar\"}"))
+
+        val (mergedSame, addedSame) = SleepHistoryCodec.mergeHistory(mixedNights, reimported)
+        assertEquals(4, mergedSame.size)
+        assertEquals(0, addedSame)
+
+        val extraNight = listOf(
+            SleepSessionRecord(1_700_500_000_000L, 1_700_527_000_000L, 450, 5, SleepQualityMood.ENERGIZED)
+        )
+        val (mergedPlusOne, addedPlusOne) = SleepHistoryCodec.mergeHistory(mixedNights, reimported + extraNight)
+        assertEquals(5, mergedPlusOne.size)
+        assertEquals(1, addedPlusOne)
+
+        // 3. UI: Manual retroactive entry (#2) + Insight card appearance (#3) in All-Time Calendar
+        composeRule.onNodeWithTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_INSIGHT_CARD).assertDoesNotExist()
+
+        // Log first night manually on today
+        composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_ADD_MANUAL_BTN)
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_MANUAL_FORM).assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.manualMoodOption(SleepQualityMood.ENERGIZED.name))
+            .performScrollTo()
+            .performClick()
+        composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_MANUAL_SAVE_BTN)
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Energized •", substring = true).performScrollTo().assertIsDisplayed()
+
+        // Log a second night manually (2+ eligible sessions triggers Cycle Pattern Insight card)
+        if (today.dayOfMonth > 1) {
+            composeRule.onNodeWithTag(RestCycleTestTags.calendarDayCell(today.minusDays(1).toString()))
+                .performScrollTo()
+                .performClick()
+            composeRule.waitForIdle()
+        }
+        composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_ADD_MANUAL_BTN)
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.MANUAL_WAKE_MINUS).performScrollTo().performClick()
+        composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_MANUAL_SAVE_BTN)
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.CALENDAR_INSIGHT_CARD)
+            .performScrollTo()
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithText("Close").performClick()
+        composeRule.waitForIdle()
+
+        // 4. UI: Backup Export / Import buttons visible in Settings
+        composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_BUTTON).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(RestCycleTestTags.BACKUP_EXPORT_BTN)
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertTextContains("Export JSON", substring = true)
+        composeRule.onNodeWithTag(RestCycleTestTags.BACKUP_IMPORT_BTN)
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertTextContains("Import JSON", substring = true)
     }
 }

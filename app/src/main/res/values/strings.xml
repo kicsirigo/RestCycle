@@ -164,4 +164,29 @@
     <string name="calendar_no_entries_for_day">No sleep logged on this day.</string>
     <string name="calendar_month_summary">%1$d nights this month • Avg %2$s</string>
     <string name="calendar_delete_entry">Remove entry</string>
+
+    <!-- v1.7.0 Sound Picker, Manual Sleep Log, Pattern Insight & JSON Backup -->
+    <string name="sound_dialog_title">Sleep Sounds</string>
+    <string name="sound_volume_label">Volume</string>
+    <string name="sound_timer_label">Sleep timer</string>
+    <string name="sound_timer_endless">∞</string>
+    <string name="sound_timer_minutes">%1$dm</string>
+    <string name="sound_timer_remaining">Stops in %1$s</string>
+    <string name="sound_background_hint">Plays continuously with screen off</string>
+    <string name="sound_close">Done</string>
+    <string name="sound_notification_channel">Sleep Sounds</string>
+    <string name="sound_notification_playing">Playing: %1$s</string>
+    <string name="sound_notification_stop">Stop</string>
+    <string name="calendar_add_manual">+ Log</string>
+    <string name="calendar_manual_bedtime">Bedtime</string>
+    <string name="calendar_manual_waketime">Wake time</string>
+    <string name="calendar_manual_quality">Feeling</string>
+    <string name="calendar_manual_save">Save</string>
+    <string name="calendar_cycle_insight">Best rest at %1$d cycles (%2$d%% refreshed across %3$d nights)</string>
+    <string name="settings_backup_label">Sleep data backup</string>
+    <string name="settings_backup_export">Export JSON</string>
+    <string name="settings_backup_import">Import JSON</string>
+    <string name="backup_export_success">Saved %1$d nights to backup</string>
+    <string name="backup_import_success">Imported %1$d new nights (%2$d total)</string>
+    <string name="backup_error">Could not read or save backup file</string>
 </resources>

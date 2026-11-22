@@ -348,6 +348,46 @@ class SleepViewModel(
         persistPref { repository.setSleepHistory(updated) }
     }
 
+    fun addManualSleepSession(
+        startEpochMillis: Long,
+        endEpochMillis: Long,
+        mood: SleepQualityMood
+    ) {
+        val safeStart = startEpochMillis.coerceAtLeast(1L)
+        val safeEnd = endEpochMillis.coerceAtLeast(safeStart)
+        val (durationMinutes, cycles) = SleepHistoryCodec.computeDurationAndCycles(
+            startEpochMillis = safeStart,
+            endEpochMillis = safeEnd,
+            sleepLatencyMinutes = sleepLatencyMinutes
+        )
+        val record = SleepSessionRecord(
+            startEpochMillis = safeStart,
+            endEpochMillis = safeEnd,
+            durationMinutes = durationMinutes,
+            cycles = cycles,
+            mood = mood
+        )
+        val updated = (listOf(record) + _sleepHistory.value)
+            .distinctBy { it.startEpochMillis to it.endEpochMillis }
+            .sortedByDescending { it.endEpochMillis }
+            .take(SleepHistoryCodec.MAX_HISTORY_RECORDS)
+        _sleepHistory.value = updated
+        persistPref { repository.setSleepHistory(updated) }
+    }
+
+    fun exportSleepHistoryJson(): String =
+        SleepHistoryCodec.exportToJson(_sleepHistory.value)
+
+    fun importSleepHistoryJson(rawJson: String): Pair<Int, Int>? {
+        val imported = SleepHistoryCodec.importFromJson(rawJson) ?: return null
+        val (merged, addedCount) = SleepHistoryCodec.mergeHistory(_sleepHistory.value, imported)
+        if (merged != _sleepHistory.value) {
+            _sleepHistory.value = merged
+            persistPref { repository.setSleepHistory(merged) }
+        }
+        return addedCount to merged.size
+    }
+
     fun cancelSleepSession() {
         if (_activeSleepStartMillis.value == 0L) return
         _activeSleepStartMillis.value = 0L

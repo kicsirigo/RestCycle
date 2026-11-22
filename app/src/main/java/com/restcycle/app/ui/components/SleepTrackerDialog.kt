@@ -58,8 +58,10 @@ import com.restcycle.app.ui.util.formatClockTime
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -75,6 +77,8 @@ fun SleepTrackerDialog(
     onCompleteSleepWithMood: (SleepQualityMood) -> Unit,
     onCancelSleep: () -> Unit,
     onDeleteRecord: (SleepSessionRecord) -> Unit = {},
+    sleepLatencyMinutes: Int = 15,
+    onAddManualSleep: (startEpochMillis: Long, endEpochMillis: Long, mood: SleepQualityMood) -> Unit = { _, _, _ -> },
     onDismiss: () -> Unit
 ) {
     val palette = AtmosphereTheme.palette
@@ -317,6 +321,37 @@ fun SleepTrackerDialog(
                     )
                 }
 
+                // Personal Sleep Cycle Pattern Insight (#3)
+                val cycleInsight = remember(sleepHistory) {
+                    SleepHistoryCodec.computeBestCycleInsight(sleepHistory)
+                }
+                if (cycleInsight != null) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = palette.accent.copy(alpha = 0.14f),
+                        border = BorderStroke(1.dp, palette.accent.copy(alpha = 0.45f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(RestCycleTestTags.CALENDAR_INSIGHT_CARD)
+                    ) {
+                        Text(
+                            text = "✨ ${
+                                stringResource(
+                                    R.string.calendar_cycle_insight,
+                                    cycleInsight.bestCycles,
+                                    cycleInsight.refreshedPercent,
+                                    cycleInsight.sampleCount
+                                )
+                            }",
+                            color = palette.accentText,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                        )
+                    }
+                }
+
                 // Month Navigation Bar
                 val monthFormatter = remember(locale) { DateTimeFormatter.ofPattern("LLLL yyyy", locale) }
                 val monthLabel = remember(displayedMonth, monthFormatter, locale) {
@@ -512,13 +547,87 @@ fun SleepTrackerDialog(
                     selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale))
                 }
                 val selectedDayRecords = sessionsByDate[selectedDate].orEmpty()
+                val canLogForSelectedDay = !selectedDate.isAfter(today)
+                var showManualForm by remember { mutableStateOf(false) }
+                var manualBedtime by remember { mutableStateOf(LocalTime.of(23, 0)) }
+                var manualWaketime by remember { mutableStateOf(LocalTime.of(6, 45)) }
+                var manualMood by remember { mutableStateOf(SleepQualityMood.RESTED) }
 
-                Text(
-                    text = selectedDateLabel,
-                    color = palette.textSecondary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = selectedDateLabel,
+                        color = palette.textSecondary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (canLogForSelectedDay) {
+                        val pillShape = RoundedCornerShape(50)
+                        Surface(
+                            shape = pillShape,
+                            color = if (showManualForm) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
+                            border = BorderStroke(1.dp, if (showManualForm) palette.accent else palette.borderSubtle),
+                            modifier = Modifier
+                                .clip(pillShape)
+                                .clickable {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    showManualForm = !showManualForm
+                                }
+                                .testTag(RestCycleTestTags.CALENDAR_ADD_MANUAL_BTN)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.calendar_add_manual),
+                                color = if (showManualForm) palette.accentText else palette.textPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (showManualForm && canLogForSelectedDay) {
+                    val bedDate = if (manualBedtime.isAfter(manualWaketime)) {
+                        selectedDate.minusDays(1)
+                    } else {
+                        selectedDate
+                    }
+                    val startEpochMillis = ZonedDateTime.of(bedDate, manualBedtime, zoneId).toInstant().toEpochMilli()
+                    val endEpochMillis = ZonedDateTime.of(selectedDate, manualWaketime, zoneId).toInstant().toEpochMilli()
+                    val (previewDuration, previewCycles) = SleepHistoryCodec.computeDurationAndCycles(
+                        startEpochMillis = startEpochMillis,
+                        endEpochMillis = endEpochMillis,
+                        sleepLatencyMinutes = sleepLatencyMinutes
+                    )
+                    ManualSleepEntryCard(
+                        bedtime = manualBedtime,
+                        waketime = manualWaketime,
+                        is24HourFormat = is24HourFormat,
+                        selectedMood = manualMood,
+                        previewDurationMinutes = previewDuration,
+                        previewCycles = previewCycles,
+                        onAdjustBedtime = { deltaMins ->
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            manualBedtime = manualBedtime.plusMinutes(deltaMins.toLong())
+                        },
+                        onAdjustWaketime = { deltaMins ->
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            manualWaketime = manualWaketime.plusMinutes(deltaMins.toLong())
+                        },
+                        onSelectMood = {
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            manualMood = it
+                        },
+                        onSave = {
+                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                            onAddManualSleep(startEpochMillis, endEpochMillis, manualMood)
+                            showManualForm = false
+                        }
+                    )
+                }
 
                 if (selectedDayRecords.isEmpty()) {
                     Text(
@@ -743,5 +852,186 @@ private fun formatDurationCompact(totalMinutes: Int): String {
         stringResource(R.string.duration_minutes_only, mins)
     } else {
         stringResource(R.string.duration_hours_minutes, hours, String.format(Locale.US, "%02d", mins))
+    }
+}
+
+@Composable
+private fun ManualSleepEntryCard(
+    bedtime: LocalTime,
+    waketime: LocalTime,
+    is24HourFormat: Boolean,
+    selectedMood: SleepQualityMood,
+    previewDurationMinutes: Int,
+    previewCycles: Int,
+    onAdjustBedtime: (Int) -> Unit,
+    onAdjustWaketime: (Int) -> Unit,
+    onSelectMood: (SleepQualityMood) -> Unit,
+    onSave: () -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = palette.pillContainer,
+        border = BorderStroke(1.dp, palette.borderSubtle),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(RestCycleTestTags.CALENDAR_MANUAL_FORM)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ManualTimeStepperRow(
+                label = stringResource(R.string.calendar_manual_bedtime),
+                timeText = formatClockTime(bedtime, is24HourFormat),
+                minusTag = RestCycleTestTags.MANUAL_BED_MINUS,
+                plusTag = RestCycleTestTags.MANUAL_BED_PLUS,
+                onMinus = { onAdjustBedtime(-15) },
+                onPlus = { onAdjustBedtime(15) }
+            )
+            ManualTimeStepperRow(
+                label = stringResource(R.string.calendar_manual_waketime),
+                timeText = formatClockTime(waketime, is24HourFormat),
+                minusTag = RestCycleTestTags.MANUAL_WAKE_MINUS,
+                plusTag = RestCycleTestTags.MANUAL_WAKE_PLUS,
+                onMinus = { onAdjustWaketime(-15) },
+                onPlus = { onAdjustWaketime(15) }
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.calendar_manual_quality),
+                    color = palette.textSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SleepQualityMood.entries.forEach { mood ->
+                        val isSelected = mood == selectedMood
+                        val shape = RoundedCornerShape(10.dp)
+                        Surface(
+                            shape = shape,
+                            color = if (isSelected) palette.accent.copy(alpha = 0.24f) else palette.cardSurface,
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) palette.accent else palette.borderSubtle
+                            ),
+                            modifier = Modifier
+                                .clip(shape)
+                                .clickable(role = Role.RadioButton) { onSelectMood(mood) }
+                                .testTag(RestCycleTestTags.manualMoodOption(mood.name))
+                        ) {
+                            Text(
+                                text = mood.emoji,
+                                fontSize = 15.sp,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.sleep_history_entry_meta,
+                        previewCycles,
+                        formatDurationCompact(previewDurationMinutes)
+                    ),
+                    style = TabularTextStyles.cardDuration,
+                    color = palette.accentText
+                )
+                FilledTonalButton(
+                    onClick = onSave,
+                    enabled = previewDurationMinutes > 0,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = palette.accent,
+                        contentColor = palette.onAccent
+                    ),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                    modifier = Modifier.testTag(RestCycleTestTags.CALENDAR_MANUAL_SAVE_BTN)
+                ) {
+                    Text(
+                        text = stringResource(R.string.calendar_manual_save),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualTimeStepperRow(
+    label: String,
+    timeText: String,
+    minusTag: String,
+    plusTag: String,
+    onMinus: () -> Unit,
+    onPlus: () -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            color = palette.textPrimary,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = palette.cardSurface,
+                border = BorderStroke(1.dp, palette.borderSubtle),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onMinus)
+                    .testTag(minusTag)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("−", color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            Text(
+                text = timeText,
+                style = TabularTextStyles.headerLiveClock,
+                color = palette.textPrimary,
+                textAlign = TextAlign.Center
+            )
+            Surface(
+                shape = CircleShape,
+                color = palette.cardSurface,
+                border = BorderStroke(1.dp, palette.borderSubtle),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onPlus)
+                    .testTag(plusTag)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("+", color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 }

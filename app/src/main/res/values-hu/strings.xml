@@ -164,4 +164,29 @@
     <string name="calendar_no_entries_for_day">Nincs rögzített alvás ezen a napon.</string>
     <string name="calendar_month_summary">%1$d éjszaka ebben a hónapban • Átlag %2$s</string>
     <string name="calendar_delete_entry">Bejegyzés törlése</string>
+
+    <!-- v1.7.0 Hangválasztó, kézi alváspótlás, minta-elemzés és JSON biztonsági mentés -->
+    <string name="sound_dialog_title">Alvóhangok</string>
+    <string name="sound_volume_label">Hangerő</string>
+    <string name="sound_timer_label">Elalvás-időzítő</string>
+    <string name="sound_timer_endless">∞</string>
+    <string name="sound_timer_minutes">%1$d p</string>
+    <string name="sound_timer_remaining">Leáll: %1$s múlva</string>
+    <string name="sound_background_hint">Lezárt képernyő mellett is szól tovább</string>
+    <string name="sound_close">Kész</string>
+    <string name="sound_notification_channel">Alvóhangok</string>
+    <string name="sound_notification_playing">Lejátszás: %1$s</string>
+    <string name="sound_notification_stop">Leállítás</string>
+    <string name="calendar_add_manual">+ Pótlás</string>
+    <string name="calendar_manual_bedtime">Lefekvés</string>
+    <string name="calendar_manual_waketime">Ébredés</string>
+    <string name="calendar_manual_quality">Kipihentség</string>
+    <string name="calendar_manual_save">Mentés</string>
+    <string name="calendar_cycle_insight">Legjobb pihenés %1$d ciklussal (%2$d%% friss ébredés %3$d éjszakából)</string>
+    <string name="settings_backup_label">Alvásadatok mentése</string>
+    <string name="settings_backup_export">JSON export</string>
+    <string name="settings_backup_import">JSON import</string>
+    <string name="backup_export_success">%1$d éjszaka elmentve a fájlba</string>
+    <string name="backup_import_success">%1$d új éjszaka betöltve (összesen %2$d)</string>
+    <string name="backup_error">Nem sikerült feldolgozni a mentési fájlt</string>
 </resources>

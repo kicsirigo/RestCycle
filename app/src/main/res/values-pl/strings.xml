@@ -164,4 +164,29 @@
     <string name="calendar_no_entries_for_day">Brak wpisów w tym dniu.</string>
     <string name="calendar_month_summary">%1$d nocy w tym miesiącu • Śr. %2$s</string>
     <string name="calendar_delete_entry">Usuń wpis</string>
+
+    <!-- v1.7.0 Dźwięki snu, ręczny wpis, wzorzec snu i kopia JSON -->
+    <string name="sound_dialog_title">Dźwięki do snu</string>
+    <string name="sound_volume_label">Głośność</string>
+    <string name="sound_timer_label">Wyłącznik czasowy</string>
+    <string name="sound_timer_endless">∞</string>
+    <string name="sound_timer_minutes">%1$d min</string>
+    <string name="sound_timer_remaining">Zatrzyma się za %1$s</string>
+    <string name="sound_background_hint">Gra dalej po wyłączeniu ekranu</string>
+    <string name="sound_close">Gotowe</string>
+    <string name="sound_notification_channel">Dźwięki do snu</string>
+    <string name="sound_notification_playing">Odtwarzanie: %1$s</string>
+    <string name="sound_notification_stop">Zatrzymaj</string>
+    <string name="calendar_add_manual">+ Dodaj</string>
+    <string name="calendar_manual_bedtime">Pójście spać</string>
+    <string name="calendar_manual_waketime">Pobudka</string>
+    <string name="calendar_manual_quality">Samopoczucie</string>
+    <string name="calendar_manual_save">Zapisz</string>
+    <string name="calendar_cycle_insight">Najlepszy sen przy %1$d cyklach (%2$d%% wypoczęty z %3$d nocy)</string>
+    <string name="settings_backup_label">Kopia zapasowa snu</string>
+    <string name="settings_backup_export">Eksport JSON</string>
+    <string name="settings_backup_import">Import JSON</string>
+    <string name="backup_export_success">Zapisano %1$d nocy w kopii</string>
+    <string name="backup_import_success">Zaimportowano %1$d nowych nocy (łącznie %2$d)</string>
+    <string name="backup_error">Nie udało się wczytać lub zapisać kopii</string>
 </resources>

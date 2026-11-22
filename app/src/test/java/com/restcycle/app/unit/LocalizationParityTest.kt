@@ -124,7 +124,24 @@ class LocalizationParityTest {
             R.string.settings_update_checking,
             R.string.settings_update_error_retry,
             R.string.settings_made_by,
-            R.string.action_close
+            R.string.action_close,
+            R.string.sound_dialog_title,
+            R.string.sound_volume_label,
+            R.string.sound_timer_label,
+            R.string.sound_timer_endless,
+            R.string.sound_background_hint,
+            R.string.sound_close,
+            R.string.sound_notification_channel,
+            R.string.sound_notification_stop,
+            R.string.calendar_add_manual,
+            R.string.calendar_manual_bedtime,
+            R.string.calendar_manual_waketime,
+            R.string.calendar_manual_quality,
+            R.string.calendar_manual_save,
+            R.string.settings_backup_label,
+            R.string.settings_backup_export,
+            R.string.settings_backup_import,
+            R.string.backup_error
         )
 
         simpleIds.forEach { resId ->
@@ -275,7 +292,24 @@ class LocalizationParityTest {
             R.string.settings_update_checking,
             R.string.settings_update_error_retry,
             R.string.settings_made_by,
-            R.string.action_close
+            R.string.action_close,
+            R.string.sound_dialog_title,
+            R.string.sound_volume_label,
+            R.string.sound_timer_label,
+            R.string.sound_timer_endless,
+            R.string.sound_background_hint,
+            R.string.sound_close,
+            R.string.sound_notification_channel,
+            R.string.sound_notification_stop,
+            R.string.calendar_add_manual,
+            R.string.calendar_manual_bedtime,
+            R.string.calendar_manual_waketime,
+            R.string.calendar_manual_quality,
+            R.string.calendar_manual_save,
+            R.string.settings_backup_label,
+            R.string.settings_backup_export,
+            R.string.settings_backup_import,
+            R.string.backup_error
         )
 
         val expectedWakeUpTitle = mapOf(
@@ -323,6 +357,12 @@ class LocalizationParityTest {
             assertFalse(localizedContext.getString(R.string.settings_update_up_to_date, "v1.2.0").isBlank())
             assertFalse(localizedContext.getString(R.string.settings_update_available_download, "v1.2.1").isBlank())
             assertFalse(localizedContext.getString(R.string.settings_update_downloading, "v1.2.1").isBlank())
+            assertFalse(localizedContext.getString(R.string.sound_timer_minutes, 30).isBlank())
+            assertFalse(localizedContext.getString(R.string.sound_timer_remaining, "14:55").isBlank())
+            assertFalse(localizedContext.getString(R.string.sound_notification_playing, "Ocean Waves").isBlank())
+            assertFalse(localizedContext.getString(R.string.calendar_cycle_insight, 5, 100, 4).isBlank())
+            assertFalse(localizedContext.getString(R.string.backup_export_success, 12).isBlank())
+            assertFalse(localizedContext.getString(R.string.backup_import_success, 3, 15).isBlank())
         }
     }
 }

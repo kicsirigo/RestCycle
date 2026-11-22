@@ -1,13 +1,17 @@
 package com.restcycle.app
 
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.restcycle.app.domain.model.SleepMode
@@ -15,6 +19,8 @@ import com.restcycle.app.platform.widget.RestCycleWidgetProvider
 import com.restcycle.app.ui.screen.RestCycleScreen
 import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.viewmodel.SleepViewModel
+import java.time.LocalDate
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -22,6 +28,60 @@ class MainActivity : ComponentActivity() {
         (application as RestCycleApplication).container.sleepViewModelFactory
     }
     private var openBreathingTrigger by mutableIntStateOf(0)
+    private var backupSnackbarEvent by mutableStateOf<Pair<Int, String>?>(null)
+
+    private val exportBackupLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        val json = viewModel.exportSleepHistoryJson()
+        val count = viewModel.sleepHistory.value.size
+        val saved = runCatching {
+            contentResolver.openOutputStream(uri)?.use { stream ->
+                stream.bufferedWriter(Charsets.UTF_8).use { writer ->
+                    writer.write(json)
+                }
+            } ?: error("Cannot open output stream")
+        }.isSuccess
+        val ctx = resolveLocalizedContext()
+        val message = if (saved) {
+            ctx.getString(R.string.backup_export_success, count)
+        } else {
+            ctx.getString(R.string.backup_error)
+        }
+        val nextId = (backupSnackbarEvent?.first ?: 0) + 1
+        backupSnackbarEvent = nextId to message
+    }
+
+    private val importBackupLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        val counts = runCatching {
+            val raw = contentResolver.openInputStream(uri)?.use { stream ->
+                stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            } ?: error("Cannot open input stream")
+            viewModel.importSleepHistoryJson(raw)
+        }.getOrNull()
+        val ctx = resolveLocalizedContext()
+        val message = if (counts != null) {
+            ctx.getString(R.string.backup_import_success, counts.first, counts.second)
+        } else {
+            ctx.getString(R.string.backup_error)
+        }
+        val nextId = (backupSnackbarEvent?.first ?: 0) + 1
+        backupSnackbarEvent = nextId to message
+    }
+
+    private fun resolveLocalizedContext(): Context {
+        val tag = viewModel.appLanguage.value.languageTag ?: return this
+        val locale = Locale.forLanguageTag(tag)
+        val config = Configuration(resources.configuration).apply {
+            setLocale(locale)
+            setLayoutDirection(locale)
+        }
+        return createConfigurationContext(config)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -88,6 +148,14 @@ class MainActivity : ComponentActivity() {
                     onCompleteSleepSession = viewModel::completeSleepSession,
                     onCancelSleepSession = viewModel::cancelSleepSession,
                     onDeleteSleepRecord = viewModel::deleteSleepRecord,
+                    onAddManualSleep = viewModel::addManualSleepSession,
+                    onExportBackup = {
+                        exportBackupLauncher.launch("restcycle-backup-${LocalDate.now()}.json")
+                    },
+                    onImportBackup = {
+                        importBackupLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
+                    },
+                    backupStatusEvent = backupSnackbarEvent,
                     openBreathingTrigger = openBreathingTrigger
                 )
             }

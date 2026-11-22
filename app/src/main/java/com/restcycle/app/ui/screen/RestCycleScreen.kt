@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.restcycle.app.R
 import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.model.SleepMode
@@ -82,13 +83,15 @@ import com.restcycle.app.domain.model.SleepOption
 import com.restcycle.app.domain.model.SleepQualityMood
 import com.restcycle.app.domain.model.SleepSessionRecord
 import com.restcycle.app.domain.model.SleepUiState
-import com.restcycle.app.platform.audio.AmbientSoundController
 import com.restcycle.app.platform.audio.AmbientSoundMode
+import com.restcycle.app.platform.audio.AmbientSoundService
+import com.restcycle.app.platform.audio.AmbientSoundStateHolder
 import com.restcycle.app.platform.reminder.BedtimeReminderScheduler
 import com.restcycle.app.platform.update.GitHubUpdateChecker
 import com.restcycle.app.platform.update.UpdateUiState
 import com.restcycle.app.platform.widget.RestCycleWidgetProvider
 import com.restcycle.app.ui.RestCycleTestTags
+import com.restcycle.app.ui.components.AmbientSoundDialog
 import com.restcycle.app.ui.components.BreathingExerciseDialog
 import com.restcycle.app.ui.components.CelestialHeader
 import com.restcycle.app.ui.components.CelestialLandscapeScene
@@ -142,6 +145,10 @@ fun RestCycleScreen(
     onCompleteSleepSession: (SleepQualityMood) -> Unit = {},
     onCancelSleepSession: () -> Unit = {},
     onDeleteSleepRecord: (SleepSessionRecord) -> Unit = {},
+    onAddManualSleep: (startEpochMillis: Long, endEpochMillis: Long, mood: SleepQualityMood) -> Unit = { _, _, _ -> },
+    onExportBackup: () -> Unit = {},
+    onImportBackup: () -> Unit = {},
+    backupStatusEvent: Pair<Int, String>? = null,
     openBreathingTrigger: Int = 0
 ) {
     val baseContext = LocalContext.current
@@ -175,27 +182,24 @@ fun RestCycleScreen(
         var showSettings by remember { mutableStateOf(false) }
         var showBreathing by remember { mutableStateOf(false) }
         var showSleepTracker by remember { mutableStateOf(false) }
-        var ambientSoundMode by remember { mutableStateOf(AmbientSoundMode.OFF) }
-        val ambientSoundController = remember { AmbientSoundController() }
+        var showSoundPicker by remember { mutableStateOf(false) }
+        val ambientPlaybackState by AmbientSoundStateHolder.state.collectAsStateWithLifecycle()
+        val ambientSoundMode = ambientPlaybackState.mode
         var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
         val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
         val clockUnavailableMessage = stringResource(R.string.clock_app_unavailable)
 
-        LaunchedEffect(openBreathingTrigger) {
-            if (openBreathingTrigger > 0) {
-                showBreathing = true
+        LaunchedEffect(backupStatusEvent?.first) {
+            val msg = backupStatusEvent?.second ?: return@LaunchedEffect
+            snackbarJob?.cancel()
+            snackbarJob = coroutineScope.launch {
+                snackbarHostState.showSnackbar(msg, duration = SnackbarDuration.Short)
             }
         }
 
-        LaunchedEffect(ambientSoundMode) {
-            if (ambientSoundMode == AmbientSoundMode.OFF) {
-                ambientSoundController.stop()
-            } else {
-                ambientSoundController.start(
-                    context = baseContext,
-                    scope = coroutineScope,
-                    mode = ambientSoundMode
-                )
+        LaunchedEffect(openBreathingTrigger) {
+            if (openBreathingTrigger > 0) {
+                showBreathing = true
             }
         }
 
@@ -226,7 +230,6 @@ fun RestCycleScreen(
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose {
                 lifecycleOwner.lifecycle.removeObserver(observer)
-                ambientSoundController.stop()
             }
         }
 
@@ -465,6 +468,13 @@ fun RestCycleScreen(
                                     showSleepTracker = true
                                 }
                             )
+                            SoundPickerPill(
+                                ambientSoundMode = ambientSoundMode,
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    showSoundPicker = true
+                                }
+                            )
                         }
                     }
 
@@ -507,6 +517,13 @@ fun RestCycleScreen(
                                     showSleepTracker = true
                                 }
                             )
+                            SoundPickerPill(
+                                ambientSoundMode = ambientSoundMode,
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    showSoundPicker = true
+                                }
+                            )
                         }
                     }
 
@@ -538,6 +555,13 @@ fun RestCycleScreen(
                                 onClick = {
                                     view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                     showSleepTracker = true
+                                }
+                            )
+                            SoundPickerPill(
+                                ambientSoundMode = ambientSoundMode,
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    showSoundPicker = true
                                 }
                             )
                         }
@@ -611,7 +635,7 @@ fun RestCycleScreen(
                             hintText = stringResource(id = hintRes),
                             onOpenBreathing = { showBreathing = true },
                             ambientSoundMode = ambientSoundMode,
-                            onCycleAmbientSound = { ambientSoundMode = ambientSoundMode.next() },
+                            onCycleAmbientSound = { showSoundPicker = true },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(vertical = 4.dp)
@@ -707,7 +731,9 @@ fun RestCycleScreen(
                 onDownloadUpdate = { releaseInfo ->
                     updateUiState = UpdateUiState.Downloading(releaseInfo)
                     GitHubUpdateChecker.downloadUpdateApk(context, releaseInfo)
-                }
+                },
+                onExportBackup = onExportBackup,
+                onImportBackup = onImportBackup
             )
         }
 
@@ -715,7 +741,32 @@ fun RestCycleScreen(
             BreathingExerciseDialog(
                 onDismiss = { showBreathing = false },
                 ambientSoundMode = ambientSoundMode,
-                onCycleAmbientSound = { ambientSoundMode = ambientSoundMode.next() }
+                onCycleAmbientSound = { showSoundPicker = true }
+            )
+        }
+
+        if (showSoundPicker) {
+            AmbientSoundDialog(
+                playbackState = ambientPlaybackState,
+                onSelectSound = { mode ->
+                    if (mode == AmbientSoundMode.OFF) {
+                        AmbientSoundService.stop(baseContext)
+                    } else {
+                        AmbientSoundService.play(
+                            context = baseContext,
+                            mode = mode,
+                            volume = ambientPlaybackState.volume,
+                            timerMinutes = ambientPlaybackState.sleepTimerMinutes
+                        )
+                    }
+                },
+                onVolumeChange = { vol ->
+                    AmbientSoundService.updateVolume(baseContext, vol)
+                },
+                onSelectTimerMinutes = { mins ->
+                    AmbientSoundService.updateTimer(baseContext, mins)
+                },
+                onDismiss = { showSoundPicker = false }
             )
         }
 
@@ -735,6 +786,8 @@ fun RestCycleScreen(
                     onCancelSleepSession()
                 },
                 onDeleteRecord = onDeleteSleepRecord,
+                sleepLatencyMinutes = uiState.sleepLatencyMinutes,
+                onAddManualSleep = onAddManualSleep,
                 onDismiss = { showSleepTracker = false }
             )
         }
@@ -796,6 +849,32 @@ private fun SleepHistoryPill(
     ) {
         Text(
             text = "📅",
+            fontSize = 12.sp,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun SoundPickerPill(
+    ambientSoundMode: AmbientSoundMode,
+    onClick: () -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    val active = ambientSoundMode != AmbientSoundMode.OFF
+    val shape = RoundedCornerShape(50)
+    Surface(
+        shape = shape,
+        color = if (active) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
+        border = BorderStroke(1.dp, if (active) palette.accent else palette.borderSubtle),
+        modifier = Modifier
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .testTag(RestCycleTestTags.SOUND_PICKER_PILL)
+    ) {
+        Text(
+            text = if (active) ambientSoundMode.emoji else "🎵",
             fontSize = 12.sp,
             maxLines = 1,
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
@@ -902,8 +981,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.6.0"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.7.0"
     } catch (_: Exception) {
-        "1.6.0"
+        "1.7.0"
     }
 }
