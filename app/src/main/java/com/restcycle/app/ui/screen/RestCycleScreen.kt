@@ -89,6 +89,7 @@ import com.restcycle.app.platform.audio.AmbientSoundService
 import com.restcycle.app.platform.audio.AmbientSoundStateHolder
 import com.restcycle.app.platform.reminder.BedtimeReminderScheduler
 import com.restcycle.app.platform.update.GitHubUpdateChecker
+import com.restcycle.app.platform.update.InstallLaunchResult
 import com.restcycle.app.platform.update.UpdateUiState
 import com.restcycle.app.platform.widget.RestCycleWidgetProvider
 import com.restcycle.app.ui.RestCycleTestTags
@@ -113,6 +114,7 @@ import com.restcycle.app.ui.theme.TimeFormatPreference
 import com.restcycle.app.ui.util.formatClockTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalTime
 import java.util.Locale
 
@@ -187,6 +189,7 @@ fun RestCycleScreen(
         val ambientPlaybackState by AmbientSoundStateHolder.state.collectAsStateWithLifecycle()
         val ambientSoundMode = ambientPlaybackState.mode
         var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
+        var updateDownloadJob by remember { mutableStateOf<Job?>(null) }
         val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
         val clockUnavailableMessage = stringResource(R.string.clock_app_unavailable)
 
@@ -730,8 +733,58 @@ fun RestCycleScreen(
                     }
                 },
                 onDownloadUpdate = { releaseInfo ->
+                    updateDownloadJob?.cancel()
                     updateUiState = UpdateUiState.Downloading(releaseInfo)
-                    GitHubUpdateChecker.downloadUpdateApk(context, releaseInfo)
+                    updateDownloadJob = coroutineScope.launch {
+                        val apkFile = GitHubUpdateChecker.downloadUpdateWithProgress(
+                            context = baseContext,
+                            info = releaseInfo
+                        ) { pct, downloaded, total ->
+                            updateUiState = UpdateUiState.Downloading(
+                                info = releaseInfo,
+                                progressPercent = pct,
+                                downloadedBytes = downloaded,
+                                totalBytes = total
+                            )
+                        }
+                        if (apkFile != null) {
+                            val launchResult = GitHubUpdateChecker.launchApkInstaller(baseContext, apkFile)
+                            updateUiState = UpdateUiState.ReadyToInstall(
+                                info = releaseInfo,
+                                apkFilePath = apkFile.absolutePath,
+                                needsInstallPermission = launchResult == InstallLaunchResult.OPENED_PERMISSION_SETTINGS
+                            )
+                        } else {
+                            updateUiState = UpdateUiState.Error
+                        }
+                    }
+                },
+                onCancelDownload = {
+                    val activeInfo = (updateUiState as? UpdateUiState.Downloading)?.info
+                    updateDownloadJob?.cancel()
+                    updateDownloadJob = null
+                    updateUiState = if (activeInfo != null) {
+                        UpdateUiState.UpdateAvailable(activeInfo)
+                    } else {
+                        UpdateUiState.Idle
+                    }
+                },
+                onInstallUpdate = { releaseInfo, apkFilePath ->
+                    val apkFile = File(apkFilePath)
+                    val launchResult = GitHubUpdateChecker.launchApkInstaller(baseContext, apkFile)
+                    updateUiState = when (launchResult) {
+                        InstallLaunchResult.FAILED -> UpdateUiState.UpdateAvailable(releaseInfo)
+                        InstallLaunchResult.OPENED_PERMISSION_SETTINGS -> UpdateUiState.ReadyToInstall(
+                            info = releaseInfo,
+                            apkFilePath = apkFilePath,
+                            needsInstallPermission = true
+                        )
+                        InstallLaunchResult.LAUNCHED_INSTALLER -> UpdateUiState.ReadyToInstall(
+                            info = releaseInfo,
+                            apkFilePath = apkFilePath,
+                            needsInstallPermission = false
+                        )
+                    }
                 },
                 onExportBackup = onExportBackup,
                 onImportBackup = onImportBackup
@@ -1018,8 +1071,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.7.2"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.7.3"
     } catch (_: Exception) {
-        "1.7.2"
+        "1.7.3"
     }
 }

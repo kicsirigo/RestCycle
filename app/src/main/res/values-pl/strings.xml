@@ -189,4 +189,8 @@
     <string name="backup_export_success">Zapisano %1$d nocy w kopii</string>
     <string name="backup_import_success">Zaimportowano %1$d nowych nocy (łącznie %2$d)</string>
     <string name="backup_error">Nie udało się wczytać lub zapisać kopii</string>
+    <string name="settings_update_downloading_progress">Pobieranie %1$s (%2$d%%)</string>
+    <string name="settings_update_install_now">Zainstaluj %1$s</string>
+    <string name="settings_update_cancel">Anuluj</string>
+    <string name="settings_update_permission_hint">Zezwól na instalację aplikacji, a potem stuknij Zainstaluj</string>
 </resources>

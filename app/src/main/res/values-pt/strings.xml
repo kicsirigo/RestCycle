@@ -189,4 +189,8 @@
     <string name="backup_export_success">%1$d noites guardadas na cópia</string>
     <string name="backup_import_success">%1$d novas noites importadas (%2$d no total)</string>
     <string name="backup_error">Não foi possível processar a cópia</string>
+    <string name="settings_update_downloading_progress">A transferir %1$s (%2$d%%)</string>
+    <string name="settings_update_install_now">Instalar %1$s</string>
+    <string name="settings_update_cancel">Cancelar</string>
+    <string name="settings_update_permission_hint">Permita a instalação de apps e toque em Instalar</string>
 </resources>

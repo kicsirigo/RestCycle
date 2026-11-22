@@ -141,7 +141,9 @@ class LocalizationParityTest {
             R.string.settings_backup_label,
             R.string.settings_backup_export,
             R.string.settings_backup_import,
-            R.string.backup_error
+            R.string.backup_error,
+            R.string.settings_update_cancel,
+            R.string.settings_update_permission_hint
         )
 
         simpleIds.forEach { resId ->
@@ -309,7 +311,9 @@ class LocalizationParityTest {
             R.string.settings_backup_label,
             R.string.settings_backup_export,
             R.string.settings_backup_import,
-            R.string.backup_error
+            R.string.backup_error,
+            R.string.settings_update_cancel,
+            R.string.settings_update_permission_hint
         )
 
         val expectedWakeUpTitle = mapOf(
@@ -363,6 +367,8 @@ class LocalizationParityTest {
             assertFalse(localizedContext.getString(R.string.calendar_cycle_insight, 5, 100, 4).isBlank())
             assertFalse(localizedContext.getString(R.string.backup_export_success, 12).isBlank())
             assertFalse(localizedContext.getString(R.string.backup_import_success, 3, 15).isBlank())
+            assertFalse(localizedContext.getString(R.string.settings_update_downloading_progress, "v1.7.3", 45).isBlank())
+            assertFalse(localizedContext.getString(R.string.settings_update_install_now, "v1.7.3").isBlank())
         }
     }
 }

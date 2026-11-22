@@ -189,4 +189,8 @@
     <string name="backup_export_success">Saved %1$d nights to backup</string>
     <string name="backup_import_success">Imported %1$d new nights (%2$d total)</string>
     <string name="backup_error">Could not read or save backup file</string>
+    <string name="settings_update_downloading_progress">Downloading %1$s (%2$d%%)</string>
+    <string name="settings_update_install_now">Install %1$s</string>
+    <string name="settings_update_cancel">Cancel</string>
+    <string name="settings_update_permission_hint">Enable app installs for RestCycle, then tap Install</string>
 </resources>

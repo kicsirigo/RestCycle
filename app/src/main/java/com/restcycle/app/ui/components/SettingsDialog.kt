@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.restcycle.app.R
+import com.restcycle.app.platform.update.GitHubUpdateChecker
 import com.restcycle.app.platform.update.ReleaseUpdateInfo
 import com.restcycle.app.platform.update.UpdateUiState
 import com.restcycle.app.ui.RestCycleTestTags
@@ -84,10 +86,12 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.7.2",
+    installedVersionName: String = "1.7.3",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {},
+    onCancelDownload: () -> Unit = {},
+    onInstallUpdate: (ReleaseUpdateInfo, String) -> Unit = { _, _ -> },
     onExportBackup: () -> Unit = {},
     onImportBackup: () -> Unit = {}
 ) {
@@ -325,32 +329,143 @@ fun SettingsDialog(
                             fontWeight = FontWeight.Medium
                         )
                     }
-                    val updateButtonText = when (updateUiState) {
-                        UpdateUiState.Idle -> stringResource(R.string.settings_update_check)
-                        UpdateUiState.Checking -> stringResource(R.string.settings_update_checking)
-                        is UpdateUiState.UpToDate -> stringResource(R.string.settings_update_up_to_date, "v$installedVersionName")
-                        is UpdateUiState.UpdateAvailable -> stringResource(R.string.settings_update_available_download, "v${updateUiState.info.latestVersion}")
-                        is UpdateUiState.Downloading -> stringResource(R.string.settings_update_downloading, "v${updateUiState.info.latestVersion}")
-                        UpdateUiState.Error -> stringResource(R.string.settings_update_error_retry)
-                    }
-                    SettingsOptionPill(
-                        label = updateButtonText,
-                        selected = updateUiState is UpdateUiState.UpdateAvailable,
-                        enabled = updateUiState !is UpdateUiState.Checking,
-                        role = Role.Button,
-                        fontSize = 12.sp,
-                        verticalPadding = 9.dp,
-                        onClick = {
-                            when (updateUiState) {
-                                is UpdateUiState.UpdateAvailable -> onDownloadUpdate(updateUiState.info)
-                                is UpdateUiState.Downloading -> onDownloadUpdate(updateUiState.info)
-                                else -> onCheckForUpdates()
+                    when (updateUiState) {
+                        is UpdateUiState.Downloading -> {
+                            val sizeSummary = if (updateUiState.totalBytes > 0L) {
+                                "${GitHubUpdateChecker.formatBytesMegabytes(updateUiState.downloadedBytes)} / ${
+                                    GitHubUpdateChecker.formatBytesMegabytes(updateUiState.totalBytes)
+                                }"
+                            } else if (updateUiState.downloadedBytes > 0L) {
+                                GitHubUpdateChecker.formatBytesMegabytes(updateUiState.downloadedBytes)
+                            } else {
+                                ""
                             }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag(RestCycleTestTags.UPDATE_ACTION_BTN)
-                    )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.settings_update_downloading_progress,
+                                        "v${updateUiState.info.latestVersion}",
+                                        updateUiState.progressPercent
+                                    ),
+                                    color = palette.textPrimary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                if (sizeSummary.isNotEmpty()) {
+                                    Text(
+                                        text = sizeSummary,
+                                        color = palette.textSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            if (updateUiState.totalBytes > 0L) {
+                                LinearProgressIndicator(
+                                    progress = { (updateUiState.progressPercent / 100f).coerceIn(0f, 1f) },
+                                    color = palette.accent,
+                                    trackColor = palette.borderSubtle,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .testTag(RestCycleTestTags.UPDATE_PROGRESS_BAR)
+                                )
+                            } else {
+                                LinearProgressIndicator(
+                                    color = palette.accent,
+                                    trackColor = palette.borderSubtle,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .testTag(RestCycleTestTags.UPDATE_PROGRESS_BAR)
+                                )
+                            }
+                            SettingsOptionPill(
+                                label = stringResource(R.string.settings_update_cancel),
+                                selected = false,
+                                role = Role.Button,
+                                fontSize = 12.sp,
+                                verticalPadding = 8.dp,
+                                onClick = onCancelDownload,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(RestCycleTestTags.UPDATE_CANCEL_BTN)
+                            )
+                        }
+
+                        is UpdateUiState.ReadyToInstall -> {
+                            SettingsOptionPill(
+                                label = stringResource(
+                                    R.string.settings_update_install_now,
+                                    "v${updateUiState.info.latestVersion}"
+                                ),
+                                leadingIcon = RestCycleIcons.ImportDownload,
+                                selected = true,
+                                role = Role.Button,
+                                fontSize = 12.sp,
+                                verticalPadding = 9.dp,
+                                onClick = {
+                                    onInstallUpdate(updateUiState.info, updateUiState.apkFilePath)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(RestCycleTestTags.UPDATE_ACTION_BTN)
+                            )
+                            if (updateUiState.needsInstallPermission) {
+                                Text(
+                                    text = stringResource(R.string.settings_update_permission_hint),
+                                    color = palette.textSecondary,
+                                    fontSize = 11.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+
+                        else -> {
+                            val updateButtonText = when (updateUiState) {
+                                UpdateUiState.Idle -> stringResource(R.string.settings_update_check)
+                                UpdateUiState.Checking -> stringResource(R.string.settings_update_checking)
+                                is UpdateUiState.UpToDate -> stringResource(
+                                    R.string.settings_update_up_to_date,
+                                    "v$installedVersionName"
+                                )
+                                is UpdateUiState.UpdateAvailable -> stringResource(
+                                    R.string.settings_update_available_download,
+                                    "v${updateUiState.info.latestVersion}"
+                                )
+                                UpdateUiState.Error -> stringResource(R.string.settings_update_error_retry)
+                                else -> stringResource(R.string.settings_update_check)
+                            }
+                            SettingsOptionPill(
+                                label = updateButtonText,
+                                leadingIcon = if (updateUiState is UpdateUiState.UpdateAvailable) {
+                                    RestCycleIcons.ImportDownload
+                                } else {
+                                    null
+                                },
+                                selected = updateUiState is UpdateUiState.UpdateAvailable,
+                                enabled = updateUiState !is UpdateUiState.Checking,
+                                role = Role.Button,
+                                fontSize = 12.sp,
+                                verticalPadding = 9.dp,
+                                onClick = {
+                                    when (updateUiState) {
+                                        is UpdateUiState.UpdateAvailable -> onDownloadUpdate(updateUiState.info)
+                                        else -> onCheckForUpdates()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(RestCycleTestTags.UPDATE_ACTION_BTN)
+                            )
+                        }
+                    }
                 }
 
                 // Sleep data backup (#5)
