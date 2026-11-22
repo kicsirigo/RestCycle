@@ -140,19 +140,28 @@
     <string name="shortcut_breathe_short">Oddech 4-7-8</string>
     <string name="shortcut_breathe_long">Uruchom ćwiczenie oddechowe 4-7-8</string>
 
-    <!-- Sleep Tracker & 7-Day History -->
+    <!-- Sleep Tracker & All-Time Calendar -->
     <string name="action_start_sleep">Śpię</string>
     <string name="action_woke_up">Wstałem</string>
-    <string name="sleep_tracker_title">Dziennik snu</string>
+    <string name="sleep_tracker_title">Kalendarz snu</string>
     <string name="sleep_wakeup_question">Jak spałeś?</string>
     <string name="sleep_mood_exhausted">Wyczerpany</string>
     <string name="sleep_mood_fair">Przeciętnie</string>
     <string name="sleep_mood_rested">Wypoczęty</string>
     <string name="sleep_mood_energized">Pełen energii</string>
-    <string name="sleep_history_title">Ostatnie 7 nocy</string>
-    <string name="sleep_history_empty">Kliknij Śpię przed snem, aby śledzić swój odpoczynek.</string>
+    <string name="sleep_history_title">Pełny kalendarz</string>
+    <string name="sleep_history_empty">Kliknij Śpię przed snem, aby budować pełny kalendarz snu.</string>
     <string name="sleep_history_avg_cycles">Śr.: %1$s cykli</string>
     <string name="sleep_sleeping_since">Śpisz od %1$s</string>
+    <string name="sleep_elapsed_label">Upłynęło: %1$s</string>
+    <string name="sleep_short_session_warning">Minęło tylko %1$d min — anuluj przy pomyłce lub wybierz ocenę snu.</string>
     <string name="sleep_cancel_session">Anuluj sesję</string>
     <string name="sleep_history_entry_meta">%1$d cykli • %2$s</string>
+    <string name="calendar_stat_total_nights">Noce</string>
+    <string name="calendar_stat_avg_sleep">Śr. sen</string>
+    <string name="calendar_stat_streak">Seria</string>
+    <string name="calendar_today">Dziś</string>
+    <string name="calendar_no_entries_for_day">Brak wpisów w tym dniu.</string>
+    <string name="calendar_month_summary">%1$d nocy w tym miesiącu • Śr. %2$s</string>
+    <string name="calendar_delete_entry">Usuń wpis</string>
 </resources>

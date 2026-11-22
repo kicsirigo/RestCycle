@@ -140,19 +140,28 @@
     <string name="shortcut_breathe_short">Respirație 4-7-8</string>
     <string name="shortcut_breathe_long">Pornește exercițiul de respirație 4-7-8</string>
 
-    <!-- Sleep Tracker & 7-Day History -->
+    <!-- Sleep Tracker & All-Time Calendar -->
     <string name="action_start_sleep">Dorm</string>
     <string name="action_woke_up">M-am trezit</string>
-    <string name="sleep_tracker_title">Jurnal de somn</string>
+    <string name="sleep_tracker_title">Calendar de somn</string>
     <string name="sleep_wakeup_question">Cum ai dormit?</string>
     <string name="sleep_mood_exhausted">Epuizat</string>
     <string name="sleep_mood_fair">Acceptabil</string>
     <string name="sleep_mood_rested">Odihnit</string>
     <string name="sleep_mood_energized">Plin de energie</string>
-    <string name="sleep_history_title">Ultimele 7 nopți</string>
-    <string name="sleep_history_empty">Apasă Dorm înainte de culcare pentru a urmări odihna aici.</string>
+    <string name="sleep_history_title">Calendar complet</string>
+    <string name="sleep_history_empty">Apasă Dorm înainte de culcare pentru a construi calendarul complet.</string>
     <string name="sleep_history_avg_cycles">Medie: %1$s cicluri</string>
     <string name="sleep_sleeping_since">Dormi de la %1$s</string>
+    <string name="sleep_elapsed_label">Timp scurs: %1$s</string>
+    <string name="sleep_short_session_warning">Au trecut doar %1$d min — anulează dacă a fost accidental sau alege cum ai dormit.</string>
     <string name="sleep_cancel_session">Anulează sesiunea</string>
     <string name="sleep_history_entry_meta">%1$d cicluri • %2$s</string>
+    <string name="calendar_stat_total_nights">Nopți</string>
+    <string name="calendar_stat_avg_sleep">Medie somn</string>
+    <string name="calendar_stat_streak">Serie</string>
+    <string name="calendar_today">Azi</string>
+    <string name="calendar_no_entries_for_day">Niciun somn înregistrat în această zi.</string>
+    <string name="calendar_month_summary">%1$d nopți luna aceasta • Medie %2$s</string>
+    <string name="calendar_delete_entry">Șterge înregistrarea</string>
 </resources>

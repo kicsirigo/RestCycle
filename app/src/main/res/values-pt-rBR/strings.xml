@@ -140,19 +140,28 @@
     <string name="shortcut_breathe_short">Respirar 4-7-8</string>
     <string name="shortcut_breathe_long">Iniciar exercício de respiração 4-7-8</string>
 
-    <!-- Sleep Tracker & 7-Day History -->
+    <!-- Sleep Tracker & All-Time Calendar -->
     <string name="action_start_sleep">Dormir</string>
     <string name="action_woke_up">Acordei</string>
-    <string name="sleep_tracker_title">Diário do sono</string>
+    <string name="sleep_tracker_title">Calendário do sono</string>
     <string name="sleep_wakeup_question">Como você dormiu?</string>
     <string name="sleep_mood_exhausted">Exausto</string>
     <string name="sleep_mood_fair">Razoável</string>
     <string name="sleep_mood_rested">Descansado</string>
     <string name="sleep_mood_energized">Energizado</string>
-    <string name="sleep_history_title">Últimas 7 noites</string>
-    <string name="sleep_history_empty">Toque em Dormir ao deitar para acompanhar seu descanso aqui.</string>
+    <string name="sleep_history_title">Calendário completo</string>
+    <string name="sleep_history_empty">Toque em Dormir ao deitar para montar seu calendário completo.</string>
     <string name="sleep_history_avg_cycles">Média: %1$s ciclos</string>
     <string name="sleep_sleeping_since">Dormindo desde %1$s</string>
+    <string name="sleep_elapsed_label">Decorrido: %1$s</string>
+    <string name="sleep_short_session_warning">Passaram apenas %1$d min — cancele se foi acidental ou registre o tempo real.</string>
     <string name="sleep_cancel_session">Cancelar sessão</string>
     <string name="sleep_history_entry_meta">%1$d ciclos • %2$s</string>
+    <string name="calendar_stat_total_nights">Noites</string>
+    <string name="calendar_stat_avg_sleep">Média</string>
+    <string name="calendar_stat_streak">Sequência</string>
+    <string name="calendar_today">Hoje</string>
+    <string name="calendar_no_entries_for_day">Nenhum sono registrado neste dia.</string>
+    <string name="calendar_month_summary">%1$d noites neste mês • Média %2$s</string>
+    <string name="calendar_delete_entry">Remover registro</string>
 </resources>

@@ -36,6 +36,12 @@ object RestCycleTestTags {
     const val SLEEP_TRACKER_DIALOG = "SLEEP_TRACKER_DIALOG"
     const val START_SLEEP_DIALOG_BTN = "START_SLEEP_DIALOG_BTN"
     const val SLEEP_MOOD_PREFIX = "SLEEP_MOOD_"
+    const val CALENDAR_PREV_MONTH = "CALENDAR_PREV_MONTH"
+    const val CALENDAR_NEXT_MONTH = "CALENDAR_NEXT_MONTH"
+    const val CALENDAR_MONTH_LABEL = "CALENDAR_MONTH_LABEL"
+    const val CALENDAR_SHORT_SESSION_NOTICE = "CALENDAR_SHORT_SESSION_NOTICE"
+    const val CALENDAR_DAY_PREFIX = "CALENDAR_DAY_"
+    const val DELETE_SLEEP_RECORD_PREFIX = "DELETE_SLEEP_RECORD_"
     const val CAFFEINE_CUTOFF_PILL = "CAFFEINE_CUTOFF_PILL"
     const val AMOLED_NIGHT_TOGGLE = "AMOLED_NIGHT_TOGGLE"
     const val BEDTIME_REMINDER_TOGGLE = "BEDTIME_REMINDER_TOGGLE"
@@ -43,6 +49,8 @@ object RestCycleTestTags {
 
     fun caffeineOption(hours: Int): String = "$CAFFEINE_OPTION_PREFIX$hours"
     fun sleepMoodOption(moodName: String): String = "$SLEEP_MOOD_PREFIX$moodName"
+    fun calendarDayCell(isoDate: String): String = "$CALENDAR_DAY_PREFIX$isoDate"
+    fun deleteSleepRecordBtn(endEpochMillis: Long): String = "$DELETE_SLEEP_RECORD_PREFIX$endEpochMillis"
 
     const val OPTION_CARD_PREFIX = "OPTION_CARD_"
     const val SET_ALARM_BTN_PREFIX = "SET_ALARM_BTN_"

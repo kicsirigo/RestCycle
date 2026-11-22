@@ -141,6 +141,7 @@ fun RestCycleScreen(
     onStartSleepSession: () -> Unit = {},
     onCompleteSleepSession: (SleepQualityMood) -> Unit = {},
     onCancelSleepSession: () -> Unit = {},
+    onDeleteSleepRecord: (SleepSessionRecord) -> Unit = {},
     openBreathingTrigger: Int = 0
 ) {
     val baseContext = LocalContext.current
@@ -210,10 +211,14 @@ fun RestCycleScreen(
                         }
                     }
                     Lifecycle.Event.ON_RESUME -> {
-                        if (pausedWhileSleeping && latestActiveSleepStart > 0L) {
+                        val activeStart = latestActiveSleepStart
+                        if (pausedWhileSleeping &&
+                            activeStart > 0L &&
+                            (System.currentTimeMillis() - activeStart) >= AUTO_WAKE_PROMPT_MIN_ELAPSED_MS
+                        ) {
                             showSleepTracker = true
-                            pausedWhileSleeping = false
                         }
+                        pausedWhileSleeping = false
                     }
                     else -> Unit
                 }
@@ -729,6 +734,7 @@ fun RestCycleScreen(
                 onCancelSleep = {
                     onCancelSleepSession()
                 },
+                onDeleteRecord = onDeleteSleepRecord,
                 onDismiss = { showSleepTracker = false }
             )
         }
@@ -737,6 +743,7 @@ fun RestCycleScreen(
 }
 
 private const val REQ_POST_NOTIFICATIONS = 5211
+private const val AUTO_WAKE_PROMPT_MIN_ELAPSED_MS = 20L * 60_000L
 
 @Composable
 private fun SleepSessionPill(
@@ -788,7 +795,7 @@ private fun SleepHistoryPill(
             .testTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON)
     ) {
         Text(
-            text = "📊",
+            text = "📅",
             fontSize = 12.sp,
             maxLines = 1,
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
@@ -895,8 +902,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.5.5"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.6.0"
     } catch (_: Exception) {
-        "1.5.5"
+        "1.6.0"
     }
 }

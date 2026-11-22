@@ -140,19 +140,28 @@
     <string name="shortcut_breathe_short">4-7-8 Légzés</string>
     <string name="shortcut_breathe_long">4-7-8 elalvás-légzés indítása</string>
 
-    <!-- Sleep Tracker & 7-Day History -->
+    <!-- Sleep Tracker & All-Time Calendar -->
     <string name="action_start_sleep">Alszom</string>
     <string name="action_woke_up">Felkeltem</string>
-    <string name="sleep_tracker_title">Alvásnapló</string>
+    <string name="sleep_tracker_title">Alvásnaptár</string>
     <string name="sleep_wakeup_question">Hogyan aludtál?</string>
     <string name="sleep_mood_exhausted">Kimerülten</string>
     <string name="sleep_mood_fair">Átlagosan</string>
     <string name="sleep_mood_rested">Pihenten</string>
     <string name="sleep_mood_energized">Kirobbanóan</string>
-    <string name="sleep_history_title">Utolsó 7 éjszaka</string>
-    <string name="sleep_history_empty">Koppints az Alszom gombra lefekvéskor, hogy itt lásd a 7 napos alvási naplódat.</string>
+    <string name="sleep_history_title">Teljes előzménynaptár</string>
+    <string name="sleep_history_empty">Koppints az Alszom gombra lefekvéskor az örökös alvásnaptárad építéséhez.</string>
     <string name="sleep_history_avg_cycles">Átlag: %1$s ciklus</string>
     <string name="sleep_sleeping_since">Alvás %1$s óta</string>
+    <string name="sleep_elapsed_label">Eltelt idő: %1$s</string>
+    <string name="sleep_short_session_warning">Csak %1$d perc telt el — véletlen érintésnél válaszd a Munkamenet megszakítása gombot.</string>
     <string name="sleep_cancel_session">Munkamenet megszakítása</string>
     <string name="sleep_history_entry_meta">%1$d ciklus • %2$s</string>
+    <string name="calendar_stat_total_nights">Éjszakák</string>
+    <string name="calendar_stat_avg_sleep">Átlagidő</string>
+    <string name="calendar_stat_streak">Sorozat</string>
+    <string name="calendar_today">Ma</string>
+    <string name="calendar_no_entries_for_day">Nincs rögzített alvás ezen a napon.</string>
+    <string name="calendar_month_summary">%1$d éjszaka ebben a hónapban • Átlag %2$s</string>
+    <string name="calendar_delete_entry">Bejegyzés törlése</string>
 </resources>

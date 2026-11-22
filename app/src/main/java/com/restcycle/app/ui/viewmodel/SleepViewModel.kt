@@ -31,7 +31,6 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.coroutineContext
-import kotlin.math.roundToInt
 
 class SleepViewModel(
     private val repository: LatencyPreferencesRepository,
@@ -315,24 +314,17 @@ class SleepViewModel(
         mood: SleepQualityMood,
         nowEpochMillis: Long = System.currentTimeMillis()
     ) {
-        val existingStart = _activeSleepStartMillis.value
-        val start = if (existingStart > 0L) {
-            existingStart
-        } else {
-            nowEpochMillis - SleepHistoryCodec.DEFAULT_FALLBACK_SLEEP_MINUTES * 60_000L
-        }
-        val elapsedMinutes = ((nowEpochMillis - start) / 60_000L).toInt()
-        val durationMinutes = if (elapsedMinutes < 15) {
-            SleepHistoryCodec.DEFAULT_FALLBACK_SLEEP_MINUTES
-        } else {
-            elapsedMinutes.coerceAtMost(14 * 60)
-        }
-        val cycles = ((durationMinutes - sleepLatencyMinutes).coerceAtLeast(90) / 90.0)
-            .roundToInt()
-            .coerceIn(1, 7)
+        val start = _activeSleepStartMillis.value
+        if (start <= 0L) return
+        val safeEnd = nowEpochMillis.coerceAtLeast(start)
+        val (durationMinutes, cycles) = SleepHistoryCodec.computeDurationAndCycles(
+            startEpochMillis = start,
+            endEpochMillis = safeEnd,
+            sleepLatencyMinutes = sleepLatencyMinutes
+        )
         val record = SleepSessionRecord(
             startEpochMillis = start,
-            endEpochMillis = nowEpochMillis,
+            endEpochMillis = safeEnd,
             durationMinutes = durationMinutes,
             cycles = cycles,
             mood = mood
@@ -345,6 +337,15 @@ class SleepViewModel(
             repository.setActiveSleepStartMillis(0L)
             repository.setSleepHistory(updated)
         }
+    }
+
+    fun deleteSleepRecord(record: SleepSessionRecord) {
+        val updated = _sleepHistory.value.filterNot {
+            it.startEpochMillis == record.startEpochMillis && it.endEpochMillis == record.endEpochMillis
+        }
+        if (updated.size == _sleepHistory.value.size) return
+        _sleepHistory.value = updated
+        persistPref { repository.setSleepHistory(updated) }
     }
 
     fun cancelSleepSession() {

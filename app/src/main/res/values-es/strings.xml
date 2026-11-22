@@ -140,19 +140,28 @@
     <string name="shortcut_breathe_short">Respirar 4-7-8</string>
     <string name="shortcut_breathe_long">Iniciar ejercicio de respiración 4-7-8</string>
 
-    <!-- Sleep Tracker & 7-Day History -->
+    <!-- Sleep Tracker & All-Time Calendar -->
     <string name="action_start_sleep">Dormir</string>
     <string name="action_woke_up">Desperté</string>
-    <string name="sleep_tracker_title">Diario de sueño</string>
+    <string name="sleep_tracker_title">Calendario de sueño</string>
     <string name="sleep_wakeup_question">¿Cómo dormiste?</string>
     <string name="sleep_mood_exhausted">Agotado</string>
     <string name="sleep_mood_fair">Regular</string>
     <string name="sleep_mood_rested">Descansado</string>
     <string name="sleep_mood_energized">Con energía</string>
-    <string name="sleep_history_title">Últimas 7 noches</string>
-    <string name="sleep_history_empty">Toca Dormir antes de acostarte para registrar tu descanso aquí.</string>
+    <string name="sleep_history_title">Historial completo</string>
+    <string name="sleep_history_empty">Toca Dormir antes de acostarte para crear tu calendario histórico.</string>
     <string name="sleep_history_avg_cycles">Prom: %1$s ciclos</string>
     <string name="sleep_sleeping_since">Durmiendo desde %1$s</string>
+    <string name="sleep_elapsed_label">Transcurrido: %1$s</string>
+    <string name="sleep_short_session_warning">Solo han pasado %1$d min — toca Cancelar si fue accidental, o elige cómo dormiste.</string>
     <string name="sleep_cancel_session">Cancelar sesión</string>
     <string name="sleep_history_entry_meta">%1$d ciclos • %2$s</string>
+    <string name="calendar_stat_total_nights">Noches</string>
+    <string name="calendar_stat_avg_sleep">Promedio</string>
+    <string name="calendar_stat_streak">Racha</string>
+    <string name="calendar_today">Hoy</string>
+    <string name="calendar_no_entries_for_day">Sin registro en este día.</string>
+    <string name="calendar_month_summary">%1$d noches este mes • Prom. %2$s</string>
+    <string name="calendar_delete_entry">Eliminar registro</string>
 </resources>

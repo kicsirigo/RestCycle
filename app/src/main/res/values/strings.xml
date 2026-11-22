@@ -140,19 +140,28 @@
     <string name="shortcut_breathe_short">4-7-8 Breathe</string>
     <string name="shortcut_breathe_long">Start 4-7-8 sleep breathing exercise</string>
 
-    <!-- Sleep Tracker & 7-Day History -->
+    <!-- Sleep Tracker & All-Time Calendar -->
     <string name="action_start_sleep">Sleep</string>
     <string name="action_woke_up">Woke up</string>
-    <string name="sleep_tracker_title">Sleep Journal</string>
+    <string name="sleep_tracker_title">Sleep Calendar</string>
     <string name="sleep_wakeup_question">How did you sleep?</string>
     <string name="sleep_mood_exhausted">Exhausted</string>
     <string name="sleep_mood_fair">Fair</string>
     <string name="sleep_mood_rested">Rested</string>
     <string name="sleep_mood_energized">Energized</string>
-    <string name="sleep_history_title">Last 7 Nights</string>
-    <string name="sleep_history_empty">Tap Sleep before bed to track your rest and morning mood here.</string>
+    <string name="sleep_history_title">All-Time Calendar</string>
+    <string name="sleep_history_empty">Tap Sleep before bed to build your all-time sleep calendar.</string>
     <string name="sleep_history_avg_cycles">Avg: %1$s cycles</string>
     <string name="sleep_sleeping_since">Sleeping since %1$s</string>
+    <string name="sleep_elapsed_label">Elapsed: %1$s</string>
+    <string name="sleep_short_session_warning">Only %1$d min elapsed — tap Cancel if this was accidental, or choose a rating to log real time.</string>
     <string name="sleep_cancel_session">Cancel session</string>
     <string name="sleep_history_entry_meta">%1$d cycles • %2$s</string>
+    <string name="calendar_stat_total_nights">Nights</string>
+    <string name="calendar_stat_avg_sleep">Avg sleep</string>
+    <string name="calendar_stat_streak">Streak</string>
+    <string name="calendar_today">Today</string>
+    <string name="calendar_no_entries_for_day">No sleep logged on this day.</string>
+    <string name="calendar_month_summary">%1$d nights this month • Avg %2$s</string>
+    <string name="calendar_delete_entry">Remove entry</string>
 </resources>

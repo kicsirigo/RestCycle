@@ -87,6 +87,7 @@ class MainActivity : ComponentActivity() {
                     onStartSleepSession = viewModel::startSleepSession,
                     onCompleteSleepSession = viewModel::completeSleepSession,
                     onCancelSleepSession = viewModel::cancelSleepSession,
+                    onDeleteSleepRecord = viewModel::deleteSleepRecord,
                     openBreathingTrigger = openBreathingTrigger
                 )
             }
