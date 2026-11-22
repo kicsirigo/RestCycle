@@ -46,7 +46,7 @@ Every interaction reacts in real time: as you scroll the haptic time wheel or sw
 | **Power Nap** | Science-backed naps | One-tap **10 min** (Micro), **20 min** (Optimal), and **90 min** (Full Cycle) presets with built-in sleep-inertia guidance. |
 
 ### Ambient Sleep Sounds, Sleep Timer & Screen-Off Playback
-- **6 High-Fidelity Built-In Offline Soundscapes** — **Ocean Waves**, **Stream & Rain**, **Fireplace**, **Night Crickets**, **432 Hz Ambient**, and **Singing Bowl** bundled directly in the APK (zero internet required).
+- **6 High-Fidelity Built-In Offline Soundscapes** — **Ocean Waves**, **Thunderstorm**, **Fireplace**, **Night Crickets**, **432 Hz Ambient**, and **Singing Bowl** bundled directly in the APK (zero internet required).
 - **Universal Sound Picker Dialog** — Accessible from the top status bar across all 4 modes as well as inside the landscape scene and breathing exercise, with a live **Volume slider (`10%–100%`)** and **Sleep Timer** (`∞`, `15m`, `30m`, `45m`, `60m`) featuring a smooth **30-second fade-out** before stopping.
 - **Continuous Screen-Off Audio** — Powered by a persistent `mediaPlayback` foreground service (`AmbientSoundService`) with notification playback controls so audio keeps playing reliably when you lock your phone or switch apps.
 

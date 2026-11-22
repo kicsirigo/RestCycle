@@ -335,18 +335,21 @@ object RestCycleIcons {
     val CloudRain: ImageVector by lazy {
         strokeIcon("RestCycleCloudRain") {
             strokePath {
-                moveTo(6.5f, 14.5f)
-                lineTo(17f, 14.5f)
-                arcTo(3.4f, 3.4f, 0f, isMoreThanHalf = false, isPositiveArc = false, 16.5f, 7.8f)
-                arcTo(5f, 5f, 0f, isMoreThanHalf = false, isPositiveArc = false, 7.2f, 8.4f)
-                arcTo(3.2f, 3.2f, 0f, isMoreThanHalf = false, isPositiveArc = false, 6.5f, 14.5f)
+                moveTo(6.5f, 14f)
+                lineTo(17f, 14f)
+                arcTo(3.4f, 3.4f, 0f, isMoreThanHalf = false, isPositiveArc = false, 16.5f, 7.3f)
+                arcTo(5f, 5f, 0f, isMoreThanHalf = false, isPositiveArc = false, 7.2f, 7.9f)
+                arcTo(3.2f, 3.2f, 0f, isMoreThanHalf = false, isPositiveArc = false, 6.5f, 14f)
                 close()
-                moveTo(8.5f, 17.5f)
-                lineTo(7.5f, 20f)
-                moveTo(12.5f, 17.5f)
-                lineTo(11.5f, 20f)
-                moveTo(16.5f, 17.5f)
-                lineTo(15.5f, 20f)
+                // Crisp lightning bolt + flanking raindrops
+                moveTo(12.5f, 14f)
+                lineTo(10.5f, 17.8f)
+                lineTo(13f, 17.8f)
+                lineTo(11.5f, 21.5f)
+                moveTo(7.5f, 17f)
+                lineTo(6.8f, 19.2f)
+                moveTo(17f, 17f)
+                lineTo(16.3f, 19.2f)
             }
         }
     }
