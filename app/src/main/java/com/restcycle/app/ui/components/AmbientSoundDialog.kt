@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -80,12 +82,23 @@ fun AmbientSoundDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "🎵 ${stringResource(R.string.sound_dialog_title)}",
-                        color = palette.textPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = RestCycleIcons.AudioWaveform,
+                            contentDescription = null,
+                            tint = palette.accentText,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.sound_dialog_title),
+                            color = palette.textPrimary,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     TextButton(
                         onClick = onDismiss,
                         colors = ButtonDefaults.textButtonColors(contentColor = palette.accentText),
@@ -233,13 +246,23 @@ fun AmbientSoundDialog(
                     }
                 }
 
-                Text(
-                    text = "🌙 ${stringResource(R.string.sound_background_hint)}",
-                    color = palette.textSecondary,
-                    fontSize = 11.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = RestCycleIcons.Moon,
+                        contentDescription = null,
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.sound_background_hint),
+                        color = palette.textSecondary,
+                        fontSize = 11.sp
+                    )
+                }
             }
         }
     }
@@ -266,15 +289,28 @@ private fun SoundModeOptionTile(
             .clickable(role = Role.RadioButton, onClick = onClick)
             .testTag(RestCycleTestTags.ambientSoundOption(mode.name))
     ) {
-        Text(
-            text = "${mode.emoji} ${stringResource(mode.labelResId)}",
-            color = if (selected) palette.accentText else palette.textPrimary,
-            fontSize = 12.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp)
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 10.dp)
+        ) {
+            val contentColor = if (selected) palette.accentText else palette.textPrimary
+            Icon(
+                imageVector = RestCycleIcons.forAmbientSound(mode),
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(15.dp)
+            )
+            Text(
+                text = stringResource(mode.labelResId),
+                color = contentColor,
+                fontSize = 12.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }

@@ -82,8 +82,10 @@ class V14FeaturesTest {
     @Test
     fun caffeinePill_andBreathingDialog_andSettingsNewThemesWorkEndToEnd() {
         // Default WAKE_UP_AT 06:50 -> highlighted wake_5 bedtime is 23:05 -> -8h caffeine cutoff = 15:05
-        composeRule.onNodeWithTag(RestCycleTestTags.CAFFEINE_CUTOFF_PILL).assertIsDisplayed()
-        composeRule.onNodeWithText("☕", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(RestCycleTestTags.CAFFEINE_CUTOFF_PILL)
+            .assertIsDisplayed()
+            .assertTextContains(":05", substring = true)
+        composeRule.onNodeWithText("\u2615", substring = true).assertDoesNotExist()
 
         // Switch to SLEEP_NOW and open 4-7-8 Breathing Exercise
         composeRule.onNodeWithTag(RestCycleTestTags.modeTab(SleepMode.SLEEP_NOW)).performClick()

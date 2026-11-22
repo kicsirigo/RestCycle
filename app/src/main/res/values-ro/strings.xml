@@ -117,7 +117,7 @@
     <string name="breathing_cycle_count">Ciclu %1$d</string>
     <string name="breathing_pause">Pauză</string>
     <string name="breathing_resume">Continuă</string>
-    <string name="caffeine_cutoff_label">☕ %1$s</string>
+    <string name="caffeine_cutoff_label">%1$s</string>
     <string name="reminder_channel_name">Mementouri de culcare</string>
     <string name="reminder_notification_title">Timpul de relaxare</string>
     <string name="reminder_notification_body">Ora ideală de culcare este %1$s — pregătește-te pentru un somn odihnitor.</string>

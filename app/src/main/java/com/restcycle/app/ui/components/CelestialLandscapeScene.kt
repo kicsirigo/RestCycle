@@ -13,10 +13,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -758,11 +762,15 @@ fun CelestialLandscapeScene(
 
         if (onCycleAmbientSound != null) {
             val soundActive = ambientSoundMode != AmbientSoundMode.OFF
-            val soundLabel = if (soundActive) {
-                "${ambientSoundMode.emoji} ${stringResource(ambientSoundMode.labelResId)}"
+            val soundLabel = stringResource(
+                if (soundActive) ambientSoundMode.labelResId else R.string.ambient_sound_button
+            )
+            val soundIcon = if (soundActive) {
+                RestCycleIcons.forAmbientSound(ambientSoundMode)
             } else {
-                "🌧️ ${stringResource(R.string.ambient_sound_button)}"
+                RestCycleIcons.AudioWaveform
             }
+            val soundTint = if (soundActive) palette.accentText else palette.textPrimary
             val shape = RoundedCornerShape(50)
             Surface(
                 shape = shape,
@@ -782,14 +790,25 @@ fun CelestialLandscapeScene(
                         onCycleAmbientSound()
                     }
             ) {
-                Text(
-                    text = soundLabel,
-                    color = if (soundActive) palette.accentText else palette.textPrimary,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
+                ) {
+                    Icon(
+                        imageVector = soundIcon,
+                        contentDescription = null,
+                        tint = soundTint,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = soundLabel,
+                        color = soundTint,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
             }
         }
 
@@ -809,14 +828,25 @@ fun CelestialLandscapeScene(
                         onOpenBreathing()
                     }
             ) {
-                Text(
-                    text = "🌬️ ${stringResource(R.string.action_breathe)}",
-                    color = palette.textPrimary,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
+                ) {
+                    Icon(
+                        imageVector = RestCycleIcons.Wind,
+                        contentDescription = null,
+                        tint = palette.textPrimary,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.action_breathe),
+                        color = palette.textPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
             }
         }
 

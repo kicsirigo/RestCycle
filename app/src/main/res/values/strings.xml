@@ -117,7 +117,7 @@
     <string name="breathing_cycle_count">Cycle %1$d</string>
     <string name="breathing_pause">Pause</string>
     <string name="breathing_resume">Resume</string>
-    <string name="caffeine_cutoff_label">☕ %1$s</string>
+    <string name="caffeine_cutoff_label">%1$s</string>
     <string name="reminder_channel_name">Bedtime Wind-Down Reminders</string>
     <string name="reminder_notification_title">Time to wind down</string>
     <string name="reminder_notification_body">Ideal bedtime is %1$s — start getting ready for restful sleep.</string>

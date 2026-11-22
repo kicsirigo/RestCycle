@@ -13,11 +13,11 @@ data class SleepCycleInsight(
     val sampleCount: Int
 )
 
-enum class SleepQualityMood(val score: Int, val emoji: String, val labelResId: Int) {
-    EXHAUSTED(1, "😫", R.string.sleep_mood_exhausted),
-    FAIR(2, "😐", R.string.sleep_mood_fair),
-    RESTED(3, "🙂", R.string.sleep_mood_rested),
-    ENERGIZED(4, "⚡", R.string.sleep_mood_energized)
+enum class SleepQualityMood(val score: Int, val labelResId: Int) {
+    EXHAUSTED(1, R.string.sleep_mood_exhausted),
+    FAIR(2, R.string.sleep_mood_fair),
+    RESTED(3, R.string.sleep_mood_rested),
+    ENERGIZED(4, R.string.sleep_mood_energized)
 }
 
 data class SleepSessionRecord(

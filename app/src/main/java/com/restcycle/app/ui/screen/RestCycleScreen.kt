@@ -69,6 +69,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -805,12 +806,9 @@ private fun SleepSessionPill(
     onClick: () -> Unit
 ) {
     val palette = AtmosphereTheme.palette
-    val emoji = if (isSleeping) "☀️" else "🌙"
-    val label = if (compact) {
-        emoji
-    } else {
-        "$emoji ${stringResource(if (isSleeping) R.string.action_woke_up else R.string.action_start_sleep)}"
-    }
+    val icon = if (isSleeping) RestCycleIcons.Sun else RestCycleIcons.Moon
+    val actionLabel = stringResource(if (isSleeping) R.string.action_woke_up else R.string.action_start_sleep)
+    val contentColor = if (isSleeping) palette.onAccent else palette.textPrimary
     val shape = RoundedCornerShape(50)
     Surface(
         shape = shape,
@@ -821,14 +819,36 @@ private fun SleepSessionPill(
             .clickable(onClick = onClick)
             .testTag(RestCycleTestTags.SLEEP_TRACKER_BUTTON)
     ) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (isSleeping) palette.onAccent else palette.textPrimary,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = if (compact) 9.dp else 11.dp, vertical = 6.dp)
-        )
+        if (compact) {
+            Icon(
+                imageVector = icon,
+                contentDescription = actionLabel,
+                tint = contentColor,
+                modifier = Modifier
+                    .padding(horizontal = 9.dp, vertical = 6.dp)
+                    .size(15.dp)
+            )
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = actionLabel,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = contentColor,
+                    maxLines = 1
+                )
+            }
+        }
     }
 }
 
@@ -847,11 +867,13 @@ private fun SleepHistoryPill(
             .clickable(onClick = onClick)
             .testTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON)
     ) {
-        Text(
-            text = "📅",
-            fontSize = 12.sp,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
+        Icon(
+            imageVector = RestCycleIcons.Calendar,
+            contentDescription = stringResource(R.string.sleep_history_title),
+            tint = palette.textPrimary,
+            modifier = Modifier
+                .padding(horizontal = 9.dp, vertical = 6.dp)
+                .size(15.dp)
         )
     }
 }
@@ -873,11 +895,13 @@ private fun SoundPickerPill(
             .clickable(onClick = onClick)
             .testTag(RestCycleTestTags.SOUND_PICKER_PILL)
     ) {
-        Text(
-            text = if (active) ambientSoundMode.emoji else "🎵",
-            fontSize = 12.sp,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
+        Icon(
+            imageVector = if (active) RestCycleIcons.forAmbientSound(ambientSoundMode) else RestCycleIcons.AudioWaveform,
+            contentDescription = stringResource(R.string.sound_dialog_title),
+            tint = if (active) palette.accentText else palette.textPrimary,
+            modifier = Modifier
+                .padding(horizontal = 9.dp, vertical = 6.dp)
+                .size(15.dp)
         )
     }
 }
@@ -893,15 +917,28 @@ private fun CaffeineCutoffPill(
         shape = RoundedCornerShape(50),
         color = palette.pillContainer,
         border = BorderStroke(1.dp, palette.borderSubtle),
-        modifier = Modifier.testTag(RestCycleTestTags.CAFFEINE_CUTOFF_PILL)
+        modifier = Modifier
+            .semantics(mergeDescendants = true) {}
+            .testTag(RestCycleTestTags.CAFFEINE_CUTOFF_PILL)
     ) {
-        Text(
-            text = stringResource(R.string.caffeine_cutoff_label, formatted),
-            style = TabularTextStyles.headerLiveClock,
-            color = palette.textSecondary,
-            maxLines = 1,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-        )
+        ) {
+            Icon(
+                imageVector = RestCycleIcons.Coffee,
+                contentDescription = stringResource(R.string.settings_caffeine_label),
+                tint = palette.textSecondary,
+                modifier = Modifier.size(13.dp)
+            )
+            Text(
+                text = stringResource(R.string.caffeine_cutoff_label, formatted),
+                style = TabularTextStyles.headerLiveClock,
+                color = palette.textSecondary,
+                maxLines = 1
+            )
+        }
     }
 }
 
@@ -981,8 +1018,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.7.1"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.7.2"
     } catch (_: Exception) {
-        "1.7.1"
+        "1.7.2"
     }
 }

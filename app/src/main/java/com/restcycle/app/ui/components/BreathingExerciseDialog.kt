@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -248,11 +249,15 @@ fun BreathingExerciseDialog(
                     }
                     if (onCycleAmbientSound != null) {
                         val soundActive = ambientSoundMode != AmbientSoundMode.OFF
-                        val soundText = if (soundActive) {
-                            "${ambientSoundMode.emoji} ${stringResource(ambientSoundMode.labelResId)}"
+                        val soundText = stringResource(
+                            if (soundActive) ambientSoundMode.labelResId else R.string.ambient_sound_button
+                        )
+                        val soundIcon = if (soundActive) {
+                            RestCycleIcons.forAmbientSound(ambientSoundMode)
                         } else {
-                            "🌧️ ${stringResource(R.string.ambient_sound_button)}"
+                            RestCycleIcons.AudioWaveform
                         }
+                        val soundTint = if (soundActive) palette.onAccent else palette.textPrimary
                         FilledTonalButton(
                             onClick = {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
@@ -261,16 +266,27 @@ fun BreathingExerciseDialog(
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = if (soundActive) palette.accent else palette.pillContainer,
-                                contentColor = if (soundActive) palette.onAccent else palette.textPrimary
+                                contentColor = soundTint
                             )
                         ) {
-                            Text(
-                                text = soundText,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = soundIcon,
+                                    contentDescription = null,
+                                    tint = soundTint,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Text(
+                                    text = soundText,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }

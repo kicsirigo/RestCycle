@@ -117,7 +117,7 @@
     <string name="breathing_cycle_count">Ciclo %1$d</string>
     <string name="breathing_pause">Pausar</string>
     <string name="breathing_resume">Continuar</string>
-    <string name="caffeine_cutoff_label">☕ %1$s</string>
+    <string name="caffeine_cutoff_label">%1$s</string>
     <string name="reminder_channel_name">Lembretes de sono</string>
     <string name="reminder_notification_title">Hora de desacelerar</string>
     <string name="reminder_notification_body">O horário ideal para dormir é %1$s — prepare-se para uma boa noite de sono.</string>

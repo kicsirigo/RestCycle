@@ -117,7 +117,7 @@
     <string name="breathing_cycle_count">Cykl %1$d</string>
     <string name="breathing_pause">Pauza</string>
     <string name="breathing_resume">Wznów</string>
-    <string name="caffeine_cutoff_label">☕ %1$s</string>
+    <string name="caffeine_cutoff_label">%1$s</string>
     <string name="reminder_channel_name">Przypomnienia o śnie</string>
     <string name="reminder_notification_title">Czas na wyciszenie</string>
     <string name="reminder_notification_body">Idealna pora snu to %1$s — zacznij przygotowywać się do snu.</string>

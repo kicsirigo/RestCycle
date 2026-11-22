@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -232,8 +235,15 @@ fun SleepTrackerDialog(
                                             horizontalArrangement = Arrangement.Center,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
+                                            Icon(
+                                                imageVector = RestCycleIcons.forMood(mood),
+                                                contentDescription = null,
+                                                tint = palette.textPrimary,
+                                                modifier = Modifier.size(15.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = "${mood.emoji} ${stringResource(mood.labelResId)}",
+                                                text = stringResource(mood.labelResId),
                                                 color = palette.textPrimary,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.SemiBold,
@@ -279,12 +289,23 @@ fun SleepTrackerDialog(
                             .fillMaxWidth()
                             .testTag(RestCycleTestTags.START_SLEEP_DIALOG_BTN)
                     ) {
-                        Text(
-                            text = "🌙 ${stringResource(R.string.action_start_sleep)}",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                        ) {
+                            Icon(
+                                imageVector = RestCycleIcons.Moon,
+                                contentDescription = null,
+                                tint = palette.onAccent,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.action_start_sleep),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 
@@ -318,7 +339,8 @@ fun SleepTrackerDialog(
                     )
                     CalendarStatCard(
                         label = stringResource(R.string.calendar_stat_streak),
-                        value = if (streakDays > 0) "🔥 $streakDays" else "0",
+                        value = streakDays.toString(),
+                        leadingIcon = if (streakDays > 0) RestCycleIcons.Flame else null,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -336,21 +358,30 @@ fun SleepTrackerDialog(
                             .fillMaxWidth()
                             .testTag(RestCycleTestTags.CALENDAR_INSIGHT_CARD)
                     ) {
-                        Text(
-                            text = "✨ ${
-                                stringResource(
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                        ) {
+                            Icon(
+                                imageVector = RestCycleIcons.Sparkles,
+                                contentDescription = null,
+                                tint = palette.accentText,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = stringResource(
                                     R.string.calendar_cycle_insight,
                                     cycleInsight.bestCycles,
                                     cycleInsight.refreshedPercent,
                                     cycleInsight.sampleCount
-                                )
-                            }",
-                            color = palette.accentText,
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
-                        )
+                                ),
+                                color = palette.accentText,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
 
@@ -519,10 +550,11 @@ fun SleepTrackerDialog(
                                                 color = if (isToday) palette.accentText else palette.textPrimary
                                             )
                                             if (latestMood != null) {
-                                                Text(
-                                                    text = latestMood.emoji,
-                                                    fontSize = 12.sp,
-                                                    lineHeight = 14.sp
+                                                Icon(
+                                                    imageVector = RestCycleIcons.forMood(latestMood),
+                                                    contentDescription = stringResource(latestMood.labelResId),
+                                                    tint = if (isSelected) palette.accentText else palette.accent,
+                                                    modifier = Modifier.size(13.dp)
                                                 )
                                             } else if (isToday) {
                                                 Box(
@@ -679,7 +711,8 @@ fun SleepTrackerDialog(
 private fun CalendarStatCard(
     label: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    leadingIcon: ImageVector? = null
 ) {
     val palette = AtmosphereTheme.palette
     Surface(
@@ -693,12 +726,25 @@ private fun CalendarStatCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Text(
-                text = value,
-                style = TabularTextStyles.cardDuration.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
-                color = palette.accentText,
-                maxLines = 1
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (leadingIcon != null) {
+                    Icon(
+                        imageVector = leadingIcon,
+                        contentDescription = null,
+                        tint = palette.accentText,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+                Text(
+                    text = value,
+                    style = TabularTextStyles.cardDuration.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                    color = palette.accentText,
+                    maxLines = 1
+                )
+            }
             Text(
                 text = label,
                 color = palette.textSecondary,
@@ -777,9 +823,11 @@ private fun SleepHistoryRow(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = record.mood.emoji,
-                    fontSize = 18.sp
+                Icon(
+                    imageVector = RestCycleIcons.forMood(record.mood),
+                    contentDescription = stringResource(record.mood.labelResId),
+                    tint = palette.accentText,
+                    modifier = Modifier.size(18.dp)
                 )
                 Column {
                     Text(
@@ -975,10 +1023,13 @@ private fun ManualSleepEntryCard(
                                 .clickable(role = Role.RadioButton) { onSelectMood(mood) }
                                 .testTag(RestCycleTestTags.manualMoodOption(mood.name))
                         ) {
-                            Text(
-                                text = mood.emoji,
-                                fontSize = 15.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            Icon(
+                                imageVector = RestCycleIcons.forMood(mood),
+                                contentDescription = stringResource(mood.labelResId),
+                                tint = if (isSelected) palette.accentText else palette.textPrimary,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                                    .size(16.dp)
                             )
                         }
                     }

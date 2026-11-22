@@ -57,15 +57,15 @@ enum class TimeFormatPreference {
     HOURS_12
 }
 
-enum class AppLanguage(val languageTag: String?, val flagEmoji: String, val nativeLabel: String) {
-    SYSTEM(null, "🌐", "Auto"),
-    ENGLISH("en", "🇬🇧", "English"),
-    HUNGARIAN("hu", "🇭🇺", "Magyar"),
-    SPANISH("es", "🇪🇸", "Español"),
-    ROMANIAN("ro", "🇷🇴", "Română"),
-    POLISH("pl", "🇵🇱", "Polski"),
-    PORTUGUESE("pt-PT", "🇵🇹", "Português"),
-    BRAZILIAN_PORTUGUESE("pt-BR", "🇧🇷", "Português (BR)")
+enum class AppLanguage(val languageTag: String?, val nativeLabel: String) {
+    SYSTEM(null, "Auto"),
+    ENGLISH("en", "English"),
+    HUNGARIAN("hu", "Magyar"),
+    SPANISH("es", "Español"),
+    ROMANIAN("ro", "Română"),
+    POLISH("pl", "Polski"),
+    PORTUGUESE("pt-PT", "Português"),
+    BRAZILIAN_PORTUGUESE("pt-BR", "Português (BR)")
 }
 
 val NordDayAtmospherePalette = AtmospherePalette(

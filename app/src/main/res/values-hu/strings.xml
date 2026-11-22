@@ -117,7 +117,7 @@
     <string name="breathing_cycle_count">%1$d. kör</string>
     <string name="breathing_pause">Szünet</string>
     <string name="breathing_resume">Folytatás</string>
-    <string name="caffeine_cutoff_label">☕ %1$s</string>
+    <string name="caffeine_cutoff_label">%1$s</string>
     <string name="reminder_channel_name">Lefekvési emlékeztetők</string>
     <string name="reminder_notification_title">Ideje lelassítani</string>
     <string name="reminder_notification_body">Az ideális lefekvési idő %1$s — kezdj el készülni a pihentető alvásra.</string>

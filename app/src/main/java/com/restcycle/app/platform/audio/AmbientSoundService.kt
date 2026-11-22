@@ -223,7 +223,7 @@ class AmbientSoundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val soundLabel = "${mode.emoji} ${getString(mode.labelResId)}"
+        val soundLabel = getString(mode.labelResId)
         val title = getString(R.string.sound_notification_playing, soundLabel)
         val subText = if (remainingSeconds > 0L) {
             getString(R.string.sound_timer_remaining, formatRemainingTime(remainingSeconds))

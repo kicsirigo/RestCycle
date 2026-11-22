@@ -244,8 +244,8 @@ class RestCycleScreenAndMainActivityTest {
         composeRule.onNodeWithTag(RestCycleTestTags.SETTINGS_BUTTON).performClick()
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("🇪🇸 Español").assertIsDisplayed()
-        composeRule.onNodeWithText("🇭🇺 Magyar").assertIsDisplayed()
+        composeRule.onNodeWithText("Español").assertIsDisplayed()
+        composeRule.onNodeWithText("Magyar").assertIsDisplayed()
 
         // Switch to Spanish
         composeRule.onNodeWithTag(RestCycleTestTags.languageOption(AppLanguage.SPANISH.name))

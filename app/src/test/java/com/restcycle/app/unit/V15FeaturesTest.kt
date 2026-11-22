@@ -3,6 +3,7 @@ package com.restcycle.app.unit
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -29,6 +30,7 @@ import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.platform.audio.AmbientSoundService
 import com.restcycle.app.platform.audio.AmbientSoundStateHolder
 import com.restcycle.app.ui.RestCycleTestTags
+import com.restcycle.app.ui.components.RestCycleIcons
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.LocalAppThemeStyle
 import com.restcycle.app.ui.theme.paletteForTheme
@@ -438,5 +440,36 @@ class V15FeaturesTest {
             .performScrollTo()
             .assertIsDisplayed()
             .assertTextContains("Import JSON", substring = true)
+    }
+
+    @Test
+    fun monochromeVectorIcons_coverAllUiAndEnumStatesWithUnified24dpGrid() {
+        val coreIcons = listOf(
+            RestCycleIcons.Alarm,
+            RestCycleIcons.Timer,
+            RestCycleIcons.Info,
+            RestCycleIcons.Settings,
+            RestCycleIcons.Contrast,
+            RestCycleIcons.Bell,
+            RestCycleIcons.ExportUpload,
+            RestCycleIcons.ImportDownload,
+            RestCycleIcons.Globe,
+            RestCycleIcons.Coffee,
+            RestCycleIcons.Calendar,
+            RestCycleIcons.Moon,
+            RestCycleIcons.Sun,
+            RestCycleIcons.Wind,
+            RestCycleIcons.AudioWaveform,
+            RestCycleIcons.Flame,
+            RestCycleIcons.Sparkles
+        )
+        val soundIcons = AmbientSoundMode.entries.map { RestCycleIcons.forAmbientSound(it) }
+        val moodIcons = SleepQualityMood.entries.map { RestCycleIcons.forMood(it) }
+
+        (coreIcons + soundIcons + moodIcons).forEach { icon ->
+            assertEquals("Expected 24dp width for ${icon.name}", 24.dp, icon.defaultWidth)
+            assertEquals("Expected 24dp height for ${icon.name}", 24.dp, icon.defaultHeight)
+            assertTrue("Expected vector paths in ${icon.name}", icon.root.size > 0)
+        }
     }
 }

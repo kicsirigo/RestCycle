@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -82,7 +84,7 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.7.1",
+    installedVersionName: String = "1.7.2",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {},
@@ -230,7 +232,8 @@ fun SettingsDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         SettingsOptionPill(
-                            label = "🖤 ${stringResource(R.string.settings_amoled_night)}",
+                            label = stringResource(R.string.settings_amoled_night),
+                            leadingIcon = RestCycleIcons.Contrast,
                             selected = pureAmoledNight,
                             role = Role.Switch,
                             onClick = { onTogglePureAmoledNight(!pureAmoledNight) },
@@ -239,7 +242,8 @@ fun SettingsDialog(
                                 .testTag(RestCycleTestTags.AMOLED_NIGHT_TOGGLE)
                         )
                         SettingsOptionPill(
-                            label = "🔔 ${stringResource(R.string.settings_reminder_toggle)}",
+                            label = stringResource(R.string.settings_reminder_toggle),
+                            leadingIcon = RestCycleIcons.Bell,
                             selected = bedtimeReminderEnabled,
                             role = Role.Switch,
                             onClick = { onToggleBedtimeReminder(!bedtimeReminderEnabled) },
@@ -292,7 +296,8 @@ fun SettingsDialog(
                                     lang.nativeLabel
                                 }
                                 SettingsOptionPill(
-                                    label = "${lang.flagEmoji} $baseLabel",
+                                    label = baseLabel,
+                                    leadingIcon = if (lang == AppLanguage.SYSTEM) RestCycleIcons.Globe else null,
                                     selected = selected,
                                     fontSize = 12.sp,
                                     onClick = { if (!selected) onSelectLanguage(lang) },
@@ -356,7 +361,8 @@ fun SettingsDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         SettingsOptionPill(
-                            label = "📤 ${stringResource(R.string.settings_backup_export)}",
+                            label = stringResource(R.string.settings_backup_export),
+                            leadingIcon = RestCycleIcons.ExportUpload,
                             selected = false,
                             role = Role.Button,
                             fontSize = 12.sp,
@@ -367,7 +373,8 @@ fun SettingsDialog(
                                 .testTag(RestCycleTestTags.BACKUP_EXPORT_BTN)
                         )
                         SettingsOptionPill(
-                            label = "📥 ${stringResource(R.string.settings_backup_import)}",
+                            label = stringResource(R.string.settings_backup_import),
+                            leadingIcon = RestCycleIcons.ImportDownload,
                             selected = false,
                             role = Role.Button,
                             fontSize = 12.sp,
@@ -444,6 +451,7 @@ private fun SettingsOptionPill(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    leadingIcon: ImageVector? = null,
     enabled: Boolean = true,
     role: Role = Role.RadioButton,
     fontSize: TextUnit = 11.sp,
@@ -451,6 +459,7 @@ private fun SettingsOptionPill(
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
+    val contentColor = if (selected) palette.onAccent else palette.textPrimary
     Surface(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
@@ -465,15 +474,39 @@ private fun SettingsOptionPill(
             color = if (selected) palette.accent else palette.borderSubtle
         )
     ) {
-        Text(
-            text = label,
-            color = if (selected) palette.onAccent else palette.textPrimary,
-            fontSize = fontSize,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = verticalPadding)
-        )
+        if (leadingIcon != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = verticalPadding)
+            ) {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = label,
+                    color = contentColor,
+                    fontSize = fontSize,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        } else {
+            Text(
+                text = label,
+                color = contentColor,
+                fontSize = fontSize,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = verticalPadding)
+            )
+        }
     }
 }
