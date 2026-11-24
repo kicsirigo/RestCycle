@@ -1,6 +1,16 @@
 package com.restcycle.app.ui.components
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
@@ -332,26 +343,48 @@ fun SleepTrackerDialog(
                 }
                 val avgDurationText = if (sleepHistory.isEmpty()) "—" else formatDurationCompact(allTimeAvgMinutes)
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Unified 3-Column Stats Strip (clean, low-noise visual hierarchy)
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = palette.pillContainer.copy(alpha = 0.65f),
+                    border = BorderStroke(1.dp, palette.borderSubtle.copy(alpha = 0.55f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    CalendarStatCard(
-                        label = stringResource(R.string.calendar_stat_total_nights),
-                        value = totalNights.toString(),
-                        modifier = Modifier.weight(1f)
-                    )
-                    CalendarStatCard(
-                        label = stringResource(R.string.calendar_stat_avg_sleep),
-                        value = avgDurationText,
-                        modifier = Modifier.weight(1f)
-                    )
-                    CalendarStatCard(
-                        label = stringResource(R.string.calendar_stat_streak),
-                        value = streakDays.toString(),
-                        leadingIcon = if (streakDays > 0) RestCycleIcons.Flame else null,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CalendarStatCard(
+                            label = stringResource(R.string.calendar_stat_total_nights),
+                            value = totalNights.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(26.dp)
+                                .background(palette.borderSubtle.copy(alpha = 0.5f))
+                        )
+                        CalendarStatCard(
+                            label = stringResource(R.string.calendar_stat_avg_sleep),
+                            value = avgDurationText,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(26.dp)
+                                .background(palette.borderSubtle.copy(alpha = 0.5f))
+                        )
+                        CalendarStatCard(
+                            label = stringResource(R.string.calendar_stat_streak),
+                            value = streakDays.toString(),
+                            leadingIcon = if (streakDays > 0) RestCycleIcons.Flame else null,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
 
                 // Personal Sleep Cycle Pattern Insight (#3)
@@ -394,7 +427,7 @@ fun SleepTrackerDialog(
                     }
                 }
 
-                // Month Navigation Bar
+                // Clean Grouped Calendar Card (borderless empty cells + animated month slide)
                 val monthFormatter = remember(locale) { DateTimeFormatter.ofPattern("LLLL yyyy", locale) }
                 val monthLabel = remember(displayedMonth, monthFormatter, locale) {
                     displayedMonth.atDay(1).format(monthFormatter)
@@ -404,176 +437,215 @@ fun SleepTrackerDialog(
                 }
                 val canGoNext = displayedMonth < currentMonth
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    shape = RoundedCornerShape(18.dp),
+                    color = palette.pillContainer.copy(alpha = 0.48f),
+                    border = BorderStroke(1.dp, palette.borderSubtle.copy(alpha = 0.55f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    MonthNavButton(
-                        symbol = "‹",
-                        enabled = true,
-                        onClick = {
-                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                            displayedMonth = displayedMonth.minusMonths(1)
-                            selectedDate = if (displayedMonth == currentMonth) today else displayedMonth.atDay(1)
-                        },
-                        modifier = Modifier.testTag(RestCycleTestTags.CALENDAR_PREV_MONTH)
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = monthLabel,
-                            color = palette.textPrimary,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.testTag(RestCycleTestTags.CALENDAR_MONTH_LABEL)
-                        )
-                        if (displayedMonth != currentMonth || selectedDate != today) {
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = palette.accent.copy(alpha = 0.18f),
-                                border = BorderStroke(1.dp, palette.accent.copy(alpha = 0.6f)),
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .clickable {
-                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                        displayedMonth = currentMonth
-                                        selectedDate = today
-                                    }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            MonthNavButton(
+                                symbol = "‹",
+                                enabled = true,
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    displayedMonth = displayedMonth.minusMonths(1)
+                                    selectedDate = if (displayedMonth == currentMonth) today else displayedMonth.atDay(1)
+                                },
+                                modifier = Modifier.testTag(RestCycleTestTags.CALENDAR_PREV_MONTH)
+                            )
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = stringResource(R.string.calendar_today),
-                                    color = palette.accentText,
-                                    fontSize = 10.sp,
+                                    text = monthLabel,
+                                    color = palette.textPrimary,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.testTag(RestCycleTestTags.CALENDAR_MONTH_LABEL)
+                                )
+                                if (displayedMonth != currentMonth || selectedDate != today) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = palette.accent.copy(alpha = 0.18f),
+                                        border = BorderStroke(1.dp, palette.accent.copy(alpha = 0.6f)),
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .clickable {
+                                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                                displayedMonth = currentMonth
+                                                selectedDate = today
+                                            }
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.calendar_today),
+                                            color = palette.accentText,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            MonthNavButton(
+                                symbol = "›",
+                                enabled = canGoNext,
+                                onClick = {
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    if (canGoNext) {
+                                        displayedMonth = displayedMonth.plusMonths(1)
+                                        selectedDate = if (displayedMonth == currentMonth) today else displayedMonth.atDay(1)
+                                    }
+                                },
+                                modifier = Modifier.testTag(RestCycleTestTags.CALENDAR_NEXT_MONTH)
+                            )
+                        }
+
+                        // Weekday Headers (Mon..Sun)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            DayOfWeek.entries.forEach { dow ->
+                                val shortName = dow.getDisplayName(TextStyle.SHORT_STANDALONE, locale)
+                                    .trimEnd('.')
+                                    .take(2)
+                                Text(
+                                    text = shortName,
+                                    color = palette.textSecondary.copy(alpha = 0.8f),
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                         }
-                    }
 
-                    MonthNavButton(
-                        symbol = "›",
-                        enabled = canGoNext,
-                        onClick = {
-                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                            if (canGoNext) {
-                                displayedMonth = displayedMonth.plusMonths(1)
-                                selectedDate = if (displayedMonth == currentMonth) today else displayedMonth.atDay(1)
+                        // Animated Month Calendar Grid (slides left/right on month change)
+                        AnimatedContent(
+                            targetState = displayedMonth,
+                            transitionSpec = {
+                                val dir = if (targetState > initialState) 1 else -1
+                                (slideInHorizontally(tween(240)) { w -> (w * 0.25f * dir).toInt() } + fadeIn(tween(200)))
+                                    .togetherWith(slideOutHorizontally(tween(180)) { w -> (-w * 0.25f * dir).toInt() } + fadeOut(tween(160)))
+                            },
+                            label = "calendarMonthSlide"
+                        ) { targetMonth ->
+                            val firstDayOfMonth = targetMonth.atDay(1)
+                            val leadingEmpty = firstDayOfMonth.dayOfWeek.value - 1
+                            val daysInMonth = targetMonth.lengthOfMonth()
+                            val totalCells = ((leadingEmpty + daysInMonth + 6) / 7) * 7
+                            val monthCells = (0 until totalCells).map { slot ->
+                                val dayNum = slot - leadingEmpty + 1
+                                if (dayNum in 1..daysInMonth) targetMonth.atDay(dayNum) else null
                             }
-                        },
-                        modifier = Modifier.testTag(RestCycleTestTags.CALENDAR_NEXT_MONTH)
-                    )
-                }
 
-                // Weekday Headers (Mon..Sun)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    DayOfWeek.entries.forEach { dow ->
-                        val shortName = dow.getDisplayName(TextStyle.SHORT_STANDALONE, locale)
-                            .trimEnd('.')
-                            .take(2)
-                        Text(
-                            text = shortName,
-                            color = palette.textSecondary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                // All-Time Month Calendar Grid
-                val firstDayOfMonth = displayedMonth.atDay(1)
-                val leadingEmpty = firstDayOfMonth.dayOfWeek.value - 1
-                val daysInMonth = displayedMonth.lengthOfMonth()
-                val totalCells = ((leadingEmpty + daysInMonth + 6) / 7) * 7
-                val monthCells = (0 until totalCells).map { slot ->
-                    val dayNum = slot - leadingEmpty + 1
-                    if (dayNum in 1..daysInMonth) displayedMonth.atDay(dayNum) else null
-                }
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    monthCells.chunked(7).forEach { weekDates ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            weekDates.forEach { cellDate ->
-                                if (cellDate == null) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(42.dp)
-                                    )
-                                } else {
-                                    val daySessions = sessionsByDate[cellDate].orEmpty()
-                                    val latestMood = daySessions.firstOrNull()?.mood
-                                    val isSelected = cellDate == selectedDate
-                                    val isToday = cellDate == today
-                                    val isFuture = cellDate > today
-                                    val cellShape = RoundedCornerShape(10.dp)
-
-                                    Surface(
-                                        shape = cellShape,
-                                        color = when {
-                                            isSelected -> palette.cardSurfaceHighlighted
-                                            latestMood != null -> palette.accent.copy(alpha = 0.14f)
-                                            else -> palette.pillContainer.copy(alpha = 0.55f)
-                                        },
-                                        border = BorderStroke(
-                                            width = if (isSelected) 1.5.dp else 1.dp,
-                                            color = when {
-                                                isSelected -> palette.accent
-                                                isToday -> palette.accent.copy(alpha = 0.55f)
-                                                latestMood != null -> palette.accent.copy(alpha = 0.35f)
-                                                else -> palette.borderSubtle.copy(alpha = 0.45f)
-                                            }
-                                        ),
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(42.dp)
-                                            .alpha(if (isFuture) 0.45f else 1f)
-                                            .clip(cellShape)
-                                            .testTag(RestCycleTestTags.calendarDayCell(cellDate.toString()))
-                                            .clickable {
-                                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                                selectedDate = cellDate
-                                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                monthCells.chunked(7).forEach { weekDates ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
-                                        Column(
-                                            modifier = Modifier.padding(vertical = 3.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                text = cellDate.dayOfMonth.toString(),
-                                                style = TabularTextStyles.cardDuration.copy(fontSize = 11.sp),
-                                                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium,
-                                                color = if (isToday) palette.accentText else palette.textPrimary
-                                            )
-                                            if (latestMood != null) {
-                                                Icon(
-                                                    imageVector = RestCycleIcons.forMood(latestMood),
-                                                    contentDescription = stringResource(latestMood.labelResId),
-                                                    tint = if (isSelected) palette.accentText else palette.accent,
-                                                    modifier = Modifier.size(13.dp)
-                                                )
-                                            } else if (isToday) {
-                                                Box(
+                                        weekDates.forEach { cellDate ->
+                                            if (cellDate == null) {
+                                                Spacer(
                                                     modifier = Modifier
-                                                        .size(4.dp)
-                                                        .clip(CircleShape)
-                                                        .background(palette.accent)
+                                                        .weight(1f)
+                                                        .height(44.dp)
                                                 )
                                             } else {
-                                                Spacer(modifier = Modifier.height(4.dp))
+                                                val daySessions = sessionsByDate[cellDate].orEmpty()
+                                                val latestMood = daySessions.firstOrNull()?.mood
+                                                val isSelected = cellDate == selectedDate
+                                                val isToday = cellDate == today
+                                                val isFuture = cellDate > today
+                                                val cellShape = RoundedCornerShape(14.dp)
+                                                val selectedScale by animateFloatAsState(
+                                                    targetValue = if (isSelected) 1.04f else 1f,
+                                                    animationSpec = spring(
+                                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                        stiffness = Spring.StiffnessMedium
+                                                    ),
+                                                    label = "calDayScale_${cellDate.dayOfMonth}"
+                                                )
+
+                                                Surface(
+                                                    shape = cellShape,
+                                                    color = when {
+                                                        isSelected -> palette.accent
+                                                        latestMood != null -> palette.accent.copy(alpha = 0.20f)
+                                                        else -> Color.Transparent
+                                                    },
+                                                    border = when {
+                                                        isSelected -> null
+                                                        isToday -> BorderStroke(1.5.dp, palette.accent)
+                                                        else -> null
+                                                    },
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .height(44.dp)
+                                                        .graphicsLayer {
+                                                            scaleX = selectedScale
+                                                            scaleY = selectedScale
+                                                        }
+                                                        .alpha(if (isFuture) 0.32f else 1f)
+                                                        .clip(cellShape)
+                                                        .testTag(RestCycleTestTags.calendarDayCell(cellDate.toString()))
+                                                        .clickable {
+                                                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                                            selectedDate = cellDate
+                                                        }
+                                                ) {
+                                                    Column(
+                                                        modifier = Modifier.padding(vertical = 4.dp),
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                        verticalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Text(
+                                                            text = cellDate.dayOfMonth.toString(),
+                                                            style = TabularTextStyles.cardDuration.copy(fontSize = 13.sp),
+                                                            fontWeight = if (isSelected || isToday || latestMood != null) {
+                                                                FontWeight.Bold
+                                                            } else {
+                                                                FontWeight.Medium
+                                                            },
+                                                            color = when {
+                                                                isSelected -> palette.onAccent
+                                                                isToday -> palette.accentText
+                                                                else -> palette.textPrimary
+                                                            }
+                                                        )
+                                                        if (latestMood != null) {
+                                                            Icon(
+                                                                imageVector = RestCycleIcons.forMood(latestMood),
+                                                                contentDescription = stringResource(latestMood.labelResId),
+                                                                tint = if (isSelected) palette.onAccent else palette.accentText,
+                                                                modifier = Modifier.size(12.dp)
+                                                            )
+                                                        } else if (isToday) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .padding(top = 2.dp)
+                                                                    .size(4.dp)
+                                                                    .clip(CircleShape)
+                                                                    .background(if (isSelected) palette.onAccent else palette.accent)
+                                                            )
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -723,44 +795,37 @@ private fun CalendarStatCard(
     leadingIcon: ImageVector? = null
 ) {
     val palette = AtmosphereTheme.palette
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = palette.pillContainer,
-        border = BorderStroke(1.dp, palette.borderSubtle),
-        modifier = modifier
+    Column(
+        modifier = modifier.padding(horizontal = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (leadingIcon != null) {
-                    Icon(
-                        imageVector = leadingIcon,
-                        contentDescription = null,
-                        tint = palette.accentText,
-                        modifier = Modifier.size(13.dp)
-                    )
-                }
-                Text(
-                    text = value,
-                    style = TabularTextStyles.cardDuration.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
-                    color = palette.accentText,
-                    maxLines = 1
+            if (leadingIcon != null) {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    tint = palette.accentText,
+                    modifier = Modifier.size(14.dp)
                 )
             }
             Text(
-                text = label,
-                color = palette.textSecondary,
-                fontSize = 10.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                text = value,
+                style = TabularTextStyles.cardDuration.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                color = palette.accentText,
+                maxLines = 1
             )
         }
+        Text(
+            text = label,
+            color = palette.textSecondary,
+            fontSize = 10.5.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

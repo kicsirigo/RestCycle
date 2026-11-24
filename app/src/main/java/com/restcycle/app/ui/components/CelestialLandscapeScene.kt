@@ -251,49 +251,49 @@ private val GruvboxNightLandscapeColors = LandscapeColors(
     waterShimmer = Color(0xFFB8BB26)
 )
 
-private val DraculaDayLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFF9580FF),
-    celestialDisc = Color(0xFFFFB86C),
-    farMountain = Color(0xFF8C86B8),
-    midMountain = Color(0xFF6272A4),
-    midMountainHighlight = Color(0xFFBD93F9),
-    foothill = Color(0xFF436B63),
-    treeBack = Color(0xFF345650),
-    treeFront = Color(0xFF25413D),
-    lakeTop = Color(0xFF8BE9FD),
-    lakeBottom = Color(0xFF6272A4),
-    streamColor = Color(0xFF8BE9FD),
-    waterShimmer = Color(0xFFF8F8F2)
+private val SolarizedDayLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFF5D26B),
+    celestialDisc = Color(0xFFFDE68A),
+    farMountain = Color(0xFF2A8A96),
+    midMountain = Color(0xFF1A6470),
+    midMountainHighlight = Color(0xFF56CFC6),
+    foothill = Color(0xFF134D59),
+    treeBack = Color(0xFF0E3F4A),
+    treeFront = Color(0xFF092F38),
+    lakeTop = Color(0xFF2AA198),
+    lakeBottom = Color(0xFF114E5A),
+    streamColor = Color(0xFF56CFC6),
+    waterShimmer = Color(0xFFEEF8F8)
 )
 
-private val DraculaDawnDuskLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFFF79C6),
-    celestialDisc = Color(0xFFFFB86C),
-    farMountain = Color(0xFF564B75),
-    midMountain = Color(0xFF44475A),
-    midMountainHighlight = Color(0xFFFF79C6),
-    foothill = Color(0xFF282A36),
-    treeBack = Color(0xFF232530),
-    treeFront = Color(0xFF191A24),
-    lakeTop = Color(0xFF6272A4),
-    lakeBottom = Color(0xFF282A36),
-    streamColor = Color(0xFFBD93F9),
-    waterShimmer = Color(0xFFFFB86C)
+private val SolarizedDawnDuskLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFFCB4B16),
+    celestialDisc = Color(0xFFDFB234),
+    farMountain = Color(0xFF1D4F5C),
+    midMountain = Color(0xFF113B47),
+    midMountainHighlight = Color(0xFFCB4B16),
+    foothill = Color(0xFF0B303B),
+    treeBack = Color(0xFF072832),
+    treeFront = Color(0xFF041E26),
+    lakeTop = Color(0xFF268BD2),
+    lakeBottom = Color(0xFF072B35),
+    streamColor = Color(0xFF2AA198),
+    waterShimmer = Color(0xFFF0CA5E)
 )
 
-private val DraculaNightLandscapeColors = LandscapeColors(
-    celestialGlow = Color(0xFFBD93F9),
-    celestialDisc = Color(0xFFF8F8F2),
-    farMountain = Color(0xFF383A4A),
-    midMountain = Color(0xFF282A36),
-    midMountainHighlight = Color(0xFF6272A4),
-    foothill = Color(0xFF1E1F29),
-    treeBack = Color(0xFF191A22),
-    treeFront = Color(0xFF12131A),
-    lakeTop = Color(0xFF44475A),
-    lakeBottom = Color(0xFF12131A),
-    streamColor = Color(0xFF8BE9FD),
-    waterShimmer = Color(0xFFBD93F9)
+private val SolarizedNightLandscapeColors = LandscapeColors(
+    celestialGlow = Color(0xFF2AA198),
+    celestialDisc = Color(0xFFE3ECEA),
+    farMountain = Color(0xFF11424F),
+    midMountain = Color(0xFF073642),
+    midMountainHighlight = Color(0xFF2AA198),
+    foothill = Color(0xFF052A34),
+    treeBack = Color(0xFF03232C),
+    treeFront = Color(0xFF001B22),
+    lakeTop = Color(0xFF124C5B),
+    lakeBottom = Color(0xFF001F27),
+    streamColor = Color(0xFF56CFC6),
+    waterShimmer = Color(0xFF9CB6BC)
 )
 
 private val RosePineDayLandscapeColors = LandscapeColors(
@@ -365,10 +365,10 @@ private fun landscapeColorsFor(
         SkyPhase.DAWN_DUSK -> GruvboxDawnDuskLandscapeColors
         SkyPhase.NIGHT -> GruvboxNightLandscapeColors
     }
-    AppThemeStyle.DRACULA -> when (skyPhase) {
-        SkyPhase.DAY -> DraculaDayLandscapeColors
-        SkyPhase.DAWN_DUSK -> DraculaDawnDuskLandscapeColors
-        SkyPhase.NIGHT -> DraculaNightLandscapeColors
+    AppThemeStyle.SOLARIZED -> when (skyPhase) {
+        SkyPhase.DAY -> SolarizedDayLandscapeColors
+        SkyPhase.DAWN_DUSK -> SolarizedDawnDuskLandscapeColors
+        SkyPhase.NIGHT -> SolarizedNightLandscapeColors
     }
     AppThemeStyle.ROSE_PINE -> when (skyPhase) {
         SkyPhase.DAY -> RosePineDayLandscapeColors

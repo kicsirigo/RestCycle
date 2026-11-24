@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalView
@@ -399,40 +401,66 @@ fun CelestialHeader(
             ) {
                 if (onOpenSoundPicker != null) {
                     val soundActive = ambientSoundMode != AmbientSoundMode.OFF
+                    val soundInteraction = remember { MutableInteractionSource() }
+                    val soundScale = rememberPressScale(soundInteraction, pressedScale = 0.89f)
                     Surface(
                         modifier = Modifier
                             .size(40.dp)
+                            .graphicsLayer {
+                                scaleX = soundScale
+                                scaleY = soundScale
+                            }
                             .clip(CircleShape)
                             .testTag(RestCycleTestTags.SOUND_PICKER_PILL)
-                            .clickable(role = Role.Button) {
+                            .clickable(
+                                interactionSource = soundInteraction,
+                                indication = null,
+                                role = Role.Button
+                            ) {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                 onOpenSoundPicker()
                             },
                         shape = CircleShape,
                         color = if (soundActive) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
-                        border = BorderStroke(1.dp, if (soundActive) palette.accent else palette.borderSubtle)
+                        border = BorderStroke(
+                            width = if (soundActive) 1.4.dp else 1.dp,
+                            color = if (soundActive) palette.accent else palette.borderSubtle
+                        )
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = if (soundActive) {
-                                    RestCycleIcons.forAmbientSound(ambientSoundMode)
-                                } else {
-                                    RestCycleIcons.AudioWaveform
-                                },
-                                contentDescription = stringResource(R.string.sound_dialog_title),
-                                tint = if (soundActive) palette.accentText else palette.textPrimary,
-                                modifier = Modifier.size(19.dp)
-                            )
+                            if (soundActive) {
+                                LiveEqualizerIcon(
+                                    color = palette.accentText,
+                                    iconSize = 19.dp
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = RestCycleIcons.AudioWaveform,
+                                    contentDescription = stringResource(R.string.sound_dialog_title),
+                                    tint = palette.textPrimary,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
                         }
                     }
                 }
                 if (onOpenSleepHistory != null) {
+                    val calInteraction = remember { MutableInteractionSource() }
+                    val calScale = rememberPressScale(calInteraction, pressedScale = 0.89f)
                     Surface(
                         modifier = Modifier
                             .size(40.dp)
+                            .graphicsLayer {
+                                scaleX = calScale
+                                scaleY = calScale
+                            }
                             .clip(CircleShape)
                             .testTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON)
-                            .clickable(role = Role.Button) {
+                            .clickable(
+                                interactionSource = calInteraction,
+                                indication = null,
+                                role = Role.Button
+                            ) {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                 onOpenSleepHistory()
                             },
@@ -451,12 +479,22 @@ fun CelestialHeader(
                     }
                 }
                 if (onOpenSettings != null) {
+                    val settingsInteraction = remember { MutableInteractionSource() }
+                    val settingsScale = rememberPressScale(settingsInteraction, pressedScale = 0.89f)
                     Surface(
                         modifier = Modifier
                             .size(40.dp)
+                            .graphicsLayer {
+                                scaleX = settingsScale
+                                scaleY = settingsScale
+                            }
                             .clip(CircleShape)
                             .testTag(RestCycleTestTags.SETTINGS_BUTTON)
-                            .clickable(role = Role.Button) {
+                            .clickable(
+                                interactionSource = settingsInteraction,
+                                indication = null,
+                                role = Role.Button
+                            ) {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                 onOpenSettings()
                             },

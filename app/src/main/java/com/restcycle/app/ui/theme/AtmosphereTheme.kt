@@ -47,7 +47,7 @@ enum class AppThemeStyle {
     NORD,
     EVERFOREST,
     GRUVBOX,
-    DRACULA,
+    SOLARIZED,
     ROSE_PINE
 }
 
@@ -70,19 +70,19 @@ enum class AppLanguage(val languageTag: String?, val nativeLabel: String) {
 
 val NordDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
-    backgroundGlow = Color(0xFF5E81AC),
-    backgroundTop = Color(0xFF334154),
-    backgroundMid = Color(0xFF2B3646),
-    backgroundBottom = Color(0xFF252E3C),
-    cardSurface = Color(0xFF344154),
-    cardSurfaceHighlighted = Color(0xFF425269),
+    backgroundGlow = Color(0xFF7EB4D6),
+    backgroundTop = Color(0xFF4C7C9E),
+    backgroundMid = Color(0xFF406B8B),
+    backgroundBottom = Color(0xFF375E7B),
+    cardSurface = Color(0xFF2B4C66),
+    cardSurfaceHighlighted = Color(0xFF365D7C),
     accent = Color(0xFF88C0D0),
-    accentText = Color(0xFF9CD4E4),
-    onAccent = Color(0xFF1D2430),
-    textPrimary = Color(0xFFECEFF4),
-    textSecondary = Color(0xFFC8D3E3),
-    borderSubtle = Color(0xFF53657F),
-    pillContainer = Color(0xFF2E3A4B),
+    accentText = Color(0xFFA3E0F2),
+    onAccent = Color(0xFF1B3042),
+    textPrimary = Color(0xFFF2F7FA),
+    textSecondary = Color(0xFFCCE0EE),
+    borderSubtle = Color(0xFF6998B8),
+    pillContainer = Color(0xFF26455D),
     isLightSystemBars = false
 )
 
@@ -124,19 +124,19 @@ val NordNightAtmospherePalette = AtmospherePalette(
 
 val EverforestDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
-    backgroundGlow = Color(0xFF5A7868),
-    backgroundTop = Color(0xFF2F3D39),
-    backgroundMid = Color(0xFF283431),
-    backgroundBottom = Color(0xFF222C2A),
-    cardSurface = Color(0xFF303E3A),
-    cardSurfaceHighlighted = Color(0xFF3C4D48),
-    accent = Color(0xFF83C092),
-    accentText = Color(0xFF9AD4A8),
-    onAccent = Color(0xFF1E2725),
-    textPrimary = Color(0xFFE6DEC8),
-    textSecondary = Color(0xFFBFC8BA),
-    borderSubtle = Color(0xFF4E625C),
-    pillContainer = Color(0xFF2A3633),
+    backgroundGlow = Color(0xFF68A878),
+    backgroundTop = Color(0xFF376E4E),
+    backgroundMid = Color(0xFF2E5F44),
+    backgroundBottom = Color(0xFF27543B),
+    cardSurface = Color(0xFF1F4531),
+    cardSurfaceHighlighted = Color(0xFF29573E),
+    accent = Color(0xFFA7C080),
+    accentText = Color(0xFFC5E898),
+    onAccent = Color(0xFF152E21),
+    textPrimary = Color(0xFFF1F5EA),
+    textSecondary = Color(0xFFC8DEC9),
+    borderSubtle = Color(0xFF538A68),
+    pillContainer = Color(0xFF1C3E2C),
     isLightSystemBars = false
 )
 
@@ -178,19 +178,19 @@ val EverforestNightAtmospherePalette = AtmospherePalette(
 
 val TokyoNightDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
-    backgroundGlow = Color(0xFF3D6EA8),
-    backgroundTop = Color(0xFF25324E),
-    backgroundMid = Color(0xFF1E2840),
-    backgroundBottom = Color(0xFF192136),
-    cardSurface = Color(0xFF25304A),
-    cardSurfaceHighlighted = Color(0xFF324061),
-    accent = Color(0xFF7DCFFF),
-    accentText = Color(0xFF7DCFFF),
-    onAccent = Color(0xFF141B2D),
-    textPrimary = Color(0xFFE6ECFF),
-    textSecondary = Color(0xFFB8C7EA),
-    borderSubtle = Color(0xFF43547A),
-    pillContainer = Color(0xFF202A42),
+    backgroundGlow = Color(0xFF4F9CF9),
+    backgroundTop = Color(0xFF2C64B8),
+    backgroundMid = Color(0xFF24539E),
+    backgroundBottom = Color(0xFF1E4688),
+    cardSurface = Color(0xFF1B3B73),
+    cardSurfaceHighlighted = Color(0xFF244C91),
+    accent = Color(0xFF7CE8FF),
+    accentText = Color(0xFF7CE8FF),
+    onAccent = Color(0xFF0F2347),
+    textPrimary = Color(0xFFF2F6FF),
+    textSecondary = Color(0xFFC7DBFA),
+    borderSubtle = Color(0xFF4A7BD0),
+    pillContainer = Color(0xFF19376B),
     isLightSystemBars = false
 )
 
@@ -232,19 +232,19 @@ val TokyoNightNightAtmospherePalette = AtmospherePalette(
 
 val GruvboxDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
-    backgroundGlow = Color(0xFF687A6B),
-    backgroundTop = Color(0xFF383A36),
-    backgroundMid = Color(0xFF30322E),
-    backgroundBottom = Color(0xFF282A27),
-    cardSurface = Color(0xFF3A3C37),
-    cardSurfaceHighlighted = Color(0xFF4A4D46),
-    accent = Color(0xFF8EC07C),
-    accentText = Color(0xFFA2D490),
-    onAccent = Color(0xFF1F211E),
-    textPrimary = Color(0xFFF2E5BC),
-    textSecondary = Color(0xFFD5C4A1),
-    borderSubtle = Color(0xFF5D6057),
-    pillContainer = Color(0xFF32342F),
+    backgroundGlow = Color(0xFFD98A48),
+    backgroundTop = Color(0xFF8A4E24),
+    backgroundMid = Color(0xFF77421E),
+    backgroundBottom = Color(0xFF663818),
+    cardSurface = Color(0xFF4F2C14),
+    cardSurfaceHighlighted = Color(0xFF63381A),
+    accent = Color(0xFFFABD2F),
+    accentText = Color(0xFFFFD269),
+    onAccent = Color(0xFF2B170A),
+    textPrimary = Color(0xFFFDF3DB),
+    textSecondary = Color(0xFFE8CFA8),
+    borderSubtle = Color(0xFFA66A3E),
+    pillContainer = Color(0xFF472711),
     isLightSystemBars = false
 )
 
@@ -284,75 +284,75 @@ val GruvboxNightAtmospherePalette = AtmospherePalette(
     isLightSystemBars = false
 )
 
-val DraculaDayAtmospherePalette = AtmospherePalette(
+val SolarizedDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
-    backgroundGlow = Color(0xFF5C6FA8),
-    backgroundTop = Color(0xFF323752),
-    backgroundMid = Color(0xFF2A2E45),
-    backgroundBottom = Color(0xFF23263A),
-    cardSurface = Color(0xFF333852),
-    cardSurfaceHighlighted = Color(0xFF424869),
-    accent = Color(0xFF8BE9FD),
-    accentText = Color(0xFF8BE9FD),
-    onAccent = Color(0xFF1B1E2E),
-    textPrimary = Color(0xFFF8F8F2),
-    textSecondary = Color(0xFFCFD4EB),
-    borderSubtle = Color(0xFF565E85),
-    pillContainer = Color(0xFF2C3148),
+    backgroundGlow = Color(0xFF36A1AD),
+    backgroundTop = Color(0xFF1B6D7A),
+    backgroundMid = Color(0xFF155D6A),
+    backgroundBottom = Color(0xFF114E5A),
+    cardSurface = Color(0xFF0D424D),
+    cardSurfaceHighlighted = Color(0xFF135361),
+    accent = Color(0xFF2AA198),
+    accentText = Color(0xFFF5D26B),
+    onAccent = Color(0xFF07262D),
+    textPrimary = Color(0xFFEEF8F8),
+    textSecondary = Color(0xFFBFE2E6),
+    borderSubtle = Color(0xFF328594),
+    pillContainer = Color(0xFF0B3A44),
     isLightSystemBars = false
 )
 
-val DraculaDawnDuskAtmospherePalette = AtmospherePalette(
+val SolarizedDawnDuskAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAWN_DUSK,
-    backgroundGlow = Color(0xFFFF79C6),
-    backgroundTop = Color(0xFF472A4D),
-    backgroundMid = Color(0xFF322A46),
-    backgroundBottom = Color(0xFF282A36),
-    cardSurface = Color(0xFF343746),
-    cardSurfaceHighlighted = Color(0xFF44475A),
-    accent = Color(0xFFFFB86C),
-    accentText = Color(0xFFFFB86C),
-    onAccent = Color(0xFF282A36),
-    textPrimary = Color(0xFFF8F8F2),
-    textSecondary = Color(0xFFDADAE8),
-    borderSubtle = Color(0xFF6272A4),
-    pillContainer = Color(0xFF303341),
+    backgroundGlow = Color(0xFFCB4B16),
+    backgroundTop = Color(0xFF1B424D),
+    backgroundMid = Color(0xFF0F3540),
+    backgroundBottom = Color(0xFF072B35),
+    cardSurface = Color(0xFF0B3642),
+    cardSurfaceHighlighted = Color(0xFF134756),
+    accent = Color(0xFFDFB234),
+    accentText = Color(0xFFF0CA5E),
+    onAccent = Color(0xFF07262E),
+    textPrimary = Color(0xFFEEF3F0),
+    textSecondary = Color(0xFFB8CFD4),
+    borderSubtle = Color(0xFF2A5F6D),
+    pillContainer = Color(0xFF09303B),
     isLightSystemBars = false
 )
 
-val DraculaNightAtmospherePalette = AtmospherePalette(
+val SolarizedNightAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.NIGHT,
-    backgroundGlow = Color(0xFF21222C),
-    backgroundTop = Color(0xFF1B1C25),
-    backgroundMid = Color(0xFF16171F),
-    backgroundBottom = Color(0xFF12131A),
-    cardSurface = Color(0xFF282A36),
-    cardSurfaceHighlighted = Color(0xFF383A4A),
-    accent = Color(0xFFBD93F9),
-    accentText = Color(0xFFBD93F9),
-    onAccent = Color(0xFF12131A),
-    textPrimary = Color(0xFFF8F8F2),
-    textSecondary = Color(0xFFB6C2E2),
-    borderSubtle = Color(0xFF44475A),
-    pillContainer = Color(0xFF232530),
+    backgroundGlow = Color(0xFF073642),
+    backgroundTop = Color(0xFF042E39),
+    backgroundMid = Color(0xFF022630),
+    backgroundBottom = Color(0xFF001F27),
+    cardSurface = Color(0xFF073642),
+    cardSurfaceHighlighted = Color(0xFF0E4654),
+    accent = Color(0xFF2AA198),
+    accentText = Color(0xFF56CFC6),
+    onAccent = Color(0xFF001F27),
+    textPrimary = Color(0xFFE3ECEA),
+    textSecondary = Color(0xFF9CB6BC),
+    borderSubtle = Color(0xFF1C5463),
+    pillContainer = Color(0xFF052D38),
     isLightSystemBars = false
 )
 
 val RosePineDayAtmospherePalette = AtmospherePalette(
     skyPhase = SkyPhase.DAY,
-    backgroundGlow = Color(0xFF5B7D92),
-    backgroundTop = Color(0xFF2E364A),
-    backgroundMid = Color(0xFF262D3E),
-    backgroundBottom = Color(0xFF202636),
-    cardSurface = Color(0xFF2F374A),
-    cardSurfaceHighlighted = Color(0xFF3D475F),
-    accent = Color(0xFF9CCFD8),
-    accentText = Color(0xFF9CCFD8),
-    onAccent = Color(0xFF1A202D),
-    textPrimary = Color(0xFFEAE8F7),
-    textSecondary = Color(0xFFC5C9DE),
-    borderSubtle = Color(0xFF4E5973),
-    pillContainer = Color(0xFF282F41),
+    backgroundGlow = Color(0xFFC97A94),
+    backgroundTop = Color(0xFF7D425E),
+    backgroundMid = Color(0xFF6C3751),
+    backgroundBottom = Color(0xFF5C2E46),
+    cardSurface = Color(0xFF4A2439),
+    cardSurfaceHighlighted = Color(0xFF5E2F49),
+    accent = Color(0xFFF6C177),
+    accentText = Color(0xFFFFD09B),
+    onAccent = Color(0xFF2B1421),
+    textPrimary = Color(0xFFFBF0F5),
+    textSecondary = Color(0xFFE5C5D6),
+    borderSubtle = Color(0xFF9C5C7B),
+    pillContainer = Color(0xFF422033),
     isLightSystemBars = false
 )
 
@@ -418,10 +418,10 @@ fun paletteForTheme(
             SkyPhase.DAWN_DUSK -> GruvboxDawnDuskAtmospherePalette
             SkyPhase.NIGHT -> GruvboxNightAtmospherePalette
         }
-        AppThemeStyle.DRACULA -> when (skyPhase) {
-            SkyPhase.DAY -> DraculaDayAtmospherePalette
-            SkyPhase.DAWN_DUSK -> DraculaDawnDuskAtmospherePalette
-            SkyPhase.NIGHT -> DraculaNightAtmospherePalette
+        AppThemeStyle.SOLARIZED -> when (skyPhase) {
+            SkyPhase.DAY -> SolarizedDayAtmospherePalette
+            SkyPhase.DAWN_DUSK -> SolarizedDawnDuskAtmospherePalette
+            SkyPhase.NIGHT -> SolarizedNightAtmospherePalette
         }
         AppThemeStyle.ROSE_PINE -> when (skyPhase) {
             SkyPhase.DAY -> RosePineDayAtmospherePalette

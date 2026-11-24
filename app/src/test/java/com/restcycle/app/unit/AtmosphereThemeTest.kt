@@ -51,11 +51,11 @@ class AtmosphereThemeUnitTest {
 
     @Test
     fun palettesMatchExactSpecificationTokens() {
-        assertEquals(Color(0xFF3D6EA8), TokyoNightDayAtmospherePalette.backgroundGlow)
-        assertEquals(Color(0xFF192136), TokyoNightDayAtmospherePalette.backgroundBottom)
-        assertEquals(Color(0xFF25304A), TokyoNightDayAtmospherePalette.cardSurface)
-        assertEquals(Color(0xFF7DCFFF), TokyoNightDayAtmospherePalette.accent)
-        assertEquals(Color(0xFFE6ECFF), TokyoNightDayAtmospherePalette.textPrimary)
+        assertEquals(Color(0xFF4F9CF9), TokyoNightDayAtmospherePalette.backgroundGlow)
+        assertEquals(Color(0xFF1E4688), TokyoNightDayAtmospherePalette.backgroundBottom)
+        assertEquals(Color(0xFF1B3B73), TokyoNightDayAtmospherePalette.cardSurface)
+        assertEquals(Color(0xFF7CE8FF), TokyoNightDayAtmospherePalette.accent)
+        assertEquals(Color(0xFFF2F6FF), TokyoNightDayAtmospherePalette.textPrimary)
         assertFalse(TokyoNightDayAtmospherePalette.isLightSystemBars)
 
         assertEquals(Color(0xFFFF9E64), TokyoNightDawnDuskAtmospherePalette.backgroundGlow)
@@ -198,6 +198,10 @@ class AtmosphereThemeUnitTest {
             assertNotEquals(day.accent, dawn.accent)
             assertNotEquals(dawn.accent, night.accent)
         }
+        val dayTops = AppThemeStyle.entries.map { paletteForTheme(SkyPhase.DAY, it).backgroundTop }.toSet()
+        val dayGlows = AppThemeStyle.entries.map { paletteForTheme(SkyPhase.DAY, it).backgroundGlow }.toSet()
+        assertEquals(AppThemeStyle.entries.size, dayTops.size)
+        assertEquals(AppThemeStyle.entries.size, dayGlows.size)
     }
 }
 

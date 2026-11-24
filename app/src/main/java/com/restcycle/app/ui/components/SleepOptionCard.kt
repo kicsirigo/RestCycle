@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -26,12 +27,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -98,12 +101,27 @@ fun SleepOptionCard(
     val buttonContainerColor = lerp(palette.pillContainer, palette.accent, highlightFraction)
     val buttonContentColor = lerp(palette.textPrimary, palette.onAccent, highlightFraction)
 
+    val cardInteraction = remember { MutableInteractionSource() }
+    val cardScale = rememberPressScale(
+        interactionSource = cardInteraction,
+        pressedScale = 0.97f,
+        restingScale = if (isHighlighted) 1.012f else 1f
+    )
+    val alarmBtnInteraction = remember { MutableInteractionSource() }
+    val alarmBtnScale = rememberPressScale(alarmBtnInteraction, pressedScale = 0.91f)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = cardScale
+                scaleY = cardScale
+            }
             .testTag(RestCycleTestTags.optionCard(option.id))
             .selectable(
                 selected = isHighlighted,
+                interactionSource = cardInteraction,
+                indication = null,
                 onClick = {
                     view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                     onSelect()
@@ -131,7 +149,7 @@ fun SleepOptionCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
+                    RollingOdometerText(
                         text = formattedTime,
                         style = TabularTextStyles.cardTargetTime,
                         color = palette.textPrimary,
@@ -248,6 +266,7 @@ fun SleepOptionCard(
                     view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                     onSetAlarm(option)
                 },
+                interactionSource = alarmBtnInteraction,
                 shape = RoundedCornerShape(14.dp),
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
@@ -256,6 +275,10 @@ fun SleepOptionCard(
                 ),
                 modifier = Modifier
                     .defaultMinSize(minHeight = 36.dp)
+                    .graphicsLayer {
+                        scaleX = alarmBtnScale
+                        scaleY = alarmBtnScale
+                    }
                     .testTag(RestCycleTestTags.setAlarmButton(option.id))
                     .semantics {
                         contentDescription = setAlarmCd

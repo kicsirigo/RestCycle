@@ -60,7 +60,7 @@ fun ModeSegmentedBar(
 
     val animatedTabIndex by animateFloatAsState(
         targetValue = selectedMode.ordinal.toFloat(),
-        animationSpec = spring(dampingRatio = 0.78f, stiffness = 380f),
+        animationSpec = spring(dampingRatio = 0.66f, stiffness = 420f),
         label = "modePillSlide"
     )
 

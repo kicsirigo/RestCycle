@@ -9,13 +9,27 @@ import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,7 +48,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -107,6 +121,7 @@ import com.restcycle.app.ui.components.RestCycleIcons
 import com.restcycle.app.ui.components.SettingsDialog
 import com.restcycle.app.ui.components.SleepOptionCard
 import com.restcycle.app.ui.components.SleepTrackerDialog
+import com.restcycle.app.ui.components.rememberPressScale
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
@@ -372,13 +387,24 @@ fun RestCycleScreen(
                         contentPadding = PaddingValues(bottom = 6.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(uiState.options, key = { it.id }) { option ->
+                        itemsIndexed(uiState.options, key = { _, it -> it.id }) { index, option ->
                             val untilBedtimeMinutes = if (uiState.mode == SleepMode.WAKE_UP_AT) {
                                 val nowMin = currentClockTime.hour * 60 + currentClockTime.minute
                                 val targetMin = option.targetTime.hour * 60 + option.targetTime.minute
                                 ((targetMin - nowMin + 1440) % 1440).toLong()
                             } else {
                                 null
+                            }
+                            val cardEntrance = remember(uiState.mode, option.id) { Animatable(0f) }
+                            LaunchedEffect(uiState.mode, option.id) {
+                                kotlinx.coroutines.delay(index * 32L)
+                                cardEntrance.animateTo(
+                                    targetValue = 1f,
+                                    animationSpec = spring(
+                                        dampingRatio = 0.78f,
+                                        stiffness = Spring.StiffnessMediumLow
+                                    )
+                                )
                             }
                             SleepOptionCard(
                                 option = option,
@@ -393,6 +419,11 @@ fun RestCycleScreen(
                                     notifyMissingClockIfFailed(
                                         onLaunchAlarm(targetOption.targetTime, alarmMessage)
                                     )
+                                },
+                                modifier = Modifier.graphicsLayer {
+                                    val p = cardEntrance.value
+                                    alpha = 0.35f + 0.65f * p
+                                    translationY = (1f - p) * 18f
                                 }
                             )
                         }
@@ -861,47 +892,101 @@ private fun SleepSessionPill(
     onClick: () -> Unit
 ) {
     val palette = AtmosphereTheme.palette
-    val icon = if (isSleeping) RestCycleIcons.Sun else RestCycleIcons.Moon
     val actionLabel = stringResource(if (isSleeping) R.string.action_woke_up else R.string.action_start_sleep)
-    val contentColor = if (isSleeping) palette.onAccent else palette.textPrimary
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressScale = rememberPressScale(interactionSource, pressedScale = 0.90f)
+    val breathingTransition = rememberInfiniteTransition(label = "sleepPillBreath")
+    val pulseAlpha by breathingTransition.animateFloat(
+        initialValue = if (isSleeping) 0.55f else 0.38f,
+        targetValue = if (isSleeping) 1.0f else 0.72f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = if (isSleeping) 1800 else 2800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "sleepPillPulseAlpha"
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (isSleeping) palette.accent else palette.accent.copy(alpha = 0.16f),
+        animationSpec = tween(240),
+        label = "sleepPillBg"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isSleeping) palette.onAccent else palette.accentText,
+        animationSpec = tween(240),
+        label = "sleepPillFg"
+    )
+    val borderColor = if (isSleeping) {
+        palette.accent.copy(alpha = pulseAlpha)
+    } else {
+        palette.accent.copy(alpha = pulseAlpha * 0.75f)
+    }
     val shape = RoundedCornerShape(50)
     Surface(
         shape = shape,
-        color = if (isSleeping) palette.accent else palette.pillContainer,
-        border = BorderStroke(1.dp, if (isSleeping) palette.accent else palette.borderSubtle),
+        color = containerColor,
+        border = BorderStroke(width = if (isSleeping) 1.5.dp else 1.2.dp, color = borderColor),
         modifier = Modifier
+            .defaultMinSize(minWidth = if (compact) 52.dp else 0.dp, minHeight = 40.dp)
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .clip(shape)
-            .clickable(onClick = onClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
             .testTag(RestCycleTestTags.SLEEP_TRACKER_BUTTON)
     ) {
-        if (compact) {
-            Icon(
-                imageVector = icon,
-                contentDescription = actionLabel,
-                tint = contentColor,
-                modifier = Modifier
-                    .padding(horizontal = 9.dp, vertical = 6.dp)
-                    .size(15.dp)
-            )
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = contentColor,
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = actionLabel,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = contentColor,
-                    maxLines = 1
-                )
+        Box(contentAlignment = Alignment.Center) {
+            if (compact) {
+                AnimatedContent(
+                    targetState = isSleeping,
+                    transitionSpec = {
+                        (fadeIn(tween(180)) + scaleIn(initialScale = 0.72f))
+                            .togetherWith(fadeOut(tween(140)) + scaleOut(targetScale = 0.72f))
+                    },
+                    label = "sleepIconMorph"
+                ) { sleeping ->
+                    Icon(
+                        imageVector = if (sleeping) RestCycleIcons.Sun else RestCycleIcons.Moon,
+                        contentDescription = actionLabel,
+                        tint = contentColor,
+                        modifier = Modifier
+                            .padding(horizontal = 15.dp, vertical = 10.dp)
+                            .size(19.dp)
+                    )
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
+                ) {
+                    AnimatedContent(
+                        targetState = isSleeping,
+                        transitionSpec = {
+                            (fadeIn(tween(180)) + scaleIn(initialScale = 0.72f))
+                                .togetherWith(fadeOut(tween(140)) + scaleOut(targetScale = 0.72f))
+                        },
+                        label = "sleepFullIconMorph"
+                    ) { sleeping ->
+                        Icon(
+                            imageVector = if (sleeping) RestCycleIcons.Sun else RestCycleIcons.Moon,
+                            contentDescription = null,
+                            tint = contentColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Text(
+                        text = actionLabel,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = contentColor,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
@@ -978,6 +1063,8 @@ private fun QuickTimePresetRow(
             val key = String.format(Locale.US, "%02d%02d", preset.hour, preset.minute)
             val label = formatClockTime(preset, is24HourFormat)
             val shape = RoundedCornerShape(50)
+            val chipInteraction = remember { MutableInteractionSource() }
+            val chipScale = rememberPressScale(chipInteraction, pressedScale = 0.90f)
             Surface(
                 shape = shape,
                 color = if (isSelected) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
@@ -986,8 +1073,15 @@ private fun QuickTimePresetRow(
                     color = if (isSelected) palette.accent else palette.borderSubtle
                 ),
                 modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = chipScale
+                        scaleY = chipScale
+                    }
                     .clip(shape)
-                    .clickable { onSelectPreset(preset) }
+                    .clickable(
+                        interactionSource = chipInteraction,
+                        indication = null
+                    ) { onSelectPreset(preset) }
                     .testTag(RestCycleTestTags.quickTimeChip(key))
             ) {
                 Text(
@@ -1019,8 +1113,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.8.2"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.8.3"
     } catch (_: Exception) {
-        "1.8.2"
+        "1.8.3"
     }
 }

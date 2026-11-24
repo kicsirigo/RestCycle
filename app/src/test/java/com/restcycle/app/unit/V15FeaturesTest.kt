@@ -67,7 +67,7 @@ class V15FeaturesTest {
     fun tokyoNightIsDefaultTheme_everforestReplacesCatppuccin_draculaAndRosePineWork() {
         assertEquals(AppThemeStyle.TOKYO_NIGHT, LocalAppThemeStyle.let { AppThemeStyle.entries.first() })
 
-        listOf(AppThemeStyle.EVERFOREST, AppThemeStyle.DRACULA, AppThemeStyle.ROSE_PINE).forEach { style ->
+        listOf(AppThemeStyle.EVERFOREST, AppThemeStyle.SOLARIZED, AppThemeStyle.ROSE_PINE).forEach { style ->
             val day = paletteForTheme(SkyPhase.DAY, style, pureAmoledNight = false)
             val night = paletteForTheme(SkyPhase.NIGHT, style, pureAmoledNight = false)
             val amoled = paletteForTheme(SkyPhase.NIGHT, style, pureAmoledNight = true)
@@ -85,7 +85,7 @@ class V15FeaturesTest {
         composeRule.onNodeWithText("Dynamic Sky").assertDoesNotExist()
         composeRule.onNodeWithText("Catppuccin Macchiato").assertDoesNotExist()
         composeRule.onNodeWithText("Everforest").assertIsDisplayed().performClick()
-        composeRule.onNodeWithText("Dracula").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("Solarized").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Rosé Pine").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Tokyo Night").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Close").performClick()

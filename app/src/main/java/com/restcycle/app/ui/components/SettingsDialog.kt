@@ -51,9 +51,9 @@ import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.AtmosphereTheme
-import com.restcycle.app.ui.theme.DraculaDawnDuskAtmospherePalette
-import com.restcycle.app.ui.theme.DraculaDayAtmospherePalette
-import com.restcycle.app.ui.theme.DraculaNightAtmospherePalette
+import com.restcycle.app.ui.theme.SolarizedDawnDuskAtmospherePalette
+import com.restcycle.app.ui.theme.SolarizedDayAtmospherePalette
+import com.restcycle.app.ui.theme.SolarizedNightAtmospherePalette
 import com.restcycle.app.ui.theme.EverforestDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.EverforestDayAtmospherePalette
 import com.restcycle.app.ui.theme.EverforestNightAtmospherePalette
@@ -86,7 +86,7 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.8.2",
+    installedVersionName: String = "1.8.3",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {},
@@ -539,9 +539,9 @@ private val THEME_OPTIONS = listOf(
         listOf(GruvboxDayAtmospherePalette.accent, GruvboxDawnDuskAtmospherePalette.backgroundGlow, GruvboxNightAtmospherePalette.accent)
     ),
     Triple(
-        AppThemeStyle.DRACULA,
-        R.string.settings_theme_dracula,
-        listOf(DraculaDayAtmospherePalette.accent, DraculaDawnDuskAtmospherePalette.backgroundGlow, DraculaNightAtmospherePalette.accent)
+        AppThemeStyle.SOLARIZED,
+        R.string.settings_theme_solarized,
+        listOf(SolarizedDayAtmospherePalette.backgroundGlow, SolarizedDawnDuskAtmospherePalette.backgroundGlow, SolarizedNightAtmospherePalette.accent)
     ),
     Triple(
         AppThemeStyle.ROSE_PINE,
