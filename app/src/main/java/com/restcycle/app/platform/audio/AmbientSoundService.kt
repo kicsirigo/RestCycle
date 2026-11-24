@@ -69,7 +69,9 @@ class AmbientSoundService : Service() {
                     .coerceAtLeast(0)
 
                 ensureNotificationChannel()
-                val remaining = if (timerMinutes > 0) timerMinutes * 60L else 0L
+                val isPreview = AmbientSoundPackManager.resolveDownloadedFile(this, mode) == null
+                val effectiveTimer = if (isPreview) 0 else timerMinutes
+                val remaining = if (effectiveTimer > 0) effectiveTimer * 60L else 0L
                 startForegroundCompat(buildNotification(mode, remaining))
 
                 AmbientSoundStateHolder.update {
@@ -77,11 +79,18 @@ class AmbientSoundService : Service() {
                         mode = mode,
                         volume = volume,
                         sleepTimerMinutes = timerMinutes,
-                        remainingSeconds = remaining
+                        remainingSeconds = remaining,
+                        isPreviewPlayback = isPreview
                     )
                 }
-                controller.start(this, serviceScope, mode, volume)
-                restartTimer(mode, timerMinutes)
+                controller.start(
+                    context = this,
+                    scope = serviceScope,
+                    mode = mode,
+                    initialVolume = volume,
+                    onPreviewCompleted = { stopPlaybackAndSelf() }
+                )
+                restartTimer(mode, effectiveTimer)
             }
 
             ACTION_UPDATE_VOLUME -> {
@@ -289,14 +298,16 @@ class AmbientSoundService : Service() {
             }
             val clampedVolume = volume.coerceIn(MIN_VOLUME, MAX_VOLUME)
             val safeTimer = timerMinutes.coerceAtLeast(0)
-            val remaining = if (safeTimer > 0) safeTimer * 60L else 0L
+            val isPreview = AmbientSoundPackManager.resolveDownloadedFile(context, mode) == null
+            val remaining = if (!isPreview && safeTimer > 0) safeTimer * 60L else 0L
 
             AmbientSoundStateHolder.update {
                 AmbientSoundPlaybackState(
                     mode = mode,
                     volume = clampedVolume,
                     sleepTimerMinutes = safeTimer,
-                    remainingSeconds = remaining
+                    remainingSeconds = remaining,
+                    isPreviewPlayback = isPreview
                 )
             }
 

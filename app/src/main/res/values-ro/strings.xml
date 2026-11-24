@@ -193,4 +193,12 @@
     <string name="settings_update_install_now">Instalează %1$s</string>
     <string name="settings_update_cancel">Anulează</string>
     <string name="settings_update_permission_hint">Permite instalarea aplicațiilor, apoi apasă Instalează</string>
+    <string name="sound_pack_preview">Mostră (15s)</string>
+    <string name="sound_pack_offline_size">FLAC • %1$s</string>
+    <string name="sound_pack_downloading">Se descarcă %1$d%%</string>
+    <string name="sound_pack_error">Descărcare eșuată</string>
+    <string name="sound_pack_download_cd">Descarcă sunetul complet</string>
+    <string name="sound_pack_delete_cd">Șterge sunetul descărcat</string>
+    <string name="sound_pack_cancel_cd">Anulează descărcarea</string>
+    <string name="sound_pack_storage_summary">Sunete descărcate: %1$s</string>
 </resources>

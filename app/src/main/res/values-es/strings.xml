@@ -193,4 +193,12 @@
     <string name="settings_update_install_now">Instalar %1$s</string>
     <string name="settings_update_cancel">Cancelar</string>
     <string name="settings_update_permission_hint">Permite instalar apps de RestCycle y toca Instalar</string>
+    <string name="sound_pack_preview">Muestra (15s)</string>
+    <string name="sound_pack_offline_size">FLAC • %1$s</string>
+    <string name="sound_pack_downloading">Descargando %1$d%%</string>
+    <string name="sound_pack_error">Error de descarga</string>
+    <string name="sound_pack_download_cd">Descargar sonido completo</string>
+    <string name="sound_pack_delete_cd">Eliminar sonido descargado</string>
+    <string name="sound_pack_cancel_cd">Cancelar descarga</string>
+    <string name="sound_pack_storage_summary">Sonidos descargados: %1$s</string>
 </resources>

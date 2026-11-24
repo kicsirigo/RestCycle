@@ -143,7 +143,12 @@ class LocalizationParityTest {
             R.string.settings_backup_import,
             R.string.backup_error,
             R.string.settings_update_cancel,
-            R.string.settings_update_permission_hint
+            R.string.settings_update_permission_hint,
+            R.string.sound_pack_preview,
+            R.string.sound_pack_error,
+            R.string.sound_pack_download_cd,
+            R.string.sound_pack_delete_cd,
+            R.string.sound_pack_cancel_cd
         )
 
         simpleIds.forEach { resId ->
@@ -313,7 +318,12 @@ class LocalizationParityTest {
             R.string.settings_backup_import,
             R.string.backup_error,
             R.string.settings_update_cancel,
-            R.string.settings_update_permission_hint
+            R.string.settings_update_permission_hint,
+            R.string.sound_pack_preview,
+            R.string.sound_pack_error,
+            R.string.sound_pack_download_cd,
+            R.string.sound_pack_delete_cd,
+            R.string.sound_pack_cancel_cd
         )
 
         val expectedWakeUpTitle = mapOf(
@@ -369,6 +379,9 @@ class LocalizationParityTest {
             assertFalse(localizedContext.getString(R.string.backup_import_success, 3, 15).isBlank())
             assertFalse(localizedContext.getString(R.string.settings_update_downloading_progress, "v1.7.3", 45).isBlank())
             assertFalse(localizedContext.getString(R.string.settings_update_install_now, "v1.7.3").isBlank())
+            assertFalse(localizedContext.getString(R.string.sound_pack_offline_size, "21.4 MB").isBlank())
+            assertFalse(localizedContext.getString(R.string.sound_pack_downloading, 60).isBlank())
+            assertFalse(localizedContext.getString(R.string.sound_pack_storage_summary, "21.4 MB").isBlank())
         }
     }
 }

@@ -4,18 +4,22 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -38,8 +42,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.restcycle.app.R
 import com.restcycle.app.platform.audio.AmbientSoundMode
+import com.restcycle.app.platform.audio.AmbientSoundPackManager
 import com.restcycle.app.platform.audio.AmbientSoundPlaybackState
 import com.restcycle.app.platform.audio.AmbientSoundService
+import com.restcycle.app.platform.audio.SoundPackStatus
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.theme.TabularTextStyles
@@ -51,11 +57,16 @@ fun AmbientSoundDialog(
     onSelectSound: (AmbientSoundMode) -> Unit,
     onVolumeChange: (Float) -> Unit,
     onSelectTimerMinutes: (Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    packStatuses: Map<AmbientSoundMode, SoundPackStatus> = emptyMap(),
+    onDownloadPack: (AmbientSoundMode) -> Unit = {},
+    onCancelDownload: (AmbientSoundMode) -> Unit = {},
+    onDeletePack: (AmbientSoundMode) -> Unit = {}
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
     val activeModes = AmbientSoundMode.entries.filter { it != AmbientSoundMode.OFF }
+    val totalDownloadedBytes = AmbientSoundPackManager.totalDownloadedBytes(packStatuses)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -114,28 +125,32 @@ fun AmbientSoundDialog(
 
                 HorizontalDivider(color = palette.borderSubtle.copy(alpha = 0.65f))
 
-                // Sound selection grid (2 columns x 3 rows) + Off pill
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    activeModes.chunked(2).forEach { pair ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            pair.forEach { mode ->
-                                SoundModeOptionTile(
-                                    mode = mode,
-                                    selected = playbackState.mode == mode,
-                                    onClick = {
-                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                        onSelectSound(mode)
-                                    },
-                                    modifier = Modifier.weight(1f)
-                                )
+                // Sound selection rows with per-pack FLAC download / cancel / delete controls
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    activeModes.forEach { mode ->
+                        SoundPackOptionRow(
+                            mode = mode,
+                            selected = playbackState.mode == mode,
+                            packStatus = packStatuses[mode] ?: SoundPackStatus.NotDownloaded,
+                            onSelect = {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onSelectSound(mode)
+                            },
+                            onDownload = {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onDownloadPack(mode)
+                            },
+                            onCancelDownload = {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onCancelDownload(mode)
+                            },
+                            onDelete = {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onDeletePack(mode)
                             }
-                        }
+                        )
                     }
-                    SoundModeOptionTile(
-                        mode = AmbientSoundMode.OFF,
+                    SoundOffOptionTile(
                         selected = playbackState.mode == AmbientSoundMode.OFF,
                         onClick = {
                             view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
@@ -246,6 +261,19 @@ fun AmbientSoundDialog(
                     }
                 }
 
+                if (totalDownloadedBytes > 0L) {
+                    Text(
+                        text = stringResource(
+                            R.string.sound_pack_storage_summary,
+                            AmbientSoundPackManager.formatFileSize(totalDownloadedBytes)
+                        ),
+                        style = TabularTextStyles.cardDuration.copy(fontSize = 11.sp),
+                        color = palette.accentText,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
@@ -269,14 +297,182 @@ fun AmbientSoundDialog(
 }
 
 @Composable
-private fun SoundModeOptionTile(
+private fun SoundPackOptionRow(
     mode: AmbientSoundMode,
+    selected: Boolean,
+    packStatus: SoundPackStatus,
+    onSelect: () -> Unit,
+    onDownload: () -> Unit,
+    onCancelDownload: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    val shape = RoundedCornerShape(12.dp)
+    val contentColor = if (selected) palette.accentText else palette.textPrimary
+
+    Surface(
+        shape = shape,
+        color = if (selected) palette.accent.copy(alpha = 0.20f) else palette.pillContainer,
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected) palette.accent else palette.borderSubtle
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(role = Role.RadioButton, onClick = onSelect)
+                        .padding(vertical = 2.dp)
+                        .testTag(RestCycleTestTags.ambientSoundOption(mode.name)),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    Icon(
+                        imageVector = RestCycleIcons.forAmbientSound(mode),
+                        contentDescription = null,
+                        tint = contentColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text(
+                            text = stringResource(mode.labelResId),
+                            color = contentColor,
+                            fontSize = 13.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val subtitle = when (packStatus) {
+                            SoundPackStatus.NotDownloaded -> stringResource(R.string.sound_pack_preview)
+                            is SoundPackStatus.Downloading -> stringResource(
+                                R.string.sound_pack_downloading,
+                                packStatus.progressPercent
+                            )
+                            is SoundPackStatus.Downloaded -> stringResource(
+                                R.string.sound_pack_offline_size,
+                                AmbientSoundPackManager.formatFileSize(packStatus.sizeBytes)
+                            )
+                            SoundPackStatus.Error -> stringResource(R.string.sound_pack_error)
+                        }
+                        Text(
+                            text = subtitle,
+                            style = TabularTextStyles.cardDuration.copy(fontSize = 10.5.sp),
+                            color = if (packStatus is SoundPackStatus.Downloaded) {
+                                palette.accentText
+                            } else {
+                                palette.textSecondary
+                            },
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                when (packStatus) {
+                    SoundPackStatus.NotDownloaded, SoundPackStatus.Error -> {
+                        SoundPackActionIconButton(
+                            icon = RestCycleIcons.ImportDownload,
+                            contentDescription = stringResource(R.string.sound_pack_download_cd),
+                            tint = palette.textPrimary,
+                            tag = RestCycleTestTags.soundPackDownloadBtn(mode.name),
+                            onClick = onDownload
+                        )
+                    }
+
+                    is SoundPackStatus.Downloading -> {
+                        SoundPackActionIconButton(
+                            icon = RestCycleIcons.Close,
+                            contentDescription = stringResource(R.string.sound_pack_cancel_cd),
+                            tint = palette.textSecondary,
+                            tag = RestCycleTestTags.soundPackCancelBtn(mode.name),
+                            onClick = onCancelDownload
+                        )
+                    }
+
+                    is SoundPackStatus.Downloaded -> {
+                        SoundPackActionIconButton(
+                            icon = RestCycleIcons.Trash,
+                            contentDescription = stringResource(R.string.sound_pack_delete_cd),
+                            tint = palette.textSecondary,
+                            tag = RestCycleTestTags.soundPackDeleteBtn(mode.name),
+                            onClick = onDelete
+                        )
+                    }
+                }
+            }
+
+            if (packStatus is SoundPackStatus.Downloading) {
+                if (packStatus.totalBytes > 0L) {
+                    LinearProgressIndicator(
+                        progress = { (packStatus.progressPercent / 100f).coerceIn(0f, 1f) },
+                        color = palette.accent,
+                        trackColor = palette.borderSubtle.copy(alpha = 0.5f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        color = palette.accent,
+                        trackColor = palette.borderSubtle.copy(alpha = 0.5f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SoundPackActionIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    tint: androidx.compose.ui.graphics.Color,
+    tag: String,
+    onClick: () -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    Surface(
+        shape = CircleShape,
+        color = palette.cardSurface,
+        border = BorderStroke(1.dp, palette.borderSubtle),
+        modifier = Modifier
+            .size(30.dp)
+            .clip(CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .testTag(tag)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = tint,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SoundOffOptionTile(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = AtmosphereTheme.palette
     val shape = RoundedCornerShape(12.dp)
+    val contentColor = if (selected) palette.accentText else palette.textPrimary
     Surface(
         shape = shape,
         color = if (selected) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
@@ -287,24 +483,23 @@ private fun SoundModeOptionTile(
         modifier = modifier
             .clip(shape)
             .clickable(role = Role.RadioButton, onClick = onClick)
-            .testTag(RestCycleTestTags.ambientSoundOption(mode.name))
+            .testTag(RestCycleTestTags.ambientSoundOption(AmbientSoundMode.OFF.name))
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 10.dp)
+                .padding(horizontal = 10.dp, vertical = 9.dp)
         ) {
-            val contentColor = if (selected) palette.accentText else palette.textPrimary
             Icon(
-                imageVector = RestCycleIcons.forAmbientSound(mode),
+                imageVector = RestCycleIcons.VolumeOff,
                 contentDescription = null,
                 tint = contentColor,
                 modifier = Modifier.size(15.dp)
             )
             Text(
-                text = stringResource(mode.labelResId),
+                text = stringResource(AmbientSoundMode.OFF.labelResId),
                 color = contentColor,
                 fontSize = 12.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,

@@ -494,6 +494,38 @@ object RestCycleIcons {
         }
     }
 
+    val Trash: ImageVector by lazy {
+        strokeIcon("RestCycleTrash") {
+            strokePath {
+                moveTo(4f, 6.5f)
+                lineTo(20f, 6.5f)
+                moveTo(9.5f, 4f)
+                lineTo(14.5f, 4f)
+                moveTo(6.5f, 6.5f)
+                lineTo(7.5f, 19f)
+                curveTo(7.6f, 19.9f, 8.2f, 20.5f, 9f, 20.5f)
+                lineTo(15f, 20.5f)
+                curveTo(15.8f, 20.5f, 16.4f, 19.9f, 16.5f, 19f)
+                lineTo(17.5f, 6.5f)
+                moveTo(10.5f, 10.5f)
+                lineTo(10.5f, 16.5f)
+                moveTo(13.5f, 10.5f)
+                lineTo(13.5f, 16.5f)
+            }
+        }
+    }
+
+    val Close: ImageVector by lazy {
+        strokeIcon("RestCycleClose") {
+            strokePath {
+                moveTo(6f, 6f)
+                lineTo(18f, 18f)
+                moveTo(18f, 6f)
+                lineTo(6f, 18f)
+            }
+        }
+    }
+
     fun forAmbientSound(mode: AmbientSoundMode): ImageVector = when (mode) {
         AmbientSoundMode.OFF -> VolumeOff
         AmbientSoundMode.BROWN_NOISE -> Waves

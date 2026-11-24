@@ -85,6 +85,7 @@ import com.restcycle.app.domain.model.SleepQualityMood
 import com.restcycle.app.domain.model.SleepSessionRecord
 import com.restcycle.app.domain.model.SleepUiState
 import com.restcycle.app.platform.audio.AmbientSoundMode
+import com.restcycle.app.platform.audio.AmbientSoundPackManager
 import com.restcycle.app.platform.audio.AmbientSoundService
 import com.restcycle.app.platform.audio.AmbientSoundStateHolder
 import com.restcycle.app.platform.reminder.BedtimeReminderScheduler
@@ -188,6 +189,10 @@ fun RestCycleScreen(
         var showSoundPicker by remember { mutableStateOf(false) }
         val ambientPlaybackState by AmbientSoundStateHolder.state.collectAsStateWithLifecycle()
         val ambientSoundMode = ambientPlaybackState.mode
+        val soundPackStatuses by AmbientSoundPackManager.statuses.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) {
+            AmbientSoundPackManager.refreshStatuses(baseContext)
+        }
         var updateUiState by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
         var updateDownloadJob by remember { mutableStateOf<Job?>(null) }
         val installedVersionName = remember(context) { resolveInstalledVersionName(context) }
@@ -820,7 +825,36 @@ fun RestCycleScreen(
                 onSelectTimerMinutes = { mins ->
                     AmbientSoundService.updateTimer(baseContext, mins)
                 },
-                onDismiss = { showSoundPicker = false }
+                onDismiss = { showSoundPicker = false },
+                packStatuses = soundPackStatuses,
+                onDownloadPack = { mode ->
+                    AmbientSoundPackManager.startDownload(
+                        context = baseContext,
+                        scope = coroutineScope,
+                        mode = mode,
+                        onCompleted = {
+                            if (AmbientSoundStateHolder.state.value.mode == mode) {
+                                val current = AmbientSoundStateHolder.state.value
+                                AmbientSoundService.play(
+                                    context = baseContext,
+                                    mode = mode,
+                                    volume = current.volume,
+                                    timerMinutes = current.sleepTimerMinutes
+                                )
+                            }
+                        }
+                    )
+                },
+                onCancelDownload = { mode ->
+                    AmbientSoundPackManager.cancelDownload(baseContext, mode)
+                },
+                onDeletePack = { mode ->
+                    val wasPlayingThisMode = AmbientSoundStateHolder.state.value.mode == mode
+                    AmbientSoundPackManager.deletePack(baseContext, mode)
+                    if (wasPlayingThisMode) {
+                        AmbientSoundService.stop(baseContext)
+                    }
+                }
             )
         }
 
@@ -1071,8 +1105,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.7.5"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.8.0"
     } catch (_: Exception) {
-        "1.7.5"
+        "1.8.0"
     }
 }

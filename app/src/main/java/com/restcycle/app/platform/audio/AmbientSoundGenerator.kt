@@ -21,15 +21,16 @@ import kotlin.math.sin
 enum class AmbientSoundMode(
     val labelResId: Int,
     val rawResId: Int?,
+    val packFileName: String? = null,
     val useOffsetTextureLayer: Boolean = false
 ) {
-    OFF(R.string.ambient_sound_off, null),
-    BROWN_NOISE(R.string.ambient_sound_brown, R.raw.ambient_brown_noise),
-    STREAM_RAIN(R.string.ambient_sound_rain, R.raw.ambient_stream_rain),
-    CAMPFIRE(R.string.ambient_sound_campfire, R.raw.ambient_campfire),
-    NIGHT_CRICKETS(R.string.ambient_sound_crickets, R.raw.ambient_night_crickets),
-    AMBIENT_PAD(R.string.ambient_sound_pad_432, R.raw.ambient_pad_432),
-    SINGING_BOWL(R.string.ambient_sound_singing_bowl, R.raw.ambient_singing_bowl);
+    OFF(R.string.ambient_sound_off, null, null),
+    BROWN_NOISE(R.string.ambient_sound_brown, R.raw.ambient_brown_noise, "ocean_waves_full.flac"),
+    STREAM_RAIN(R.string.ambient_sound_rain, R.raw.ambient_stream_rain, "thunderstorm_full.flac"),
+    CAMPFIRE(R.string.ambient_sound_campfire, R.raw.ambient_campfire, "fireplace_full.flac"),
+    NIGHT_CRICKETS(R.string.ambient_sound_crickets, R.raw.ambient_night_crickets, "night_crickets_full.flac"),
+    AMBIENT_PAD(R.string.ambient_sound_pad_432, R.raw.ambient_pad_432, "ambient_pad_432_full.flac"),
+    SINGING_BOWL(R.string.ambient_sound_singing_bowl, R.raw.ambient_singing_bowl, "singing_bowl_full.flac");
 
     fun next(): AmbientSoundMode {
         val all = entries
@@ -41,7 +42,8 @@ data class AmbientSoundPlaybackState(
     val mode: AmbientSoundMode = AmbientSoundMode.OFF,
     val volume: Float = 0.85f,
     val sleepTimerMinutes: Int = 0,
-    val remainingSeconds: Long = 0L
+    val remainingSeconds: Long = 0L,
+    val isPreviewPlayback: Boolean = false
 ) {
     val isPlaying: Boolean get() = mode != AmbientSoundMode.OFF
 }
@@ -59,7 +61,13 @@ object AmbientSoundStateHolder {
     }
 
     fun stopPlayback() {
-        _state.update { it.copy(mode = AmbientSoundMode.OFF, remainingSeconds = 0L) }
+        _state.update {
+            it.copy(
+                mode = AmbientSoundMode.OFF,
+                remainingSeconds = 0L,
+                isPreviewPlayback = false
+            )
+        }
     }
 }
 
@@ -92,22 +100,47 @@ class AmbientSoundController {
         context: Context,
         scope: CoroutineScope,
         mode: AmbientSoundMode,
-        initialVolume: Float = 0.85f
+        initialVolume: Float = 0.85f,
+        onPreviewCompleted: () -> Unit = {}
     ) {
         stop()
         val trackResId = mode.rawResId ?: return
         masterVolume = initialVolume.coerceIn(0.1f, 1.0f)
         fadeMultiplier = 1.0f
         val appContext = context.applicationContext
+        val downloadedFile = AmbientSoundPackManager.resolveDownloadedFile(appContext, mode)
+        val isPreview = downloadedFile == null
 
         mixJob = scope.launch(Dispatchers.Default) {
             var p1: MediaPlayer? = null
             var p2: MediaPlayer? = null
             try {
                 val effective = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
-                p1 = createLoopingPlayer(appContext, trackResId, initialVolume = 0.85f * effective, seekHalfway = false)
-                p2 = if (mode.useOffsetTextureLayer) {
-                    createLoopingPlayer(appContext, trackResId, initialVolume = 0.24f * effective, seekHalfway = true)
+                p1 = if (downloadedFile != null) {
+                    createFilePlayer(
+                        filePath = downloadedFile.absolutePath,
+                        initialVolume = 0.85f * effective,
+                        looping = true,
+                        seekHalfway = false
+                    )
+                } else {
+                    createRawPlayer(
+                        context = appContext,
+                        rawResId = trackResId,
+                        initialVolume = 0.85f * effective,
+                        looping = false,
+                        seekHalfway = false
+                    )?.apply {
+                        setOnCompletionListener { onPreviewCompleted() }
+                    }
+                }
+                p2 = if (downloadedFile != null && mode.useOffsetTextureLayer) {
+                    createFilePlayer(
+                        filePath = downloadedFile.absolutePath,
+                        initialVolume = 0.24f * effective,
+                        looping = true,
+                        seekHalfway = true
+                    )
                 } else {
                     null
                 }
@@ -153,15 +186,41 @@ class AmbientSoundController {
         }
     }
 
-    private fun createLoopingPlayer(
+    private fun createFilePlayer(
+        filePath: String,
+        initialVolume: Float,
+        looping: Boolean,
+        seekHalfway: Boolean
+    ): MediaPlayer? {
+        return runCatching {
+            MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
+                setDataSource(filePath)
+                isLooping = looping
+                prepare()
+                if (seekHalfway && duration > 2000) {
+                    seekTo(duration / 2)
+                }
+                setVolume(initialVolume, initialVolume)
+            }
+        }.getOrNull()
+    }
+
+    private fun createRawPlayer(
         context: Context,
         rawResId: Int,
         initialVolume: Float,
+        looping: Boolean,
         seekHalfway: Boolean
     ): MediaPlayer? {
         return runCatching {
             MediaPlayer.create(context, rawResId)?.apply {
-                isLooping = true
+                isLooping = looping
                 setAudioAttributes(
                     AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)

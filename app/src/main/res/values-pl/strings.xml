@@ -193,4 +193,12 @@
     <string name="settings_update_install_now">Zainstaluj %1$s</string>
     <string name="settings_update_cancel">Anuluj</string>
     <string name="settings_update_permission_hint">Zezwól na instalację aplikacji, a potem stuknij Zainstaluj</string>
+    <string name="sound_pack_preview">Próbka (15s)</string>
+    <string name="sound_pack_offline_size">FLAC • %1$s</string>
+    <string name="sound_pack_downloading">Pobieranie %1$d%%</string>
+    <string name="sound_pack_error">Błąd pobierania</string>
+    <string name="sound_pack_download_cd">Pobierz pełny dźwięk</string>
+    <string name="sound_pack_delete_cd">Usuń pobrany dźwięk</string>
+    <string name="sound_pack_cancel_cd">Anuluj pobieranie</string>
+    <string name="sound_pack_storage_summary">Pobrane dźwięki: %1$s</string>
 </resources>

@@ -105,7 +105,7 @@ class V15FeaturesTest {
         )
         rawIds.forEach { rawId ->
             val sizeBytes = context.resources.openRawResource(rawId).use { it.readBytes().size }
-            assertTrue("Expected non-empty MP3 raw asset $rawId, got $sizeBytes", sizeBytes > 400_000)
+            assertTrue("Expected compact 15s preview MP3 raw asset $rawId, got $sizeBytes", sizeBytes in 100_000..300_000)
         }
         assertEquals(6, rawIds.distinct().size)
 

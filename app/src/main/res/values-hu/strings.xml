@@ -193,4 +193,12 @@
     <string name="settings_update_install_now">Telepítés: %1$s</string>
     <string name="settings_update_cancel">Mégse</string>
     <string name="settings_update_permission_hint">Engedélyezd az ismeretlen alkalmazások telepítését, majd koppints a Telepítésre</string>
+    <string name="sound_pack_preview">Minta (15 mp)</string>
+    <string name="sound_pack_offline_size">FLAC • %1$s</string>
+    <string name="sound_pack_downloading">Letöltés: %1$d%%</string>
+    <string name="sound_pack_error">Letöltési hiba</string>
+    <string name="sound_pack_download_cd">Teljes hang letöltése</string>
+    <string name="sound_pack_delete_cd">Letöltött hang törlése</string>
+    <string name="sound_pack_cancel_cd">Letöltés megszakítása</string>
+    <string name="sound_pack_storage_summary">Letöltött hangok: %1$s</string>
 </resources>

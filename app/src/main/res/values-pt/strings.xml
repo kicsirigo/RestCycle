@@ -193,4 +193,12 @@
     <string name="settings_update_install_now">Instalar %1$s</string>
     <string name="settings_update_cancel">Cancelar</string>
     <string name="settings_update_permission_hint">Permita a instalação de apps e toque em Instalar</string>
+    <string name="sound_pack_preview">Amostra (15s)</string>
+    <string name="sound_pack_offline_size">FLAC • %1$s</string>
+    <string name="sound_pack_downloading">A transferir %1$d%%</string>
+    <string name="sound_pack_error">Falha na transferência</string>
+    <string name="sound_pack_download_cd">Transferir som completo</string>
+    <string name="sound_pack_delete_cd">Eliminar som transferido</string>
+    <string name="sound_pack_cancel_cd">Cancelar transferência</string>
+    <string name="sound_pack_storage_summary">Sons transferidos: %1$s</string>
 </resources>
