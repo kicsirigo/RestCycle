@@ -764,7 +764,7 @@ class Tier1FeatureCoverageTest {
             composeRule.onNodeWithTag(RestCycleTestTags.MODE_TAB_SLEEP_NOW).assertIsSelected()
             composeRule.onNodeWithTag(RestCycleTestTags.MODE_TAB_WAKE_UP_AT).assertIsNotSelected()
             composeRule.onNodeWithTag(RestCycleTestTags.TIME_WHEEL).assertDoesNotExist()
-            assertEquals(6, composeRule.findAllCardsInResultsZone().size)
+            assertEquals(4, composeRule.findAllCardsInResultsZone().size)
         }
     }
 
@@ -775,7 +775,7 @@ class Tier1FeatureCoverageTest {
             composeRule.switchMode(SleepMode.GO_TO_BED_AT)
             composeRule.onNodeWithTag(RestCycleTestTags.MODE_TAB_GO_TO_BED_AT).assertIsSelected()
             composeRule.onNodeWithTag(RestCycleTestTags.TIME_WHEEL).assertIsDisplayed()
-            assertEquals(6, composeRule.findAllCardsInResultsZone().size)
+            assertEquals(4, composeRule.findAllCardsInResultsZone().size)
         }
     }
 

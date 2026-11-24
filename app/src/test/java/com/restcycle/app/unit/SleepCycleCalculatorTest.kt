@@ -33,7 +33,7 @@ class SleepCycleCalculatorTest {
         )
 
         assertEquals(
-            listOf("wake_6", "wake_5", "wake_4", "wake_3", "wake_2", "wake_1"),
+            listOf("wake_6", "wake_5", "wake_4", "wake_3"),
             options.map { it.id }
         )
         assertEquals(
@@ -41,26 +41,22 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(21, 35),
                 LocalTime.of(23, 5),
                 LocalTime.of(0, 35),
-                LocalTime.of(2, 5),
-                LocalTime.of(3, 35),
-                LocalTime.of(5, 5)
+                LocalTime.of(2, 5)
             ),
             options.map { it.targetTime }
         )
-        assertEquals(listOf(540, 450, 360, 270, 180, 90), options.map { it.durationMinutes })
-        assertEquals(listOf(6, 5, 4, 3, 2, 1), options.map { it.cycles })
+        assertEquals(listOf(540, 450, 360, 270), options.map { it.durationMinutes })
+        assertEquals(listOf(6, 5, 4, 3), options.map { it.cycles })
         assertEquals(
             listOf(
                 CycleQuality.OPTIMAL,
                 CycleQuality.OPTIMAL,
                 CycleQuality.GOOD,
-                CycleQuality.SHORT,
-                CycleQuality.SHORT,
                 CycleQuality.SHORT
             ),
             options.map { it.quality }
         )
-        assertEquals(listOf(101, 101, 102, 103, 103, 103), options.map { it.labelResId })
+        assertEquals(listOf(101, 101, 102, 103), options.map { it.labelResId })
         options.forEach { assertNull(it.countdownMinutesFromNow) }
     }
 
@@ -79,9 +75,7 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(14, 45),
                 LocalTime.of(16, 15),
                 LocalTime.of(17, 45),
-                LocalTime.of(19, 15),
-                LocalTime.of(20, 45),
-                LocalTime.of(22, 15)
+                LocalTime.of(19, 15)
             ),
             options.map { it.targetTime }
         )
@@ -102,9 +96,7 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(14, 44),
                 LocalTime.of(16, 14),
                 LocalTime.of(17, 44),
-                LocalTime.of(19, 14),
-                LocalTime.of(20, 44),
-                LocalTime.of(22, 14)
+                LocalTime.of(19, 14)
             ),
             options.map { it.targetTime }
         )
@@ -131,9 +123,7 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(21, 50),
                 LocalTime.of(23, 20),
                 LocalTime.of(0, 50),
-                LocalTime.of(2, 20),
-                LocalTime.of(3, 50),
-                LocalTime.of(5, 20)
+                LocalTime.of(2, 20)
             ),
             zeroLatency.map { it.targetTime }
         )
@@ -158,9 +148,7 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(20, 50),
                 LocalTime.of(22, 20),
                 LocalTime.of(23, 50),
-                LocalTime.of(1, 20),
-                LocalTime.of(2, 50),
-                LocalTime.of(4, 20)
+                LocalTime.of(1, 20)
             ),
             maxLatency.map { it.targetTime }
         )
@@ -178,7 +166,7 @@ class SleepCycleCalculatorTest {
         )
 
         assertEquals(
-            listOf("sleep_now_6", "sleep_now_5", "sleep_now_4", "sleep_now_3", "sleep_now_2", "sleep_now_1"),
+            listOf("sleep_now_6", "sleep_now_5", "sleep_now_4", "sleep_now_3"),
             options.map { it.id }
         )
         assertEquals(
@@ -186,13 +174,11 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(7, 15),
                 LocalTime.of(5, 45),
                 LocalTime.of(4, 15),
-                LocalTime.of(2, 45),
-                LocalTime.of(1, 15),
-                LocalTime.of(23, 45)
+                LocalTime.of(2, 45)
             ),
             options.map { it.targetTime }
         )
-        assertEquals(listOf(555L, 465L, 375L, 285L, 195L, 105L), options.map { it.countdownMinutesFromNow })
+        assertEquals(listOf(555L, 465L, 375L, 285L), options.map { it.countdownMinutesFromNow })
     }
 
     @Test
@@ -210,13 +196,11 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(9, 5),
                 LocalTime.of(7, 35),
                 LocalTime.of(6, 5),
-                LocalTime.of(4, 35),
-                LocalTime.of(3, 5),
-                LocalTime.of(1, 35)
+                LocalTime.of(4, 35)
             ),
             options.map { it.targetTime }
         )
-        assertEquals(listOf(555L, 465L, 375L, 285L, 195L, 105L), options.map { it.countdownMinutesFromNow })
+        assertEquals(listOf(555L, 465L, 375L, 285L), options.map { it.countdownMinutesFromNow })
     }
 
     @Test
@@ -233,13 +217,11 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(7, 0),
                 LocalTime.of(5, 30),
                 LocalTime.of(4, 0),
-                LocalTime.of(2, 30),
-                LocalTime.of(1, 0),
-                LocalTime.of(23, 30)
+                LocalTime.of(2, 30)
             ),
             low.map { it.targetTime }
         )
-        assertEquals(listOf(540L, 450L, 360L, 270L, 180L, 90L), low.map { it.countdownMinutesFromNow })
+        assertEquals(listOf(540L, 450L, 360L, 270L), low.map { it.countdownMinutesFromNow })
 
         val high = calculator.calculateOptions(
             SleepMode.SLEEP_NOW,
@@ -253,13 +235,11 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(8, 0),
                 LocalTime.of(6, 30),
                 LocalTime.of(5, 0),
-                LocalTime.of(3, 30),
-                LocalTime.of(2, 0),
-                LocalTime.of(0, 30)
+                LocalTime.of(3, 30)
             ),
             high.map { it.targetTime }
         )
-        assertEquals(listOf(600L, 510L, 420L, 330L, 240L, 150L), high.map { it.countdownMinutesFromNow })
+        assertEquals(listOf(600L, 510L, 420L, 330L), high.map { it.countdownMinutesFromNow })
     }
 
     @Test
@@ -273,7 +253,7 @@ class SleepCycleCalculatorTest {
         )
 
         assertEquals(
-            listOf("bed_6", "bed_5", "bed_4", "bed_3", "bed_2", "bed_1"),
+            listOf("bed_6", "bed_5", "bed_4", "bed_3"),
             options.map { it.id }
         )
         assertEquals(
@@ -281,9 +261,7 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(7, 15),
                 LocalTime.of(5, 45),
                 LocalTime.of(4, 15),
-                LocalTime.of(2, 45),
-                LocalTime.of(1, 15),
-                LocalTime.of(23, 45)
+                LocalTime.of(2, 45)
             ),
             options.map { it.targetTime }
         )
@@ -304,9 +282,7 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(9, 15),
                 LocalTime.of(7, 45),
                 LocalTime.of(6, 15),
-                LocalTime.of(4, 45),
-                LocalTime.of(3, 15),
-                LocalTime.of(1, 45)
+                LocalTime.of(4, 45)
             ),
             atMidnight.map { it.targetTime }
         )
@@ -323,9 +299,7 @@ class SleepCycleCalculatorTest {
                 LocalTime.of(9, 14),
                 LocalTime.of(7, 44),
                 LocalTime.of(6, 14),
-                LocalTime.of(4, 44),
-                LocalTime.of(3, 14),
-                LocalTime.of(1, 44)
+                LocalTime.of(4, 44)
             ),
             at2359.map { it.targetTime }
         )

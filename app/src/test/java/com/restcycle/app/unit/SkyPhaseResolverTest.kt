@@ -125,8 +125,8 @@ class SkyPhaseResolverTest {
             resolver.resolveActiveSkyPhase(SleepMode.GO_TO_BED_AT, bedtime, options, "bed_6")
         )
         assertEquals(
-            SkyPhase.NIGHT, // bed_1 = 00:45
-            resolver.resolveActiveSkyPhase(SleepMode.GO_TO_BED_AT, bedtime, options, "bed_1")
+            SkyPhase.NIGHT, // bed_3 = 03:45
+            resolver.resolveActiveSkyPhase(SleepMode.GO_TO_BED_AT, bedtime, options, "bed_3")
         )
     }
 

@@ -350,10 +350,10 @@ class Tier3CrossFeatureTest {
             assertTrue(relativeLuminance(dayBg) > 0.60)
             assertSystemBarsLight(activity, expectedLightStatus = true, expectedLightNav = true)
 
-            // NIGHT in GO_TO_BED_AT 22:00 -> bed_1 = 23:45
+            // NIGHT in GO_TO_BED_AT 22:00 -> bed_3 = 02:45
             composeRule.switchMode(SleepMode.GO_TO_BED_AT)
             composeRule.selectWheelTime(LocalTime.of(22, 0), is24Hour = true)
-            composeRule.tapOptionCard("bed_1")
+            composeRule.tapOptionCard("bed_3")
             val nightBg = composeRule.sampleRootBackgroundColorArgb(650)
             assertTrue(Color.red(nightBg) <= 5 && Color.green(nightBg) <= 5 && Color.blue(nightBg) <= 5)
             assertSystemBarsLight(activity, expectedLightStatus = false, expectedLightNav = false)

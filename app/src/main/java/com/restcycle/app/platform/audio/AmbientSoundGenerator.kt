@@ -3,6 +3,7 @@ package com.restcycle.app.platform.audio
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.os.PowerManager
 import com.restcycle.app.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -118,6 +119,7 @@ class AmbientSoundController {
                 val effective = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
                 p1 = if (downloadedFile != null) {
                     createFilePlayer(
+                        context = appContext,
                         filePath = downloadedFile.absolutePath,
                         initialVolume = 0.85f * effective,
                         looping = true,
@@ -136,6 +138,7 @@ class AmbientSoundController {
                 }
                 p2 = if (downloadedFile != null && mode.useOffsetTextureLayer) {
                     createFilePlayer(
+                        context = appContext,
                         filePath = downloadedFile.absolutePath,
                         initialVolume = 0.24f * effective,
                         looping = true,
@@ -150,15 +153,21 @@ class AmbientSoundController {
                 p1?.start()
                 p2?.start()
 
-                var elapsedSeconds = 0.0
-                while (isActive) {
-                    val (leftGain, rightGain, offsetGain) = computeMixGains(elapsedSeconds)
-                    val scale = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
-                    p1?.setVolume(leftGain * scale, rightGain * scale)
-                    p2?.setVolume(offsetGain * scale, offsetGain * 0.90f * scale)
+                if (p2 != null) {
+                    var elapsedSeconds = 0.0
+                    while (isActive) {
+                        val (leftGain, rightGain, offsetGain) = computeMixGains(elapsedSeconds)
+                        val scale = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
+                        p1?.setVolume(leftGain * scale, rightGain * scale)
+                        p2?.setVolume(offsetGain * scale, offsetGain * 0.90f * scale)
 
-                    delay(MIX_STEP_MS)
-                    elapsedSeconds = (elapsedSeconds + MIX_STEP_MS / 1000.0) % MIX_CYCLE_DURATION_SECONDS
+                        delay(MIX_STEP_MS)
+                        elapsedSeconds = (elapsedSeconds + MIX_STEP_MS / 1000.0) % MIX_CYCLE_DURATION_SECONDS
+                    }
+                } else {
+                    // Pure single-track FLAC / preview playback: avoid 500ms setVolume IPC polling
+                    // that can trigger buffer-glitch pops on some Android audio HALs.
+                    kotlinx.coroutines.awaitCancellation()
                 }
             } catch (_: Throwable) {
                 // Gracefully ignore in headless/Robolectric test environments without audio hardware
@@ -187,6 +196,7 @@ class AmbientSoundController {
     }
 
     private fun createFilePlayer(
+        context: Context,
         filePath: String,
         initialVolume: Float,
         looping: Boolean,
@@ -194,6 +204,7 @@ class AmbientSoundController {
     ): MediaPlayer? {
         return runCatching {
             MediaPlayer().apply {
+                runCatching { setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK) }
                 setAudioAttributes(
                     AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -220,6 +231,7 @@ class AmbientSoundController {
     ): MediaPlayer? {
         return runCatching {
             MediaPlayer.create(context, rawResId)?.apply {
+                runCatching { setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK) }
                 isLooping = looping
                 setAudioAttributes(
                     AudioAttributes.Builder()

@@ -301,13 +301,13 @@ class Tier4RealWorldScenariosTest {
         withMainActivity(composeRule) { _, _ ->
             composeRule.setLatencyMinutes(20)
             composeRule.switchMode(SleepMode.SLEEP_NOW)
-            // 23:55 + 20m = 00:15 -> 1c 01:45, 5c 07:45, 6c 09:15
+            // 23:55 + 20m = 00:15 -> 3c 04:45, 5c 07:45, 6c 09:15
             composeRule.findOptionCardById("sleep_now_5").assertTextContains("07:45", substring = true)
-            composeRule.findOptionCardById("sleep_now_1").performScrollTo().assertTextContains("01:45", substring = true)
+            composeRule.findOptionCardById("sleep_now_3").performScrollTo().assertTextContains("04:45", substring = true)
 
-            envRule.advanceClockMinutes(composeRule, 6) // 00:01 -> 5c 07:51, 1c 01:51
+            envRule.advanceClockMinutes(composeRule, 6) // 00:01 -> 5c 07:51, 3c 04:51
             composeRule.findOptionCardById("sleep_now_5").performScrollTo().assertTextContains("07:51", substring = true)
-            composeRule.findOptionCardById("sleep_now_1").performScrollTo().assertTextContains("01:51", substring = true)
+            composeRule.findOptionCardById("sleep_now_3").performScrollTo().assertTextContains("04:51", substring = true)
             composeRule.assertAllNumericTextsUnderTagHaveTnum(RestCycleTestTags.UPPER_RESULTS_ZONE)
         }
     }

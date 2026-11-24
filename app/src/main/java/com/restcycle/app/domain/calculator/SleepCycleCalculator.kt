@@ -140,7 +140,7 @@ class SleepCycleCalculator {
 
     companion object {
         const val CYCLE_MINUTES = 90
-        const val MIN_CYCLES = 1
+        const val MIN_CYCLES = 3
         const val MAX_CYCLES = 6
         const val DEFAULT_SUGGESTED_CYCLES = 5
 

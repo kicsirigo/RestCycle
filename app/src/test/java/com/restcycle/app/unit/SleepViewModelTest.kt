@@ -167,9 +167,9 @@ class SleepViewModelTest {
         assertEquals(LocalTime.of(6, 50), state.selectedTime)
         assertEquals(15, state.sleepLatencyMinutes)
         assertEquals(10, state.napLatencyMinutes)
-        assertEquals(6, state.options.size)
+        assertEquals(4, state.options.size)
         assertEquals(
-            listOf("wake_6", "wake_5", "wake_4", "wake_3", "wake_2", "wake_1"),
+            listOf("wake_6", "wake_5", "wake_4", "wake_3"),
             state.options.map { it.id }
         )
         assertEquals("wake_5", state.highlightedOptionId)
@@ -228,7 +228,7 @@ class SleepViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(SleepMode.SLEEP_NOW, state.mode)
-        assertEquals(6, state.options.size)
+        assertEquals(4, state.options.size)
         assertEquals("sleep_now_5", state.highlightedOptionId)
         assertEquals(
             LocalTime.of(7, 15),
@@ -246,7 +246,7 @@ class SleepViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(SleepMode.GO_TO_BED_AT, state.mode)
-        assertEquals(6, state.options.size)
+        assertEquals(4, state.options.size)
         assertEquals("bed_5", state.highlightedOptionId)
         assertEquals(LocalTime.of(22, 30), state.selectedTime)
         assertEquals(

@@ -56,6 +56,7 @@ import android.view.HapticFeedbackConstants
 import com.restcycle.app.R
 import com.restcycle.app.domain.model.SkyPhase
 import com.restcycle.app.domain.model.SleepMode
+import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.ATMOSPHERE_TRANSITION_DURATION_MS
 import com.restcycle.app.ui.theme.AtmosphereTheme
@@ -86,6 +87,9 @@ fun CelestialHeader(
     skyPhase: SkyPhase,
     mode: SleepMode,
     modifier: Modifier = Modifier,
+    ambientSoundMode: AmbientSoundMode = AmbientSoundMode.OFF,
+    onOpenSoundPicker: (() -> Unit)? = null,
+    onOpenSleepHistory: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null
 ) {
     val palette = AtmosphereTheme.palette
@@ -183,7 +187,7 @@ fun CelestialHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
         Canvas(
-            modifier = Modifier.size(64.dp)
+            modifier = Modifier.size(50.dp)
         ) {
             val center = Offset(size.width * 0.5f, size.height * 0.5f)
             val minDim = size.minDimension
@@ -359,76 +363,116 @@ fun CelestialHeader(
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .background(color = textScrimColor, shape = RoundedCornerShape(14.dp))
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .padding(horizontal = 6.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.app_name),
-                    color = palette.textPrimary,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = palette.pillContainer
-                ) {
-                    Text(
-                        text = skyPhaseLabel,
-                        color = palette.accentText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
-                }
-            }
-            Box {
-                Text(
-                    text = modeSubtitle,
-                    color = palette.textSecondary,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Text(
+                text = stringResource(R.string.app_name),
+                color = palette.textPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "$skyPhaseLabel · $modeSubtitle",
+                color = palette.textSecondary,
+                fontSize = 11.5.sp,
+                lineHeight = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
         }
         }
 
-        if (onOpenSettings != null) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Surface(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .testTag(RestCycleTestTags.SETTINGS_BUTTON)
-                    .clickable(role = Role.Button) {
-                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                        onOpenSettings()
-                    },
-                shape = CircleShape,
-                color = palette.pillContainer,
-                border = BorderStroke(1.dp, palette.borderSubtle)
+        if (onOpenSoundPicker != null || onOpenSleepHistory != null || onOpenSettings != null) {
+            Spacer(modifier = Modifier.width(6.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = RestCycleIcons.Settings,
-                        contentDescription = stringResource(R.string.settings_title),
-                        tint = palette.accentText,
-                        modifier = Modifier.size(18.dp)
-                    )
+                if (onOpenSoundPicker != null) {
+                    val soundActive = ambientSoundMode != AmbientSoundMode.OFF
+                    Surface(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .testTag(RestCycleTestTags.SOUND_PICKER_PILL)
+                            .clickable(role = Role.Button) {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onOpenSoundPicker()
+                            },
+                        shape = CircleShape,
+                        color = if (soundActive) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
+                        border = BorderStroke(1.dp, if (soundActive) palette.accent else palette.borderSubtle)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (soundActive) {
+                                    RestCycleIcons.forAmbientSound(ambientSoundMode)
+                                } else {
+                                    RestCycleIcons.AudioWaveform
+                                },
+                                contentDescription = stringResource(R.string.sound_dialog_title),
+                                tint = if (soundActive) palette.accentText else palette.textPrimary,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+                    }
+                }
+                if (onOpenSleepHistory != null) {
+                    Surface(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .testTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON)
+                            .clickable(role = Role.Button) {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onOpenSleepHistory()
+                            },
+                        shape = CircleShape,
+                        color = palette.pillContainer,
+                        border = BorderStroke(1.dp, palette.borderSubtle)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = RestCycleIcons.Calendar,
+                                contentDescription = stringResource(R.string.sleep_history_title),
+                                tint = palette.textPrimary,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+                    }
+                }
+                if (onOpenSettings != null) {
+                    Surface(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .testTag(RestCycleTestTags.SETTINGS_BUTTON)
+                            .clickable(role = Role.Button) {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                onOpenSettings()
+                            },
+                        shape = CircleShape,
+                        color = palette.pillContainer,
+                        border = BorderStroke(1.dp, palette.borderSubtle)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = RestCycleIcons.Settings,
+                                contentDescription = stringResource(R.string.settings_title),
+                                tint = palette.accentText,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

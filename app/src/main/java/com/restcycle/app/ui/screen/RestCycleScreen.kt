@@ -304,16 +304,23 @@ fun RestCycleScreen(
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(horizontal = 16.dp)
         ) {
-            // Upper ~46% Zone: Celestial Header + Scrollable Result Cards
+            val isLiveMode = uiState.mode == SleepMode.SLEEP_NOW || uiState.mode == SleepMode.POWER_NAP
+            val upperZoneWeight = if (isLiveMode) 0.55f else 0.46f
+            val lowerZoneWeight = 1f - upperZoneWeight
+
+            // Upper Zone: Celestial Header + Scrollable Result Cards
             Column(
                 modifier = Modifier
-                    .weight(0.46f)
+                    .weight(upperZoneWeight)
                     .fillMaxWidth()
                     .background(Color.Transparent)
             ) {
                 CelestialHeader(
                     skyPhase = uiState.activeSkyPhase,
                     mode = uiState.mode,
+                    ambientSoundMode = ambientSoundMode,
+                    onOpenSoundPicker = { showSoundPicker = true },
+                    onOpenSleepHistory = { showSleepTracker = true },
                     onOpenSettings = { showSettings = true }
                 )
 
@@ -393,10 +400,10 @@ fun RestCycleScreen(
                 }
             }
 
-            // Bottom ~54% Thumb-Zone Controls (strictly transparent over root sky gradient)
+            // Bottom Thumb-Zone Controls (strictly transparent over root sky gradient)
             Column(
                 modifier = Modifier
-                    .weight(0.54f)
+                    .weight(lowerZoneWeight)
                     .fillMaxWidth()
                     .background(Color.Transparent)
                     .testTag(RestCycleTestTags.THUMB_CONTROLS_ZONE)
@@ -471,19 +478,6 @@ fun RestCycleScreen(
                                 compact = true,
                                 onClick = onSleepActionClick
                             )
-                            SleepHistoryPill(
-                                onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    showSleepTracker = true
-                                }
-                            )
-                            SoundPickerPill(
-                                ambientSoundMode = ambientSoundMode,
-                                onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    showSoundPicker = true
-                                }
-                            )
                         }
                     }
 
@@ -520,19 +514,6 @@ fun RestCycleScreen(
                                 compact = true,
                                 onClick = onSleepActionClick
                             )
-                            SleepHistoryPill(
-                                onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    showSleepTracker = true
-                                }
-                            )
-                            SoundPickerPill(
-                                ambientSoundMode = ambientSoundMode,
-                                onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    showSoundPicker = true
-                                }
-                            )
                         }
                     }
 
@@ -559,19 +540,6 @@ fun RestCycleScreen(
                                 isSleeping = isSleeping,
                                 compact = false,
                                 onClick = onSleepActionClick
-                            )
-                            SleepHistoryPill(
-                                onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    showSleepTracker = true
-                                }
-                            )
-                            SoundPickerPill(
-                                ambientSoundMode = ambientSoundMode,
-                                onClick = {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    showSoundPicker = true
-                                }
                             )
                         }
                     }
@@ -940,60 +908,6 @@ private fun SleepSessionPill(
 }
 
 @Composable
-private fun SleepHistoryPill(
-    onClick: () -> Unit
-) {
-    val palette = AtmosphereTheme.palette
-    val shape = RoundedCornerShape(50)
-    Surface(
-        shape = shape,
-        color = palette.pillContainer,
-        border = BorderStroke(1.dp, palette.borderSubtle),
-        modifier = Modifier
-            .clip(shape)
-            .clickable(onClick = onClick)
-            .testTag(RestCycleTestTags.SLEEP_HISTORY_BUTTON)
-    ) {
-        Icon(
-            imageVector = RestCycleIcons.Calendar,
-            contentDescription = stringResource(R.string.sleep_history_title),
-            tint = palette.textPrimary,
-            modifier = Modifier
-                .padding(horizontal = 9.dp, vertical = 6.dp)
-                .size(15.dp)
-        )
-    }
-}
-
-@Composable
-private fun SoundPickerPill(
-    ambientSoundMode: AmbientSoundMode,
-    onClick: () -> Unit
-) {
-    val palette = AtmosphereTheme.palette
-    val active = ambientSoundMode != AmbientSoundMode.OFF
-    val shape = RoundedCornerShape(50)
-    Surface(
-        shape = shape,
-        color = if (active) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
-        border = BorderStroke(1.dp, if (active) palette.accent else palette.borderSubtle),
-        modifier = Modifier
-            .clip(shape)
-            .clickable(onClick = onClick)
-            .testTag(RestCycleTestTags.SOUND_PICKER_PILL)
-    ) {
-        Icon(
-            imageVector = if (active) RestCycleIcons.forAmbientSound(ambientSoundMode) else RestCycleIcons.AudioWaveform,
-            contentDescription = stringResource(R.string.sound_dialog_title),
-            tint = if (active) palette.accentText else palette.textPrimary,
-            modifier = Modifier
-                .padding(horizontal = 9.dp, vertical = 6.dp)
-                .size(15.dp)
-        )
-    }
-}
-
-@Composable
 private fun CaffeineCutoffPill(
     cutoffTime: LocalTime,
     is24HourFormat: Boolean
@@ -1105,8 +1019,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.8.0"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.8.1"
     } catch (_: Exception) {
-        "1.8.0"
+        "1.8.1"
     }
 }

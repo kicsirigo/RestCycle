@@ -287,10 +287,10 @@ class Tier2BoundaryCornerTest {
         envRule.setClockToLocalTime(LocalTime.of(23, 50))
         withMainActivity(composeRule) { _, _ ->
             composeRule.switchMode(SleepMode.SLEEP_NOW)
-            // 23:50 + 15m = 00:05 fall asleep -> 1c 01:35, 5c 07:35, 6c 09:05
+            // 23:50 + 15m = 00:05 fall asleep -> 3c 04:35, 5c 07:35, 6c 09:05
             composeRule.onNodeWithTag(RestCycleTestTags.optionCard("sleep_now_6")).assertTextContains("09:05", substring = true)
             composeRule.onNodeWithTag(RestCycleTestTags.optionCard("sleep_now_5")).assertTextContains("07:35", substring = true)
-            composeRule.findOptionCardById("sleep_now_1").performScrollTo().assertTextContains("01:35", substring = true)
+            composeRule.findOptionCardById("sleep_now_3").performScrollTo().assertTextContains("04:35", substring = true)
         }
     }
 
@@ -357,7 +357,7 @@ class Tier2BoundaryCornerTest {
             composeRule.selectWheelTime(LocalTime.of(23, 59), is24Hour = true)
             composeRule.onNodeWithTag(RestCycleTestTags.optionCard("bed_6")).assertTextContains("09:14", substring = true)
             composeRule.onNodeWithTag(RestCycleTestTags.optionCard("bed_5")).assertTextContains("07:44", substring = true)
-            composeRule.findOptionCardById("bed_1").performScrollTo().assertTextContains("01:44", substring = true)
+            composeRule.findOptionCardById("bed_3").performScrollTo().assertTextContains("04:44", substring = true)
         }
     }
 
@@ -366,7 +366,7 @@ class Tier2BoundaryCornerTest {
         withMainActivity(composeRule) { _, _ ->
             composeRule.switchMode(SleepMode.GO_TO_BED_AT)
             composeRule.selectWheelTime(LocalTime.of(0, 0), is24Hour = true)
-            val expected = mapOf(6 to "09:15", 5 to "07:45", 4 to "06:15", 3 to "04:45", 2 to "03:15", 1 to "01:45")
+            val expected = mapOf(6 to "09:15", 5 to "07:45", 4 to "06:15", 3 to "04:45")
             expected.forEach { (cyc, t) ->
                 composeRule.findOptionCardById("bed_$cyc")
                     .performScrollTo()

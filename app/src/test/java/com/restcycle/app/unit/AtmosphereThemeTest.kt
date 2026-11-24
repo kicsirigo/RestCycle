@@ -221,10 +221,10 @@ class AtmosphereSystemBarsTest {
         // Switching to GO_TO_BED_AT and tapping bed_6 (07:45) vs tapping wheel 08:00 -> DAY
         composeRule.onNodeWithTag(RestCycleTestTags.MODE_TAB_GO_TO_BED_AT).performClick()
         composeRule.waitForIdle()
-        // bed_1 is 00:15 (NIGHT) -> light bars = false
+        // bed_3 is 03:15 (NIGHT) -> light bars = false
         composeRule.onNodeWithTag(RestCycleTestTags.UPPER_RESULTS_ZONE)
-            .performScrollToNode(hasTestTag(RestCycleTestTags.optionCard("bed_1")))
-        composeRule.onNodeWithTag(RestCycleTestTags.optionCard("bed_1")).performClick()
+            .performScrollToNode(hasTestTag(RestCycleTestTags.optionCard("bed_3")))
+        composeRule.onNodeWithTag(RestCycleTestTags.optionCard("bed_3")).performClick()
         composeRule.waitForIdle()
         composeRule.activityRule.scenario.onActivity { activity ->
             val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
