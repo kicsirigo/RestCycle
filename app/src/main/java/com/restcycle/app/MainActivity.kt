@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
             val bedtimeReminderEnabled by viewModel.bedtimeReminderEnabled.collectAsStateWithLifecycle()
             val activeSleepStartMillis by viewModel.activeSleepStartMillis.collectAsStateWithLifecycle()
             val sleepHistory by viewModel.sleepHistory.collectAsStateWithLifecycle()
+            val savedSoundMixes by viewModel.savedSoundMixes.collectAsStateWithLifecycle()
             val liveClockTime by viewModel.clockTime.collectAsStateWithLifecycle()
             val syncedClockTime = uiState.options.firstOrNull()
                 ?.takeIf {
@@ -145,10 +146,17 @@ class MainActivity : ComponentActivity() {
                     activeSleepStartMillis = activeSleepStartMillis,
                     sleepHistory = sleepHistory,
                     onStartSleepSession = viewModel::startSleepSession,
-                    onCompleteSleepSession = viewModel::completeSleepSession,
+                    onCompleteSleepSession = { mood -> viewModel.completeSleepSession(mood) },
+                    onCompleteSleepSessionWithTags = { mood, tags -> viewModel.completeSleepSession(mood, tags) },
                     onCancelSleepSession = viewModel::cancelSleepSession,
                     onDeleteSleepRecord = viewModel::deleteSleepRecord,
-                    onAddManualSleep = viewModel::addManualSleepSession,
+                    onAddManualSleep = { start, end, mood -> viewModel.addManualSleepSession(start, end, mood) },
+                    onAddManualSleepWithTags = { start, end, mood, tags ->
+                        viewModel.addManualSleepSession(start, end, mood, tags)
+                    },
+                    savedSoundMixes = savedSoundMixes,
+                    onSaveSoundMix = viewModel::saveSoundMix,
+                    onDeleteSoundMix = viewModel::deleteSoundMix,
                     onExportBackup = {
                         exportBackupLauncher.launch("restcycle-backup-${LocalDate.now()}.json")
                     },

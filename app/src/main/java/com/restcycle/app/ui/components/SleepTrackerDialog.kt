@@ -15,11 +15,14 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,7 +57,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -70,9 +77,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.restcycle.app.R
+import com.restcycle.app.domain.model.SleepFactorTag
 import com.restcycle.app.domain.model.SleepHistoryCodec
 import com.restcycle.app.domain.model.SleepQualityMood
 import com.restcycle.app.domain.model.SleepSessionRecord
+import com.restcycle.app.domain.model.WeeklySleepSummary
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AtmosphereTheme
 import com.restcycle.app.ui.theme.TabularTextStyles
@@ -90,7 +99,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SleepTrackerDialog(
     activeSleepStartMillis: Long,
@@ -102,6 +111,8 @@ fun SleepTrackerDialog(
     onDeleteRecord: (SleepSessionRecord) -> Unit = {},
     sleepLatencyMinutes: Int = 15,
     onAddManualSleep: (startEpochMillis: Long, endEpochMillis: Long, mood: SleepQualityMood) -> Unit = { _, _, _ -> },
+    onCompleteSleepWithTags: ((SleepQualityMood, Set<SleepFactorTag>) -> Unit)? = null,
+    onAddManualSleepWithTags: ((startEpochMillis: Long, endEpochMillis: Long, mood: SleepQualityMood, tags: Set<SleepFactorTag>) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val palette = AtmosphereTheme.palette
@@ -225,6 +236,18 @@ fun SleepTrackerDialog(
                             }
                         }
 
+                        var wakeSelectedTags by remember { mutableStateOf<Set<SleepFactorTag>>(emptySet()) }
+                        SleepFactorTagSelector(
+                            selectedTags = wakeSelectedTags,
+                            onToggleTag = { tag ->
+                                wakeSelectedTags = if (tag in wakeSelectedTags) {
+                                    wakeSelectedTags - tag
+                                } else {
+                                    wakeSelectedTags + tag
+                                }
+                            }
+                        )
+
                         Text(
                             text = stringResource(R.string.sleep_wakeup_question),
                             color = palette.textPrimary,
@@ -248,7 +271,11 @@ fun SleepTrackerDialog(
                                             .testTag(RestCycleTestTags.sleepMoodOption(mood.name))
                                             .clickable(role = Role.Button) {
                                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                                onCompleteSleepWithMood(mood)
+                                                if (onCompleteSleepWithTags != null) {
+                                                    onCompleteSleepWithTags(mood, wakeSelectedTags)
+                                                } else {
+                                                    onCompleteSleepWithMood(mood)
+                                                }
                                             }
                                     ) {
                                         Row(
@@ -390,6 +417,17 @@ fun SleepTrackerDialog(
                     }
                 }
 
+                // Weekly 7-Day Sleep Trend, Sleep Debt & Consistency Card
+                val weeklySummary = remember(sleepHistory, today, zoneId) {
+                    SleepHistoryCodec.computeWeeklySummary(sleepHistory, today, zoneId)
+                }
+                if (sleepHistory.isNotEmpty()) {
+                    WeeklySleepChartCard(
+                        summary = weeklySummary,
+                        locale = locale
+                    )
+                }
+
                 // Personal Sleep Cycle Pattern Insight (#3)
                 val cycleInsight = remember(sleepHistory) {
                     SleepHistoryCodec.computeBestCycleInsight(sleepHistory)
@@ -422,6 +460,50 @@ fun SleepTrackerDialog(
                                     cycleInsight.sampleCount
                                 ),
                                 color = palette.accentText,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+
+                // Sleep Factor Correlation Insight
+                val factorInsight = remember(sleepHistory) {
+                    SleepHistoryCodec.computeFactorInsight(sleepHistory)
+                }
+                if (factorInsight != null) {
+                    val tagName = stringResource(factorInsight.tag.labelResId)
+                    val insightText = stringResource(
+                        if (factorInsight.isPositive) {
+                            R.string.sleep_factor_insight_positive
+                        } else {
+                            R.string.sleep_factor_insight_negative
+                        },
+                        tagName,
+                        factorInsight.refreshedPercent,
+                        factorInsight.sampleCount
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = palette.pillContainer.copy(alpha = 0.72f),
+                        border = BorderStroke(1.dp, palette.borderSubtle),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                        ) {
+                            Icon(
+                                imageVector = RestCycleIcons.forSleepFactor(factorInsight.tag),
+                                contentDescription = null,
+                                tint = palette.accentText,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = insightText,
+                                color = palette.textPrimary,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Medium,
                                 textAlign = TextAlign.Center
@@ -670,6 +752,7 @@ fun SleepTrackerDialog(
                 var manualBedtime by remember { mutableStateOf(LocalTime.of(23, 0)) }
                 var manualWaketime by remember { mutableStateOf(LocalTime.of(6, 45)) }
                 var manualMood by remember { mutableStateOf(SleepQualityMood.RESTED) }
+                var manualTags by remember { mutableStateOf<Set<SleepFactorTag>>(emptySet()) }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -729,6 +812,7 @@ fun SleepTrackerDialog(
                         waketime = manualWaketime,
                         is24HourFormat = is24HourFormat,
                         selectedMood = manualMood,
+                        selectedTags = manualTags,
                         previewDurationMinutes = previewDuration,
                         previewCycles = previewCycles,
                         onSetBedtime = { manualBedtime = it },
@@ -737,9 +821,17 @@ fun SleepTrackerDialog(
                             view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                             manualMood = it
                         },
+                        onToggleTag = { tag ->
+                            manualTags = if (tag in manualTags) manualTags - tag else manualTags + tag
+                        },
                         onSave = {
                             view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                            onAddManualSleep(startEpochMillis, endEpochMillis, manualMood)
+                            if (onAddManualSleepWithTags != null) {
+                                onAddManualSleepWithTags(startEpochMillis, endEpochMillis, manualMood, manualTags)
+                            } else {
+                                onAddManualSleep(startEpochMillis, endEpochMillis, manualMood)
+                            }
+                            manualTags = emptySet()
                             showManualForm = false
                         }
                     )
@@ -923,6 +1015,22 @@ private fun SleepHistoryRow(
                         style = TabularTextStyles.cardDuration,
                         color = palette.textSecondary
                     )
+                    if (record.tags.isNotEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            record.tags.take(4).forEach { tag ->
+                                Icon(
+                                    imageVector = RestCycleIcons.forSleepFactor(tag),
+                                    contentDescription = stringResource(tag.labelResId),
+                                    tint = palette.accentText,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -987,11 +1095,13 @@ private fun ManualSleepEntryCard(
     waketime: LocalTime,
     is24HourFormat: Boolean,
     selectedMood: SleepQualityMood,
+    selectedTags: Set<SleepFactorTag> = emptySet(),
     previewDurationMinutes: Int,
     previewCycles: Int,
     onSetBedtime: (LocalTime) -> Unit,
     onSetWaketime: (LocalTime) -> Unit,
     onSelectMood: (SleepQualityMood) -> Unit,
+    onToggleTag: (SleepFactorTag) -> Unit = {},
     onSave: () -> Unit
 ) {
     val palette = AtmosphereTheme.palette
@@ -1075,6 +1185,11 @@ private fun ManualSleepEntryCard(
                     amPmTestTag = RestCycleTestTags.MANUAL_WHEEL_AM_PM
                 )
             }
+
+            SleepFactorTagSelector(
+                selectedTags = selectedTags,
+                onToggleTag = onToggleTag
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1228,6 +1343,213 @@ private fun ManualTimeStepperRow(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text("+", color = palette.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeeklySleepChartCard(
+    summary: WeeklySleepSummary,
+    locale: Locale
+) {
+    val palette = AtmosphereTheme.palette
+    val maxScaleMinutes = maxOf(
+        540,
+        summary.days.maxOfOrNull { it.totalMinutes } ?: 540
+    ).toFloat()
+    val targetMinutes = 450f
+
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = palette.pillContainer.copy(alpha = 0.58f),
+        border = BorderStroke(1.dp, palette.borderSubtle.copy(alpha = 0.55f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.weekly_chart_title),
+                    color = palette.textPrimary,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    val debtText = if (summary.sleepDebtMinutes <= 0) {
+                        stringResource(R.string.weekly_debt_balanced)
+                    } else {
+                        stringResource(
+                            R.string.weekly_debt_label,
+                            formatDurationCompact(summary.sleepDebtMinutes)
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = palette.accent.copy(alpha = 0.16f)
+                    ) {
+                        Text(
+                            text = debtText,
+                            style = TabularTextStyles.cardDuration.copy(fontSize = 10.sp),
+                            color = palette.accentText,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                        )
+                    }
+                    summary.consistencyPercent?.let { pct ->
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = palette.cardSurface
+                        ) {
+                            Text(
+                                text = stringResource(R.string.weekly_consistency_label, pct),
+                                style = TabularTextStyles.cardDuration.copy(fontSize = 10.sp),
+                                color = palette.textSecondary,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 7-day animated Canvas bar chart with 7.5h dashed target line
+            val barColor = palette.accent
+            val emptyBarColor = palette.borderSubtle.copy(alpha = 0.35f)
+            val targetLineColor = palette.accentText.copy(alpha = 0.55f)
+            val animatedFractions = summary.days.map { pt ->
+                animateFloatAsState(
+                    targetValue = (pt.totalMinutes / maxScaleMinutes).coerceIn(0f, 1f),
+                    animationSpec = spring(
+                        dampingRatio = 0.80f,
+                        stiffness = Spring.StiffnessLow
+                    ),
+                    label = "weeklyBar_${pt.date}"
+                ).value
+            }
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(68.dp)
+            ) {
+                val count = summary.days.size.coerceAtLeast(1)
+                val slotW = size.width / count
+                val barW = (slotW * 0.44f).coerceAtMost(24.dp.toPx())
+                val targetY = size.height * (1f - (targetMinutes / maxScaleMinutes).coerceIn(0.1f, 0.95f))
+
+                drawLine(
+                    color = targetLineColor,
+                    start = Offset(0f, targetY),
+                    end = Offset(size.width, targetY),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
+                )
+
+                animatedFractions.forEachIndexed { idx, frac ->
+                    val cx = slotW * idx + slotW * 0.5f
+                    val left = cx - barW * 0.5f
+                    if (frac <= 0.01f) {
+                        val stubH = 4.dp.toPx()
+                        drawRoundRect(
+                            color = emptyBarColor,
+                            topLeft = Offset(left, size.height - stubH),
+                            size = Size(barW, stubH),
+                            cornerRadius = CornerRadius(barW * 0.4f, barW * 0.4f)
+                        )
+                    } else {
+                        val barH = (size.height * frac).coerceAtLeast(6.dp.toPx())
+                        drawRoundRect(
+                            color = barColor,
+                            topLeft = Offset(left, size.height - barH),
+                            size = Size(barW, barH),
+                            cornerRadius = CornerRadius(barW * 0.4f, barW * 0.4f)
+                        )
+                    }
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                summary.days.forEach { pt ->
+                    val label = pt.date.dayOfWeek
+                        .getDisplayName(TextStyle.SHORT_STANDALONE, locale)
+                        .trimEnd('.')
+                        .take(2)
+                    Text(
+                        text = label,
+                        color = palette.textSecondary,
+                        fontSize = 10.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SleepFactorTagSelector(
+    selectedTags: Set<SleepFactorTag>,
+    onToggleTag: (SleepFactorTag) -> Unit
+) {
+    val palette = AtmosphereTheme.palette
+    val view = LocalView.current
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(
+            text = stringResource(R.string.sleep_factors_label),
+            color = palette.textSecondary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            SleepFactorTag.entries.forEach { tag ->
+                val isSelected = tag in selectedTags
+                val shape = RoundedCornerShape(50)
+                Surface(
+                    shape = shape,
+                    color = if (isSelected) palette.accent.copy(alpha = 0.22f) else palette.cardSurface,
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (isSelected) palette.accent else palette.borderSubtle
+                    ),
+                    modifier = Modifier
+                        .clip(shape)
+                        .clickable {
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            onToggleTag(tag)
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = RestCycleIcons.forSleepFactor(tag),
+                            contentDescription = null,
+                            tint = if (isSelected) palette.accentText else palette.textSecondary,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = stringResource(tag.labelResId),
+                            color = if (isSelected) palette.accentText else palette.textPrimary,
+                            fontSize = 10.5.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            maxLines = 1
+                        )
                     }
                 }
             }

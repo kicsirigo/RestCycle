@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -44,9 +45,10 @@ data class AmbientSoundPlaybackState(
     val volume: Float = 0.85f,
     val sleepTimerMinutes: Int = 0,
     val remainingSeconds: Long = 0L,
-    val isPreviewPlayback: Boolean = false
+    val isPreviewPlayback: Boolean = false,
+    val activeLayers: Map<AmbientSoundMode, Float> = emptyMap()
 ) {
-    val isPlaying: Boolean get() = mode != AmbientSoundMode.OFF
+    val isPlaying: Boolean get() = activeLayers.isNotEmpty() || mode != AmbientSoundMode.OFF
 }
 
 /**
@@ -66,24 +68,22 @@ object AmbientSoundStateHolder {
             it.copy(
                 mode = AmbientSoundMode.OFF,
                 remainingSeconds = 0L,
-                isPreviewPlayback = false
+                isPreviewPlayback = false,
+                activeLayers = emptyMap()
             )
         }
     }
 }
 
 /**
- * Plays a single selected ambient `.mp3` soundscape cleanly without mixing in unrelated sounds,
- * supporting dynamic volume scaling, optional half-track stereo evolution, and smooth fade-out.
+ * Multi-track ambient audio controller supporting up to [MAX_MIX_LAYERS] simultaneous
+ * lossless FLAC (or 15s offline preview) tracks with independent per-track perceptual volume,
+ * master volume scaling, PARTIAL_WAKE_LOCK, and smooth 30-second sleep timer fade-out.
  */
 class AmbientSoundController {
     private var mixJob: Job? = null
-
-    @Volatile
-    private var primaryPlayer: MediaPlayer? = null
-
-    @Volatile
-    private var offsetSelfPlayer: MediaPlayer? = null
+    private val layerPlayers = ConcurrentHashMap<AmbientSoundMode, MediaPlayer>()
+    private val layerVolumes = ConcurrentHashMap<AmbientSoundMode, Float>()
 
     @Volatile
     private var masterVolume: Float = 0.85f
@@ -101,6 +101,99 @@ class AmbientSoundController {
         applyCurrentVolumes()
     }
 
+    fun setLayerVolume(mode: AmbientSoundMode, volume: Float) {
+        val clamped = volume.coerceIn(0.10f, 1.0f)
+        layerVolumes[mode] = clamped
+        val scale = (clamped * masterVolume * fadeMultiplier).coerceIn(0f, 1f)
+        val gain = scale * scale
+        runCatching {
+            layerPlayers[mode]?.setVolume(gain, gain)
+        }
+    }
+
+    fun syncLayers(
+        context: Context,
+        scope: CoroutineScope,
+        layers: Map<AmbientSoundMode, Float>,
+        initialMasterVolume: Float = masterVolume,
+        onLayerPreviewCompleted: (AmbientSoundMode) -> Unit = {}
+    ) {
+        val target = layers
+            .filterKeys { it != AmbientSoundMode.OFF && it.rawResId != null }
+            .entries
+            .take(MAX_MIX_LAYERS)
+            .associate { it.key to it.value.coerceIn(0.10f, 1.0f) }
+
+        if (target.isEmpty()) {
+            stop()
+            return
+        }
+
+        masterVolume = initialMasterVolume.coerceIn(0.0f, 1.0f)
+        val appContext = context.applicationContext
+
+        // Release any removed layers
+        val toRemove = layerPlayers.keys.filter { it !in target.keys }
+        toRemove.forEach { removedMode ->
+            layerVolumes.remove(removedMode)
+            layerPlayers.remove(removedMode)?.let { releasePlayer(it) }
+        }
+
+        // Update volumes for already-running layers
+        target.forEach { (mode, vol) ->
+            layerVolumes[mode] = vol
+            if (layerPlayers.containsKey(mode)) {
+                setLayerVolume(mode, vol)
+            }
+        }
+
+        // Launch any newly added layers asynchronously without disturbing existing layers
+        val toAdd = target.filterKeys { !layerPlayers.containsKey(it) }
+        if (toAdd.isNotEmpty()) {
+            scope.launch(Dispatchers.Default) {
+                toAdd.forEach { (mode, vol) ->
+                    val rawId = mode.rawResId ?: return@forEach
+                    val downloadedFile = AmbientSoundPackManager.resolveDownloadedFile(appContext, mode)
+                    val scale = (vol * masterVolume * fadeMultiplier).coerceIn(0f, 1f)
+                    val gain = scale * scale
+                    val player = if (downloadedFile != null) {
+                        createFilePlayer(
+                            context = appContext,
+                            filePath = downloadedFile.absolutePath,
+                            initialVolume = gain,
+                            looping = true,
+                            seekHalfway = false
+                        )
+                    } else {
+                        createRawPlayer(
+                            context = appContext,
+                            rawResId = rawId,
+                            initialVolume = gain,
+                            looping = false,
+                            seekHalfway = false
+                        )?.apply {
+                            setOnCompletionListener {
+                                layerPlayers.remove(mode)?.let { releasePlayer(it) }
+                                layerVolumes.remove(mode)
+                                onLayerPreviewCompleted(mode)
+                            }
+                        }
+                    }
+                    if (player != null) {
+                        layerPlayers.put(mode, player)?.let { old -> releasePlayer(old) }
+                        layerVolumes[mode] = vol
+                        runCatching {
+                            player.start()
+                            val currentScale = ((layerVolumes[mode] ?: vol) * masterVolume * fadeMultiplier).coerceIn(0f, 1f)
+                            val currentGain = currentScale * currentScale
+                            player.setVolume(currentGain, currentGain)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun start(
         context: Context,
         scope: CoroutineScope,
@@ -109,95 +202,35 @@ class AmbientSoundController {
         onPreviewCompleted: () -> Unit = {}
     ) {
         stop()
-        val trackResId = mode.rawResId ?: return
-        masterVolume = initialVolume.coerceIn(0.0f, 1.0f)
+        if (mode == AmbientSoundMode.OFF || mode.rawResId == null) return
         fadeMultiplier = 1.0f
-        val appContext = context.applicationContext
-        val downloadedFile = AmbientSoundPackManager.resolveDownloadedFile(appContext, mode)
-
-        mixJob = scope.launch(Dispatchers.Default) {
-            var p1: MediaPlayer? = null
-            var p2: MediaPlayer? = null
-            try {
-                val effective = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
-                val perceptualGain = effective * effective
-                p1 = if (downloadedFile != null) {
-                    createFilePlayer(
-                        context = appContext,
-                        filePath = downloadedFile.absolutePath,
-                        initialVolume = perceptualGain,
-                        looping = true,
-                        seekHalfway = false
-                    )
-                } else {
-                    createRawPlayer(
-                        context = appContext,
-                        rawResId = trackResId,
-                        initialVolume = perceptualGain,
-                        looping = false,
-                        seekHalfway = false
-                    )?.apply {
-                        setOnCompletionListener { onPreviewCompleted() }
-                    }
-                }
-                p2 = if (downloadedFile != null && mode.useOffsetTextureLayer) {
-                    createFilePlayer(
-                        context = appContext,
-                        filePath = downloadedFile.absolutePath,
-                        initialVolume = 0.24f * perceptualGain,
-                        looping = true,
-                        seekHalfway = true
-                    )
-                } else {
-                    null
-                }
-                primaryPlayer = p1
-                offsetSelfPlayer = p2
-
-                p1?.start()
-                p2?.start()
-                applyCurrentVolumes()
-
-                if (p2 != null) {
-                    var elapsedSeconds = 0.0
-                    while (isActive) {
-                        val (leftGain, rightGain, offsetGain) = computeMixGains(elapsedSeconds)
-                        val scale = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
-                        p1?.setVolume(leftGain * scale, rightGain * scale)
-                        p2?.setVolume(offsetGain * scale, offsetGain * 0.90f * scale)
-
-                        delay(MIX_STEP_MS)
-                        elapsedSeconds = (elapsedSeconds + MIX_STEP_MS / 1000.0) % MIX_CYCLE_DURATION_SECONDS
-                    }
-                } else {
-                    // Pure single-track FLAC / preview playback: avoid 500ms setVolume IPC polling
-                    // that can trigger buffer-glitch pops on some Android audio HALs.
-                    kotlinx.coroutines.awaitCancellation()
-                }
-            } catch (_: Throwable) {
-                // Gracefully ignore in headless/Robolectric test environments without audio hardware
-            } finally {
-                releasePlayers(p1, p2)
-                primaryPlayer = null
-                offsetSelfPlayer = null
-            }
-        }
+        syncLayers(
+            context = context,
+            scope = scope,
+            layers = mapOf(mode to DEFAULT_LAYER_VOLUME),
+            initialMasterVolume = initialVolume,
+            onLayerPreviewCompleted = { onPreviewCompleted() }
+        )
     }
 
     fun stop() {
         mixJob?.cancel()
         mixJob = null
-        releasePlayers(primaryPlayer, offsetSelfPlayer)
-        primaryPlayer = null
-        offsetSelfPlayer = null
+        val snapshot = layerPlayers.values.toList()
+        layerPlayers.clear()
+        layerVolumes.clear()
+        snapshot.forEach { releasePlayer(it) }
     }
 
     private fun applyCurrentVolumes() {
-        val scale = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
-        val perceptualGain = scale * scale
-        runCatching {
-            primaryPlayer?.setVolume(perceptualGain, perceptualGain)
-            offsetSelfPlayer?.setVolume(0.24f * perceptualGain, 0.22f * perceptualGain)
+        val master = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
+        layerPlayers.forEach { (mode, player) ->
+            val layerVol = layerVolumes[mode] ?: DEFAULT_LAYER_VOLUME
+            val scale = (layerVol * master).coerceIn(0f, 1f)
+            val gain = scale * scale
+            runCatching {
+                player.setVolume(gain, gain)
+            }
         }
     }
 
@@ -253,20 +286,20 @@ class AmbientSoundController {
         }.getOrNull()
     }
 
-    private fun releasePlayers(p1: MediaPlayer?, p2: MediaPlayer?) {
-        listOf(p1, p2).forEach { player ->
-            runCatching {
-                if (player?.isPlaying == true) {
-                    player.stop()
-                }
+    private fun releasePlayer(player: MediaPlayer?) {
+        runCatching {
+            if (player?.isPlaying == true) {
+                player.stop()
             }
-            runCatching {
-                player?.release()
-            }
+        }
+        runCatching {
+            player?.release()
         }
     }
 
     companion object {
+        const val MAX_MIX_LAYERS = 3
+        const val DEFAULT_LAYER_VOLUME = 0.80f
         // 2.5 hours (150 minutes = 9000 seconds) per macro stereo evolution cycle before repeat
         const val MIX_CYCLE_DURATION_SECONDS = 150 * 60.0
         const val FADE_OUT_DURATION_SECONDS = 30L

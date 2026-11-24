@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathBuilder
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import com.restcycle.app.domain.model.SleepFactorTag
 import com.restcycle.app.domain.model.SleepQualityMood
 import com.restcycle.app.platform.audio.AmbientSoundMode
 
@@ -536,10 +537,100 @@ object RestCycleIcons {
         AmbientSoundMode.SINGING_BOWL -> SingingBowl
     }
 
+    val Exercise: ImageVector by lazy {
+        strokeIcon("RestCycleExercise") {
+            strokePath {
+                moveTo(3f, 12f)
+                lineTo(6.5f, 12f)
+                lineTo(9f, 6f)
+                lineTo(13.5f, 18f)
+                lineTo(16.5f, 11f)
+                lineTo(21f, 11f)
+            }
+        }
+    }
+
+    val Stress: ImageVector by lazy {
+        strokeIcon("RestCycleStress") {
+            strokePath {
+                moveTo(13f, 3f)
+                lineTo(6f, 13f)
+                lineTo(12f, 13f)
+                lineTo(11f, 21f)
+                lineTo(18f, 11f)
+                lineTo(12f, 11f)
+                close()
+            }
+        }
+    }
+
+    val Meal: ImageVector by lazy {
+        strokeIcon("RestCycleMeal") {
+            strokePath {
+                moveTo(4f, 12f)
+                lineTo(20f, 12f)
+                curveTo(20f, 16.5f, 16.5f, 19.5f, 12f, 19.5f)
+                curveTo(7.5f, 19.5f, 4f, 16.5f, 4f, 12f)
+                close()
+                moveTo(9f, 8.5f)
+                lineTo(9f, 5.5f)
+                moveTo(12f, 8.5f)
+                lineTo(12f, 4.5f)
+                moveTo(15f, 8.5f)
+                lineTo(15f, 5.5f)
+            }
+        }
+    }
+
+    val Screen: ImageVector by lazy {
+        strokeIcon("RestCycleScreen") {
+            strokePath {
+                moveTo(7f, 3f)
+                lineTo(17f, 3f)
+                quadTo(18.5f, 3f, 18.5f, 4.5f)
+                lineTo(18.5f, 19.5f)
+                quadTo(18.5f, 21f, 17f, 21f)
+                lineTo(7f, 21f)
+                quadTo(5.5f, 21f, 5.5f, 19.5f)
+                lineTo(5.5f, 4.5f)
+                quadTo(5.5f, 3f, 7f, 3f)
+                close()
+                moveTo(11f, 18f)
+                lineTo(13f, 18f)
+            }
+        }
+    }
+
+    val Alcohol: ImageVector by lazy {
+        strokeIcon("RestCycleAlcohol") {
+            strokePath {
+                moveTo(8f, 4f)
+                lineTo(16f, 4f)
+                lineTo(15f, 10.5f)
+                curveTo(14.7f, 12.5f, 13.5f, 13.5f, 12f, 13.5f)
+                curveTo(10.5f, 13.5f, 9.3f, 12.5f, 9f, 10.5f)
+                close()
+                moveTo(12f, 13.5f)
+                lineTo(12f, 20f)
+                moveTo(8.5f, 20f)
+                lineTo(15.5f, 20f)
+            }
+        }
+    }
+
     fun forMood(mood: SleepQualityMood): ImageVector = when (mood) {
         SleepQualityMood.EXHAUSTED -> MoodExhausted
         SleepQualityMood.FAIR -> MoodFair
         SleepQualityMood.RESTED -> MoodRested
         SleepQualityMood.ENERGIZED -> MoodEnergized
+    }
+
+    fun forSleepFactor(tag: SleepFactorTag): ImageVector = when (tag) {
+        SleepFactorTag.LATE_CAFFEINE -> Coffee
+        SleepFactorTag.EXERCISE -> Exercise
+        SleepFactorTag.STRESS -> Stress
+        SleepFactorTag.LATE_MEAL -> Meal
+        SleepFactorTag.SCREEN_TIME -> Screen
+        SleepFactorTag.ALCOHOL -> Alcohol
     }
 }

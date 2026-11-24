@@ -201,4 +201,23 @@
     <string name="sound_pack_delete_cd">Eliminar sonido descargado</string>
     <string name="sound_pack_cancel_cd">Cancelar descarga</string>
     <string name="sound_pack_storage_summary">Sonidos descargados: %1$s</string>
+    <string name="mixer_active_count">Mezcla (%1$d/3)</string>
+    <string name="mixer_presets_label">Mezclas guardadas</string>
+    <string name="mixer_save_current">+ Guardar mezcla</string>
+    <string name="mixer_preset_cozy_storm">Tormenta acogedora</string>
+    <string name="mixer_preset_forest_night">Noche en el bosque</string>
+    <string name="weekly_chart_title">Tendencia de 7 días</string>
+    <string name="weekly_debt_label">Deuda: %1$s</string>
+    <string name="weekly_debt_balanced">Equilibrado</string>
+    <string name="weekly_consistency_label">%1$d%% constante</string>
+    <string name="weekly_target_label">7.5h</string>
+    <string name="sleep_factors_label">Factores de sueño (opcional)</string>
+    <string name="sleep_factor_caffeine">Cafeína tarde</string>
+    <string name="sleep_factor_exercise">Ejercicio</string>
+    <string name="sleep_factor_stress">Estrés</string>
+    <string name="sleep_factor_late_meal">Cena tarde</string>
+    <string name="sleep_factor_screen_time">Pantallas</string>
+    <string name="sleep_factor_alcohol">Alcohol</string>
+    <string name="sleep_factor_insight_positive">%1$s: descansado %2$d%% de las veces (%3$d noches)</string>
+    <string name="sleep_factor_insight_negative">%1$s: descansado solo %2$d%% de las veces (%3$d noches)</string>
 </resources>

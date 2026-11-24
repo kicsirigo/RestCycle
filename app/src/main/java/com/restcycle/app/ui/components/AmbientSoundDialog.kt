@@ -1,8 +1,15 @@
 package com.restcycle.app.ui.components
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +59,7 @@ import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.platform.audio.AmbientSoundPackManager
 import com.restcycle.app.platform.audio.AmbientSoundPlaybackState
 import com.restcycle.app.platform.audio.AmbientSoundService
+import com.restcycle.app.platform.audio.SoundMixPreset
 import com.restcycle.app.platform.audio.SoundPackStatus
 import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AtmosphereTheme
@@ -69,13 +77,41 @@ fun AmbientSoundDialog(
     packStatuses: Map<AmbientSoundMode, SoundPackStatus> = emptyMap(),
     onDownloadPack: (AmbientSoundMode) -> Unit = {},
     onCancelDownload: (AmbientSoundMode) -> Unit = {},
-    onDeletePack: (AmbientSoundMode) -> Unit = {}
+    onDeletePack: (AmbientSoundMode) -> Unit = {},
+    onLayerVolumeChange: (AmbientSoundMode, Float) -> Unit = { _, _ -> },
+    savedMixes: List<SoundMixPreset> = emptyList(),
+    onApplyMix: (Map<AmbientSoundMode, Float>) -> Unit = {},
+    onSaveCurrentMix: (String, Map<AmbientSoundMode, Float>) -> Unit = { _, _ -> },
+    onDeleteSavedMix: (String) -> Unit = {}
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
     val activeModes = AmbientSoundMode.entries.filter { it != AmbientSoundMode.OFF }
+    val activeLayers = playbackState.activeLayers.ifEmpty {
+        if (playbackState.mode != AmbientSoundMode.OFF) mapOf(playbackState.mode to 0.80f) else emptyMap()
+    }
     val totalDownloadedBytes = AmbientSoundPackManager.totalDownloadedBytes(packStatuses)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val cozyStormLabel = stringResource(R.string.mixer_preset_cozy_storm)
+    val forestNightLabel = stringResource(R.string.mixer_preset_forest_night)
+    val builtInMixes = listOf(
+        SoundMixPreset(
+            id = "builtin_cozy_storm",
+            name = cozyStormLabel,
+            layers = mapOf(
+                AmbientSoundMode.STREAM_RAIN to 0.78f,
+                AmbientSoundMode.CAMPFIRE to 0.45f
+            )
+        ),
+        SoundMixPreset(
+            id = "builtin_forest_night",
+            name = forestNightLabel,
+            layers = mapOf(
+                AmbientSoundMode.NIGHT_CRICKETS to 0.75f,
+                AmbientSoundMode.AMBIENT_PAD to 0.40f
+            )
+        )
+    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -122,6 +158,20 @@ fun AmbientSoundDialog(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
+                        if (activeLayers.isNotEmpty()) {
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = palette.accent.copy(alpha = 0.20f)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.mixer_active_count, activeLayers.size),
+                                    color = palette.accentText,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
                     TextButton(
                         onClick = onDismiss,
@@ -138,17 +188,127 @@ fun AmbientSoundDialog(
 
                 HorizontalDivider(color = palette.borderSubtle.copy(alpha = 0.65f))
 
-                // Sound selection rows with per-pack FLAC download / cancel / delete controls
+                // Saved & Curated Mixes Strip
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.mixer_presets_label),
+                        color = palette.textSecondary,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (activeLayers.size >= 2) {
+                            val saveLabel = activeLayers.keys.joinToString(" + ") {
+                                it.name.lowercase().replaceFirstChar { c -> c.uppercase() }.take(8)
+                            }
+                            val saveShape = RoundedCornerShape(50)
+                            Surface(
+                                shape = saveShape,
+                                color = palette.accent.copy(alpha = 0.22f),
+                                border = BorderStroke(1.dp, palette.accent),
+                                modifier = Modifier
+                                    .clip(saveShape)
+                                    .clickable {
+                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                        onSaveCurrentMix(saveLabel, activeLayers)
+                                    }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.mixer_save_current),
+                                    color = palette.accentText,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                        savedMixes.forEach { preset ->
+                            val isActiveMix = activeLayers.keys == preset.layers.keys
+                            val chipShape = RoundedCornerShape(50)
+                            Surface(
+                                shape = chipShape,
+                                color = if (isActiveMix) palette.accent.copy(alpha = 0.20f) else palette.pillContainer,
+                                border = BorderStroke(1.dp, if (isActiveMix) palette.accent else palette.borderSubtle),
+                                modifier = Modifier
+                                    .clip(chipShape)
+                                    .clickable {
+                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                        onApplyMix(preset.layers)
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(start = 10.dp, end = 6.dp, top = 5.dp, bottom = 5.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = preset.name,
+                                        color = if (isActiveMix) palette.accentText else palette.textPrimary,
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1
+                                    )
+                                    Icon(
+                                        imageVector = RestCycleIcons.Close,
+                                        contentDescription = null,
+                                        tint = palette.textSecondary,
+                                        modifier = Modifier
+                                            .size(13.dp)
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                                onDeleteSavedMix(preset.id)
+                                            }
+                                    )
+                                }
+                            }
+                        }
+                        builtInMixes.forEach { preset ->
+                            val isActiveMix = activeLayers.keys == preset.layers.keys
+                            val chipShape = RoundedCornerShape(50)
+                            Surface(
+                                shape = chipShape,
+                                color = if (isActiveMix) palette.accent.copy(alpha = 0.20f) else palette.pillContainer,
+                                border = BorderStroke(1.dp, if (isActiveMix) palette.accent else palette.borderSubtle),
+                                modifier = Modifier
+                                    .clip(chipShape)
+                                    .clickable {
+                                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                        onApplyMix(preset.layers)
+                                    }
+                            ) {
+                                Text(
+                                    text = preset.name,
+                                    color = if (isActiveMix) palette.accentText else palette.textPrimary,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Sound selection rows with multi-track mixing, per-track slider & FLAC pack controls
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     activeModes.forEach { mode ->
+                        val layerVol = activeLayers[mode]
                         SoundPackOptionRow(
                             mode = mode,
-                            selected = playbackState.mode == mode,
+                            selected = layerVol != null,
+                            layerVolume = layerVol ?: 0.80f,
                             packStatus = packStatuses[mode] ?: SoundPackStatus.NotDownloaded,
                             onSelect = {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                 onSelectSound(mode)
                             },
+                            onLayerVolumeChange = { vol -> onLayerVolumeChange(mode, vol) },
                             onDownload = {
                                 view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                 onDownloadPack(mode)
@@ -164,7 +324,7 @@ fun AmbientSoundDialog(
                         )
                     }
                     SoundOffOptionTile(
-                        selected = playbackState.mode == AmbientSoundMode.OFF,
+                        selected = activeLayers.isEmpty(),
                         onClick = {
                             view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                             onSelectSound(AmbientSoundMode.OFF)
@@ -322,8 +482,10 @@ fun AmbientSoundDialog(
 private fun SoundPackOptionRow(
     mode: AmbientSoundMode,
     selected: Boolean,
+    layerVolume: Float,
     packStatus: SoundPackStatus,
     onSelect: () -> Unit,
+    onLayerVolumeChange: (Float) -> Unit,
     onDownload: () -> Unit,
     onCancelDownload: () -> Unit,
     onDelete: () -> Unit
@@ -448,6 +610,39 @@ private fun SoundPackOptionRow(
                             onClick = onDelete
                         )
                     }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = selected,
+                enter = expandVertically(tween(180)) + fadeIn(tween(150)),
+                exit = shrinkVertically(tween(150)) + fadeOut(tween(120))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 12.dp, end = 12.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Slider(
+                        value = layerVolume,
+                        onValueChange = onLayerVolumeChange,
+                        valueRange = 0.10f..1.0f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = palette.accent,
+                            activeTrackColor = palette.accent,
+                            inactiveTrackColor = palette.borderSubtle
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(26.dp)
+                    )
+                    Text(
+                        text = "${(layerVolume * 100f).roundToInt()}%",
+                        style = TabularTextStyles.cardDuration.copy(fontSize = 11.sp),
+                        color = palette.accentText
+                    )
                 }
             }
 

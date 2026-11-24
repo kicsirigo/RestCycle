@@ -8,11 +8,15 @@ import com.restcycle.app.data.preferences.LatencyPreferencesRepository
 import com.restcycle.app.domain.calculator.SkyPhaseResolver
 import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.calculator.SleepOptionLabels
+import com.restcycle.app.domain.model.SleepFactorTag
 import com.restcycle.app.domain.model.SleepHistoryCodec
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepQualityMood
 import com.restcycle.app.domain.model.SleepSessionRecord
 import com.restcycle.app.domain.model.SleepUiState
+import com.restcycle.app.platform.audio.AmbientSoundMode
+import com.restcycle.app.platform.audio.SoundMixCodec
+import com.restcycle.app.platform.audio.SoundMixPreset
 import com.restcycle.app.platform.time.AndroidTimeFormatProvider
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
@@ -91,6 +95,9 @@ class SleepViewModel(
     private val _sleepHistory = MutableStateFlow<List<SleepSessionRecord>>(emptyList())
     val sleepHistory: StateFlow<List<SleepSessionRecord>> = _sleepHistory.asStateFlow()
 
+    private val _savedSoundMixes = MutableStateFlow<List<SoundMixPreset>>(emptyList())
+    val savedSoundMixes: StateFlow<List<SoundMixPreset>> = _savedSoundMixes.asStateFlow()
+
     init {
         collectPref(repository.sleepLatencyMinutes, sleepWritesInFlight) { stored ->
             val clamped = stored.coerceIn(MIN_LATENCY, MAX_SLEEP_LATENCY)
@@ -141,6 +148,7 @@ class SleepViewModel(
         collectPref(repository.bedtimeReminderEnabled, genericWritesInFlight) { _bedtimeReminderEnabled.value = it }
         collectPref(repository.activeSleepStartMillis, genericWritesInFlight) { _activeSleepStartMillis.value = it }
         collectPref(repository.sleepHistory, genericWritesInFlight) { _sleepHistory.value = it }
+        collectPref(repository.savedSoundMixes, genericWritesInFlight) { _savedSoundMixes.value = it }
         collectPref(repository.timeFormatPreference, genericWritesInFlight) { stored ->
             if (stored != currentTimeFormatPref) {
                 currentTimeFormatPref = stored
@@ -312,6 +320,7 @@ class SleepViewModel(
 
     fun completeSleepSession(
         mood: SleepQualityMood,
+        tags: Set<SleepFactorTag> = emptySet(),
         nowEpochMillis: Long = System.currentTimeMillis()
     ) {
         val start = _activeSleepStartMillis.value
@@ -327,7 +336,8 @@ class SleepViewModel(
             endEpochMillis = safeEnd,
             durationMinutes = durationMinutes,
             cycles = cycles,
-            mood = mood
+            mood = mood,
+            tags = tags
         )
         val updated = (listOf(record) + _sleepHistory.value)
             .take(SleepHistoryCodec.MAX_HISTORY_RECORDS)
@@ -351,7 +361,8 @@ class SleepViewModel(
     fun addManualSleepSession(
         startEpochMillis: Long,
         endEpochMillis: Long,
-        mood: SleepQualityMood
+        mood: SleepQualityMood,
+        tags: Set<SleepFactorTag> = emptySet()
     ) {
         val safeStart = startEpochMillis.coerceAtLeast(1L)
         val safeEnd = endEpochMillis.coerceAtLeast(safeStart)
@@ -365,7 +376,8 @@ class SleepViewModel(
             endEpochMillis = safeEnd,
             durationMinutes = durationMinutes,
             cycles = cycles,
-            mood = mood
+            mood = mood,
+            tags = tags
         )
         val updated = (listOf(record) + _sleepHistory.value)
             .distinctBy { it.startEpochMillis to it.endEpochMillis }
@@ -373,6 +385,29 @@ class SleepViewModel(
             .take(SleepHistoryCodec.MAX_HISTORY_RECORDS)
         _sleepHistory.value = updated
         persistPref { repository.setSleepHistory(updated) }
+    }
+
+    fun saveSoundMix(name: String, layers: Map<AmbientSoundMode, Float>) {
+        val cleanLayers = layers.filterKeys { it != AmbientSoundMode.OFF }
+            .entries.take(SoundMixCodec.MAX_LAYERS_PER_MIX)
+            .associate { it.key to it.value.coerceIn(0.10f, 1.0f) }
+        if (cleanLayers.isEmpty()) return
+        val preset = SoundMixPreset(
+            id = "mix_${System.currentTimeMillis()}",
+            name = name.trim().ifBlank { "Mix" },
+            layers = cleanLayers
+        )
+        val updated = (listOf(preset) + _savedSoundMixes.value)
+            .take(SoundMixCodec.MAX_SAVED_MIXES)
+        _savedSoundMixes.value = updated
+        persistPref { repository.setSavedSoundMixes(updated) }
+    }
+
+    fun deleteSoundMix(id: String) {
+        val updated = _savedSoundMixes.value.filterNot { it.id == id }
+        if (updated.size == _savedSoundMixes.value.size) return
+        _savedSoundMixes.value = updated
+        persistPref { repository.setSavedSoundMixes(updated) }
     }
 
     fun exportSleepHistoryJson(): String =

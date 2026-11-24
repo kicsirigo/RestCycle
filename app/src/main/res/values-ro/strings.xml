@@ -201,4 +201,23 @@
     <string name="sound_pack_delete_cd">Șterge sunetul descărcat</string>
     <string name="sound_pack_cancel_cd">Anulează descărcarea</string>
     <string name="sound_pack_storage_summary">Sunete descărcate: %1$s</string>
+    <string name="mixer_active_count">Mix (%1$d/3)</string>
+    <string name="mixer_presets_label">Mixuri salvate</string>
+    <string name="mixer_save_current">+ Salvează mix</string>
+    <string name="mixer_preset_cozy_storm">Furtună liniștită</string>
+    <string name="mixer_preset_forest_night">Noapte în pădure</string>
+    <string name="weekly_chart_title">Tendință 7 zile</string>
+    <string name="weekly_debt_label">Datorie: %1$s</string>
+    <string name="weekly_debt_balanced">Echilibrat</string>
+    <string name="weekly_consistency_label">%1$d%% constant</string>
+    <string name="weekly_target_label">7.5h</string>
+    <string name="sleep_factors_label">Factori de somn (opțional)</string>
+    <string name="sleep_factor_caffeine">Cofeină târziu</string>
+    <string name="sleep_factor_exercise">Sport</string>
+    <string name="sleep_factor_stress">Stres</string>
+    <string name="sleep_factor_late_meal">Cină târzie</string>
+    <string name="sleep_factor_screen_time">Ecrane</string>
+    <string name="sleep_factor_alcohol">Alcool</string>
+    <string name="sleep_factor_insight_positive">%1$s: odihnit %2$d%% din nopți (%3$d nopți)</string>
+    <string name="sleep_factor_insight_negative">%1$s: odihnit doar %2$d%% din nopți (%3$d nopți)</string>
 </resources>

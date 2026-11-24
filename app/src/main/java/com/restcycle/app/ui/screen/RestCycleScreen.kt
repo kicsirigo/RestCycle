@@ -93,6 +93,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.restcycle.app.R
 import com.restcycle.app.domain.calculator.SleepCycleCalculator
+import com.restcycle.app.domain.model.SleepFactorTag
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepOption
 import com.restcycle.app.domain.model.SleepQualityMood
@@ -102,6 +103,7 @@ import com.restcycle.app.platform.audio.AmbientSoundMode
 import com.restcycle.app.platform.audio.AmbientSoundPackManager
 import com.restcycle.app.platform.audio.AmbientSoundService
 import com.restcycle.app.platform.audio.AmbientSoundStateHolder
+import com.restcycle.app.platform.audio.SoundMixPreset
 import com.restcycle.app.platform.reminder.BedtimeReminderScheduler
 import com.restcycle.app.platform.update.GitHubUpdateChecker
 import com.restcycle.app.platform.update.InstallLaunchResult
@@ -165,6 +167,11 @@ fun RestCycleScreen(
     onCancelSleepSession: () -> Unit = {},
     onDeleteSleepRecord: (SleepSessionRecord) -> Unit = {},
     onAddManualSleep: (startEpochMillis: Long, endEpochMillis: Long, mood: SleepQualityMood) -> Unit = { _, _, _ -> },
+    onCompleteSleepSessionWithTags: ((SleepQualityMood, Set<SleepFactorTag>) -> Unit)? = null,
+    onAddManualSleepWithTags: ((startEpochMillis: Long, endEpochMillis: Long, mood: SleepQualityMood, tags: Set<SleepFactorTag>) -> Unit)? = null,
+    savedSoundMixes: List<SoundMixPreset> = emptyList(),
+    onSaveSoundMix: (String, Map<AmbientSoundMode, Float>) -> Unit = { _, _ -> },
+    onDeleteSoundMix: (String) -> Unit = {},
     onExportBackup: () -> Unit = {},
     onImportBackup: () -> Unit = {},
     backupStatusEvent: Pair<Int, String>? = null,
@@ -810,16 +817,14 @@ fun RestCycleScreen(
                     if (mode == AmbientSoundMode.OFF) {
                         AmbientSoundService.stop(baseContext)
                     } else {
-                        AmbientSoundService.play(
-                            context = baseContext,
-                            mode = mode,
-                            volume = ambientPlaybackState.volume,
-                            timerMinutes = ambientPlaybackState.sleepTimerMinutes
-                        )
+                        AmbientSoundService.toggleLayer(baseContext, mode)
                     }
                 },
                 onVolumeChange = { vol ->
                     AmbientSoundService.updateVolume(baseContext, vol)
+                },
+                onLayerVolumeChange = { mode, vol ->
+                    AmbientSoundService.updateLayerVolume(mode, vol)
                 },
                 onSelectTimerMinutes = { mins ->
                     AmbientSoundService.updateTimer(baseContext, mins)
@@ -832,14 +837,10 @@ fun RestCycleScreen(
                         scope = coroutineScope,
                         mode = mode,
                         onCompleted = {
-                            if (AmbientSoundStateHolder.state.value.mode == mode) {
-                                val current = AmbientSoundStateHolder.state.value
-                                AmbientSoundService.play(
-                                    context = baseContext,
-                                    mode = mode,
-                                    volume = current.volume,
-                                    timerMinutes = current.sleepTimerMinutes
-                                )
+                            val current = AmbientSoundStateHolder.state.value
+                            if (current.activeLayers.containsKey(mode) || current.mode == mode) {
+                                val layers = current.activeLayers.ifEmpty { mapOf(mode to 0.80f) }
+                                AmbientSoundService.applyMix(baseContext, layers)
                             }
                         }
                     )
@@ -848,12 +849,24 @@ fun RestCycleScreen(
                     AmbientSoundPackManager.cancelDownload(baseContext, mode)
                 },
                 onDeletePack = { mode ->
-                    val wasPlayingThisMode = AmbientSoundStateHolder.state.value.mode == mode
+                    val current = AmbientSoundStateHolder.state.value
+                    val wasPlayingThisMode = current.activeLayers.containsKey(mode) || current.mode == mode
                     AmbientSoundPackManager.deletePack(baseContext, mode)
                     if (wasPlayingThisMode) {
-                        AmbientSoundService.stop(baseContext)
+                        val remaining = current.activeLayers - mode
+                        if (remaining.isEmpty()) {
+                            AmbientSoundService.stop(baseContext)
+                        } else {
+                            AmbientSoundService.applyMix(baseContext, remaining)
+                        }
                     }
-                }
+                },
+                savedMixes = savedSoundMixes,
+                onApplyMix = { layers ->
+                    AmbientSoundService.applyMix(baseContext, layers)
+                },
+                onSaveCurrentMix = onSaveSoundMix,
+                onDeleteSavedMix = onDeleteSoundMix
             )
         }
 
@@ -869,12 +882,27 @@ fun RestCycleScreen(
                     onCompleteSleepSession(mood)
                     showSleepTracker = false
                 },
+                onCompleteSleepWithTags = { mood, tags ->
+                    if (onCompleteSleepSessionWithTags != null) {
+                        onCompleteSleepSessionWithTags(mood, tags)
+                    } else {
+                        onCompleteSleepSession(mood)
+                    }
+                    showSleepTracker = false
+                },
                 onCancelSleep = {
                     onCancelSleepSession()
                 },
                 onDeleteRecord = onDeleteSleepRecord,
                 sleepLatencyMinutes = uiState.sleepLatencyMinutes,
                 onAddManualSleep = onAddManualSleep,
+                onAddManualSleepWithTags = { start, end, mood, tags ->
+                    if (onAddManualSleepWithTags != null) {
+                        onAddManualSleepWithTags(start, end, mood, tags)
+                    } else {
+                        onAddManualSleep(start, end, mood)
+                    }
+                },
                 onDismiss = { showSleepTracker = false }
             )
         }
@@ -1113,8 +1141,8 @@ private fun resolveInstalledVersionName(context: Context): String {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.8.4"
+        packageInfo.versionName?.takeIf { it.isNotBlank() } ?: "1.9.0"
     } catch (_: Exception) {
-        "1.8.4"
+        "1.9.0"
     }
 }

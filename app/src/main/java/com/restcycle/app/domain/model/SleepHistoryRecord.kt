@@ -4,13 +4,47 @@ import com.restcycle.app.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 data class SleepCycleInsight(
     val bestCycles: Int,
     val refreshedPercent: Int,
     val sampleCount: Int
+)
+
+enum class SleepFactorTag(val labelResId: Int) {
+    LATE_CAFFEINE(R.string.sleep_factor_caffeine),
+    EXERCISE(R.string.sleep_factor_exercise),
+    STRESS(R.string.sleep_factor_stress),
+    LATE_MEAL(R.string.sleep_factor_late_meal),
+    SCREEN_TIME(R.string.sleep_factor_screen_time),
+    ALCOHOL(R.string.sleep_factor_alcohol)
+}
+
+data class DailySleepPoint(
+    val date: LocalDate,
+    val totalMinutes: Int,
+    val bestMood: SleepQualityMood?
+)
+
+data class WeeklySleepSummary(
+    val days: List<DailySleepPoint>,
+    val sleepDebtMinutes: Int,
+    val consistencyPercent: Int?,
+    val loggedNightsCount: Int
+)
+
+data class SleepFactorInsight(
+    val tag: SleepFactorTag,
+    val refreshedPercent: Int,
+    val sampleCount: Int,
+    val isPositive: Boolean
 )
 
 enum class SleepQualityMood(val score: Int, val labelResId: Int) {
@@ -25,7 +59,8 @@ data class SleepSessionRecord(
     val endEpochMillis: Long,
     val durationMinutes: Int,
     val cycles: Int,
-    val mood: SleepQualityMood
+    val mood: SleepQualityMood,
+    val tags: Set<SleepFactorTag> = emptySet()
 )
 
 object SleepHistoryCodec {
@@ -74,7 +109,12 @@ object SleepHistoryCodec {
 
     fun encode(records: List<SleepSessionRecord>): String {
         return records.take(MAX_HISTORY_RECORDS).joinToString(";") { record ->
-            "${record.startEpochMillis},${record.endEpochMillis},${record.durationMinutes},${record.cycles},${record.mood.name}"
+            val base = "${record.startEpochMillis},${record.endEpochMillis},${record.durationMinutes},${record.cycles},${record.mood.name}"
+            if (record.tags.isEmpty()) {
+                base
+            } else {
+                "$base,${record.tags.joinToString("|") { it.name }}"
+            }
         }
     }
 
@@ -83,21 +123,118 @@ object SleepHistoryCodec {
         return raw.split(";")
             .mapNotNull { entry ->
                 val parts = entry.split(",")
-                if (parts.size != 5) return@mapNotNull null
+                if (parts.size < 5) return@mapNotNull null
                 val start = parts[0].toLongOrNull() ?: return@mapNotNull null
                 val end = parts[1].toLongOrNull() ?: return@mapNotNull null
                 val duration = parts[2].toIntOrNull()?.coerceIn(0, 24 * 60) ?: return@mapNotNull null
                 val cycles = parts[3].toIntOrNull()?.coerceIn(0, 12) ?: return@mapNotNull null
                 val mood = SleepQualityMood.entries.firstOrNull { it.name == parts[4] } ?: return@mapNotNull null
+                val tags = if (parts.size >= 6 && parts[5].isNotBlank()) {
+                    parts[5].split("|").mapNotNullTo(LinkedHashSet()) { tagName ->
+                        SleepFactorTag.entries.firstOrNull { it.name == tagName }
+                    }
+                } else {
+                    emptySet()
+                }
                 SleepSessionRecord(
                     startEpochMillis = start,
                     endEpochMillis = end,
                     durationMinutes = duration,
                     cycles = cycles,
-                    mood = mood
+                    mood = mood,
+                    tags = tags
                 )
             }
             .take(MAX_HISTORY_RECORDS)
+    }
+
+    /**
+     * Computes a rolling 7-day sleep chart, weekly sleep debt (against [targetMinutes] per logged night),
+     * and circular bedtime consistency percentage across the last 14 days.
+     */
+    fun computeWeeklySummary(
+        records: List<SleepSessionRecord>,
+        today: LocalDate = LocalDate.now(),
+        zoneId: ZoneId = ZoneId.systemDefault(),
+        targetMinutes: Int = 450
+    ): WeeklySleepSummary {
+        val byDate = records.groupBy { record ->
+            Instant.ofEpochMilli(record.endEpochMillis).atZone(zoneId).toLocalDate()
+        }
+        val days = (6 downTo 0).map { offset ->
+            val date = today.minusDays(offset.toLong())
+            val dayRecords = byDate[date].orEmpty()
+            DailySleepPoint(
+                date = date,
+                totalMinutes = dayRecords.sumOf { it.durationMinutes }.coerceAtMost(24 * 60),
+                bestMood = dayRecords.maxByOrNull { it.mood.score }?.mood
+            )
+        }
+        val loggedDays = days.filter { it.totalMinutes > 0 }
+        val debtMinutes = loggedDays.sumOf { (targetMinutes - it.totalMinutes) }.coerceAtLeast(0)
+
+        val windowStart = today.minusDays(13)
+        val recentBedMinutes = records
+            .filter { record ->
+                val d = Instant.ofEpochMilli(record.endEpochMillis).atZone(zoneId).toLocalDate()
+                !d.isBefore(windowStart) && !d.isAfter(today)
+            }
+            .map { record ->
+                val startTime = Instant.ofEpochMilli(record.startEpochMillis).atZone(zoneId).toLocalTime()
+                startTime.hour * 60 + startTime.minute
+            }
+
+        val consistency = if (recentBedMinutes.size >= 2) {
+            val angles = recentBedMinutes.map { (it / 1440.0) * 2.0 * PI }
+            val meanSin = angles.sumOf { sin(it) } / angles.size
+            val meanCos = angles.sumOf { cos(it) } / angles.size
+            val meanAngle = atan2(meanSin, meanCos)
+            val sqDiffs = angles.map { a ->
+                var diff = a - meanAngle
+                while (diff > PI) diff -= 2.0 * PI
+                while (diff < -PI) diff += 2.0 * PI
+                val mins = (diff / (2.0 * PI)) * 1440.0
+                mins * mins
+            }
+            val stdDevMinutes = sqrt(sqDiffs.sum() / sqDiffs.size)
+            // <= 15 min std-dev = 100%, 150+ min std-dev = 20%
+            val normalized = (100.0 - ((stdDevMinutes - 15.0).coerceAtLeast(0.0) * (80.0 / 135.0)))
+            normalized.roundToInt().coerceIn(20, 100)
+        } else {
+            null
+        }
+
+        return WeeklySleepSummary(
+            days = days,
+            sleepDebtMinutes = debtMinutes,
+            consistencyPercent = consistency,
+            loggedNightsCount = loggedDays.size
+        )
+    }
+
+    /**
+     * Finds the sleep factor tag with the clearest positive or negative impact on refreshed wake-ups.
+     * Requires at least 2 logged nights with the same tag.
+     */
+    fun computeFactorInsight(records: List<SleepSessionRecord>): SleepFactorInsight? {
+        val candidates = SleepFactorTag.entries.mapNotNull { tag ->
+            val tagged = records.filter { tag in it.tags }
+            if (tagged.size < 2) return@mapNotNull null
+            val refreshed = tagged.count {
+                it.mood == SleepQualityMood.RESTED || it.mood == SleepQualityMood.ENERGIZED
+            }
+            val pct = ((refreshed * 100.0) / tagged.size).roundToInt().coerceIn(0, 100)
+            SleepFactorInsight(
+                tag = tag,
+                refreshedPercent = pct,
+                sampleCount = tagged.size,
+                isPositive = pct >= 60
+            )
+        }
+        return candidates.maxWithOrNull(
+            compareBy<SleepFactorInsight> { abs(it.refreshedPercent - 50) }
+                .thenBy { it.sampleCount }
+        )
     }
 
     /**
@@ -154,7 +291,13 @@ object SleepHistoryCodec {
                     appendLine("      \"endEpochMillis\": ${record.endEpochMillis},")
                     appendLine("      \"durationMinutes\": ${record.durationMinutes},")
                     appendLine("      \"cycles\": ${record.cycles},")
-                    appendLine("      \"mood\": \"${record.mood.name}\"")
+                    if (record.tags.isEmpty()) {
+                        appendLine("      \"mood\": \"${record.mood.name}\"")
+                    } else {
+                        appendLine("      \"mood\": \"${record.mood.name}\",")
+                        val tagsJson = record.tags.joinToString(", ") { "\"${it.name}\"" }
+                        appendLine("      \"tags\": [$tagsJson]")
+                    }
                     append("    }")
                     if (index < limited.lastIndex) append(",")
                     appendLine()
@@ -182,12 +325,19 @@ object SleepHistoryCodec {
             val cycles = (obj["cycles"] as? Number)?.toInt()?.coerceIn(0, 12) ?: return null
             val moodName = obj["mood"] as? String ?: return null
             val mood = SleepQualityMood.entries.firstOrNull { it.name == moodName } ?: return null
+            val tagsRaw = obj["tags"] as? List<*>
+            val tags = tagsRaw
+                ?.mapNotNullTo(LinkedHashSet()) { rawTag ->
+                    (rawTag as? String)?.let { name -> SleepFactorTag.entries.firstOrNull { it.name == name } }
+                }
+                ?: emptySet()
             parsed += SleepSessionRecord(
                 startEpochMillis = start,
                 endEpochMillis = end,
                 durationMinutes = duration,
                 cycles = cycles,
-                mood = mood
+                mood = mood,
+                tags = tags
             )
         }
         return parsed

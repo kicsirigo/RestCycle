@@ -201,4 +201,23 @@
     <string name="sound_pack_delete_cd">Delete downloaded sound</string>
     <string name="sound_pack_cancel_cd">Cancel download</string>
     <string name="sound_pack_storage_summary">Downloaded sounds: %1$s</string>
+    <string name="mixer_active_count">Mix (%1$d/3)</string>
+    <string name="mixer_presets_label">Saved Mixes</string>
+    <string name="mixer_save_current">+ Save Mix</string>
+    <string name="mixer_preset_cozy_storm">Cozy Storm</string>
+    <string name="mixer_preset_forest_night">Forest Night</string>
+    <string name="weekly_chart_title">7-Day Sleep Trend</string>
+    <string name="weekly_debt_label">Debt: %1$s</string>
+    <string name="weekly_debt_balanced">Balanced</string>
+    <string name="weekly_consistency_label">%1$d%% steady</string>
+    <string name="weekly_target_label">7.5h</string>
+    <string name="sleep_factors_label">Sleep factors (optional)</string>
+    <string name="sleep_factor_caffeine">Late caffeine</string>
+    <string name="sleep_factor_exercise">Exercise</string>
+    <string name="sleep_factor_stress">Stress</string>
+    <string name="sleep_factor_late_meal">Late meal</string>
+    <string name="sleep_factor_screen_time">Screens</string>
+    <string name="sleep_factor_alcohol">Alcohol</string>
+    <string name="sleep_factor_insight_positive">%1$s: rested %2$d%% of the time (%3$d nights)</string>
+    <string name="sleep_factor_insight_negative">%1$s: rested only %2$d%% of the time (%3$d nights)</string>
 </resources>

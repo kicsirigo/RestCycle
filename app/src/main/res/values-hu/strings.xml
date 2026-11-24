@@ -201,4 +201,23 @@
     <string name="sound_pack_delete_cd">Letöltött hang törlése</string>
     <string name="sound_pack_cancel_cd">Letöltés megszakítása</string>
     <string name="sound_pack_storage_summary">Letöltött hangok: %1$s</string>
+    <string name="mixer_active_count">Mix (%1$d/3)</string>
+    <string name="mixer_presets_label">Mentett mixek</string>
+    <string name="mixer_save_current">+ Mix mentése</string>
+    <string name="mixer_preset_cozy_storm">Kuckós vihar</string>
+    <string name="mixer_preset_forest_night">Erdei éjszaka</string>
+    <string name="weekly_chart_title">7 napos alvástrend</string>
+    <string name="weekly_debt_label">Adósság: %1$s</string>
+    <string name="weekly_debt_balanced">Kiegyensúlyozott</string>
+    <string name="weekly_consistency_label">%1$d%% rendszeres</string>
+    <string name="weekly_target_label">7,5ó</string>
+    <string name="sleep_factors_label">Alvási tényezők (opcionális)</string>
+    <string name="sleep_factor_caffeine">Késői koffein</string>
+    <string name="sleep_factor_exercise">Edzés</string>
+    <string name="sleep_factor_stress">Stressz</string>
+    <string name="sleep_factor_late_meal">Késői vacsora</string>
+    <string name="sleep_factor_screen_time">Képernyő</string>
+    <string name="sleep_factor_alcohol">Alkohol</string>
+    <string name="sleep_factor_insight_positive">%1$s: %2$d%%-ban kipihent ébredés (%3$d éj)</string>
+    <string name="sleep_factor_insight_negative">%1$s: csak %2$d%%-ban kipihent ébredés (%3$d éj)</string>
 </resources>

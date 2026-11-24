@@ -201,4 +201,23 @@
     <string name="sound_pack_delete_cd">Usuń pobrany dźwięk</string>
     <string name="sound_pack_cancel_cd">Anuluj pobieranie</string>
     <string name="sound_pack_storage_summary">Pobrane dźwięki: %1$s</string>
+    <string name="mixer_active_count">Miks (%1$d/3)</string>
+    <string name="mixer_presets_label">Zapisane miksy</string>
+    <string name="mixer_save_current">+ Zapisz miks</string>
+    <string name="mixer_preset_cozy_storm">Przytulna burza</string>
+    <string name="mixer_preset_forest_night">Leśna noc</string>
+    <string name="weekly_chart_title">Trend 7-dniowy</string>
+    <string name="weekly_debt_label">Dług: %1$s</string>
+    <string name="weekly_debt_balanced">Zrównoważony</string>
+    <string name="weekly_consistency_label">%1$d%% regularny</string>
+    <string name="weekly_target_label">7,5g</string>
+    <string name="sleep_factors_label">Czynniki snu (opcjonalne)</string>
+    <string name="sleep_factor_caffeine">Późna kofeina</string>
+    <string name="sleep_factor_exercise">Trening</string>
+    <string name="sleep_factor_stress">Stres</string>
+    <string name="sleep_factor_late_meal">Późny posiłek</string>
+    <string name="sleep_factor_screen_time">Ekrany</string>
+    <string name="sleep_factor_alcohol">Alkohol</string>
+    <string name="sleep_factor_insight_positive">%1$s: wypoczęty w %2$d%% nocy (%3$d nocy)</string>
+    <string name="sleep_factor_insight_negative">%1$s: wypoczęty tylko w %2$d%% nocy (%3$d nocy)</string>
 </resources>

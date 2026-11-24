@@ -16,6 +16,8 @@ import com.restcycle.app.domain.calculator.SleepCycleCalculator
 import com.restcycle.app.domain.model.SleepHistoryCodec
 import com.restcycle.app.domain.model.SleepMode
 import com.restcycle.app.domain.model.SleepSessionRecord
+import com.restcycle.app.platform.audio.SoundMixCodec
+import com.restcycle.app.platform.audio.SoundMixPreset
 import com.restcycle.app.ui.theme.AppLanguage
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.TimeFormatPreference
@@ -43,6 +45,7 @@ interface LatencyPreferencesRepository {
     val bedtimeReminderEnabled: Flow<Boolean> get() = flowOf(false)
     val activeSleepStartMillis: Flow<Long> get() = flowOf(0L)
     val sleepHistory: Flow<List<SleepSessionRecord>> get() = flowOf(emptyList())
+    val savedSoundMixes: Flow<List<SoundMixPreset>> get() = flowOf(emptyList())
 
     suspend fun setSleepLatency(minutes: Int)
     suspend fun setNapLatency(minutes: Int)
@@ -57,6 +60,7 @@ interface LatencyPreferencesRepository {
     suspend fun setBedtimeReminderEnabled(enabled: Boolean) {}
     suspend fun setActiveSleepStartMillis(epochMillis: Long) {}
     suspend fun setSleepHistory(records: List<SleepSessionRecord>) {}
+    suspend fun setSavedSoundMixes(presets: List<SoundMixPreset>) {}
 
     companion object {
         const val PREFS_NAME = "restcycle_prefs"
@@ -97,6 +101,7 @@ class DataStoreLatencyPreferencesRepository(
         val BEDTIME_REMINDER_ENABLED = booleanPreferencesKey("bedtime_reminder_enabled")
         val ACTIVE_SLEEP_START_MILLIS = longPreferencesKey("active_sleep_start_millis")
         val SLEEP_HISTORY_RECORDS = stringPreferencesKey("sleep_history_records")
+        val SAVED_SOUND_MIXES = stringPreferencesKey("saved_sound_mixes")
     }
 
     private val safeData: Flow<Preferences> = dataStore.data.catch { exception ->
@@ -164,6 +169,10 @@ class DataStoreLatencyPreferencesRepository(
         SleepHistoryCodec.decode(it[Keys.SLEEP_HISTORY_RECORDS])
     }
 
+    override val savedSoundMixes: Flow<List<SoundMixPreset>> = readPref {
+        SoundMixCodec.decode(it[Keys.SAVED_SOUND_MIXES])
+    }
+
     override suspend fun setSleepLatency(minutes: Int) = writePref(
         Keys.SLEEP_LATENCY_MINUTES,
         minutes.coerceIn(LatencyPreferencesRepository.MIN_SLEEP_LATENCY_MINUTES, LatencyPreferencesRepository.MAX_SLEEP_LATENCY_MINUTES)
@@ -212,6 +221,9 @@ class DataStoreLatencyPreferencesRepository(
 
     override suspend fun setSleepHistory(records: List<SleepSessionRecord>) =
         writePref(Keys.SLEEP_HISTORY_RECORDS, SleepHistoryCodec.encode(records))
+
+    override suspend fun setSavedSoundMixes(presets: List<SoundMixPreset>) =
+        writePref(Keys.SAVED_SOUND_MIXES, SoundMixCodec.encode(presets))
 
     companion object {
         fun createDataStore(

@@ -43,6 +43,16 @@ class AmbientSoundService : Service() {
                 .distinctUntilChanged()
                 .collect { controller.setVolume(it) }
         }
+        serviceScope.launch {
+            AmbientSoundStateHolder.state
+                .map { it.activeLayers }
+                .distinctUntilChanged()
+                .collect { layers ->
+                    layers.forEach { (mode, vol) ->
+                        controller.setLayerVolume(mode, vol)
+                    }
+                }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -68,29 +78,18 @@ class AmbientSoundService : Service() {
                 val timerMinutes = (intent?.getIntExtra(EXTRA_TIMER_MINUTES, 0) ?: 0)
                     .coerceAtLeast(0)
 
-                ensureNotificationChannel()
-                val isPreview = AmbientSoundPackManager.resolveDownloadedFile(this, mode) == null
-                val effectiveTimer = if (isPreview) 0 else timerMinutes
-                val remaining = if (effectiveTimer > 0) effectiveTimer * 60L else 0L
-                startForegroundCompat(buildNotification(mode, remaining))
+                val singleLayers = mapOf(mode to AmbientSoundController.DEFAULT_LAYER_VOLUME)
+                syncMixPlayback(singleLayers, volume, timerMinutes)
+            }
 
-                AmbientSoundStateHolder.update {
-                    AmbientSoundPlaybackState(
-                        mode = mode,
-                        volume = volume,
-                        sleepTimerMinutes = timerMinutes,
-                        remainingSeconds = remaining,
-                        isPreviewPlayback = isPreview
-                    )
+            ACTION_SYNC_MIX -> {
+                val current = AmbientSoundStateHolder.state.value
+                val layers = current.activeLayers
+                if (layers.isEmpty()) {
+                    stopPlaybackAndSelf()
+                    return START_NOT_STICKY
                 }
-                controller.start(
-                    context = this,
-                    scope = serviceScope,
-                    mode = mode,
-                    initialVolume = volume,
-                    onPreviewCompleted = { stopPlaybackAndSelf() }
-                )
-                restartTimer(mode, effectiveTimer)
+                syncMixPlayback(layers, current.volume, current.sleepTimerMinutes)
             }
 
             ACTION_UPDATE_VOLUME -> {
@@ -122,6 +121,52 @@ class AmbientSoundService : Service() {
             }
         }
         return START_NOT_STICKY
+    }
+
+    private fun syncMixPlayback(
+        layers: Map<AmbientSoundMode, Float>,
+        volume: Float,
+        timerMinutes: Int
+    ) {
+        val primaryMode = layers.keys.firstOrNull() ?: run {
+            stopPlaybackAndSelf()
+            return
+        }
+        ensureNotificationChannel()
+        val allPreview = layers.keys.all { AmbientSoundPackManager.resolveDownloadedFile(this, it) == null }
+        val effectiveTimer = if (allPreview) 0 else timerMinutes
+        val remaining = if (effectiveTimer > 0) effectiveTimer * 60L else 0L
+        startForegroundCompat(buildNotification(primaryMode, remaining))
+
+        AmbientSoundStateHolder.update {
+            AmbientSoundPlaybackState(
+                mode = primaryMode,
+                volume = volume.coerceIn(MIN_VOLUME, MAX_VOLUME),
+                sleepTimerMinutes = timerMinutes,
+                remainingSeconds = remaining,
+                isPreviewPlayback = allPreview,
+                activeLayers = layers
+            )
+        }
+        controller.syncLayers(
+            context = this,
+            scope = serviceScope,
+            layers = layers,
+            initialMasterVolume = volume,
+            onLayerPreviewCompleted = { finishedMode ->
+                val remainingLayers = AmbientSoundStateHolder.state.value.activeLayers - finishedMode
+                if (remainingLayers.isEmpty()) {
+                    stopPlaybackAndSelf()
+                } else {
+                    val nextPrimary = remainingLayers.keys.first()
+                    AmbientSoundStateHolder.update {
+                        it.copy(mode = nextPrimary, activeLayers = remainingLayers)
+                    }
+                    updateNotification(nextPrimary, AmbientSoundStateHolder.state.value.remainingSeconds)
+                }
+            }
+        )
+        restartTimer(primaryMode, effectiveTimer)
     }
 
     private fun restartTimer(mode: AmbientSoundMode, timerMinutes: Int) {
@@ -265,6 +310,7 @@ class AmbientSoundService : Service() {
         const val NOTIFICATION_ID = 5310
 
         const val ACTION_PLAY = "com.restcycle.app.action.AMBIENT_PLAY"
+        const val ACTION_SYNC_MIX = "com.restcycle.app.action.AMBIENT_SYNC_MIX"
         const val ACTION_UPDATE_VOLUME = "com.restcycle.app.action.AMBIENT_VOLUME"
         const val ACTION_UPDATE_TIMER = "com.restcycle.app.action.AMBIENT_TIMER"
         const val ACTION_STOP = "com.restcycle.app.action.AMBIENT_STOP"
@@ -307,7 +353,8 @@ class AmbientSoundService : Service() {
                     volume = clampedVolume,
                     sleepTimerMinutes = safeTimer,
                     remainingSeconds = remaining,
-                    isPreviewPlayback = isPreview
+                    isPreviewPlayback = isPreview,
+                    activeLayers = mapOf(mode to AmbientSoundController.DEFAULT_LAYER_VOLUME)
                 )
             }
 
@@ -316,6 +363,72 @@ class AmbientSoundService : Service() {
                 putExtra(EXTRA_MODE_NAME, mode.name)
                 putExtra(EXTRA_VOLUME, clampedVolume)
                 putExtra(EXTRA_TIMER_MINUTES, safeTimer)
+            }
+            runCatching {
+                ContextCompat.startForegroundService(context.applicationContext, intent)
+            }
+        }
+
+        fun toggleLayer(context: Context, mode: AmbientSoundMode) {
+            if (mode == AmbientSoundMode.OFF) {
+                stop(context)
+                return
+            }
+            val current = AmbientSoundStateHolder.state.value
+            val updated = LinkedHashMap(current.activeLayers)
+            if (updated.containsKey(mode)) {
+                updated.remove(mode)
+            } else {
+                if (updated.size >= AmbientSoundController.MAX_MIX_LAYERS) {
+                    val oldestKey = updated.keys.firstOrNull()
+                    if (oldestKey != null) updated.remove(oldestKey)
+                }
+                updated[mode] = AmbientSoundController.DEFAULT_LAYER_VOLUME
+            }
+            applyMix(context, updated)
+        }
+
+        fun updateLayerVolume(mode: AmbientSoundMode, layerVolume: Float) {
+            val clamped = layerVolume.coerceIn(0.10f, 1.0f)
+            AmbientSoundStateHolder.update { current ->
+                if (!current.activeLayers.containsKey(mode)) {
+                    current
+                } else {
+                    val updated = LinkedHashMap(current.activeLayers)
+                    updated[mode] = clamped
+                    current.copy(activeLayers = updated)
+                }
+            }
+        }
+
+        fun applyMix(context: Context, layers: Map<AmbientSoundMode, Float>) {
+            val cleaned = layers
+                .filterKeys { it != AmbientSoundMode.OFF }
+                .entries
+                .take(AmbientSoundController.MAX_MIX_LAYERS)
+                .associateTo(LinkedHashMap()) { it.key to it.value.coerceIn(0.10f, 1.0f) }
+
+            if (cleaned.isEmpty()) {
+                stop(context)
+                return
+            }
+            val current = AmbientSoundStateHolder.state.value
+            val primary = cleaned.keys.first()
+            val allPreview = cleaned.keys.all { AmbientSoundPackManager.resolveDownloadedFile(context, it) == null }
+            val safeTimer = current.sleepTimerMinutes.coerceAtLeast(0)
+            val remaining = if (!allPreview && safeTimer > 0) safeTimer * 60L else 0L
+
+            AmbientSoundStateHolder.update {
+                it.copy(
+                    mode = primary,
+                    remainingSeconds = remaining,
+                    isPreviewPlayback = allPreview,
+                    activeLayers = cleaned
+                )
+            }
+
+            val intent = Intent(context, AmbientSoundService::class.java).apply {
+                action = ACTION_SYNC_MIX
             }
             runCatching {
                 ContextCompat.startForegroundService(context.applicationContext, intent)

@@ -12,8 +12,8 @@ android {
         applicationId = "com.restcycle.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 25
-        versionName = "1.8.4"
+        versionCode = 26
+        versionName = "1.9.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
