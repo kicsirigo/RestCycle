@@ -72,7 +72,7 @@ class V15FeaturesTest {
             val night = paletteForTheme(SkyPhase.NIGHT, style, pureAmoledNight = false)
             val amoled = paletteForTheme(SkyPhase.NIGHT, style, pureAmoledNight = true)
 
-            assertTrue(day.isLightSystemBars)
+            assertFalse(day.isLightSystemBars)
             assertFalse(night.isLightSystemBars)
             assertNotEquals(Color(0xFF000000), night.backgroundBottom)
             assertEquals(Color(0xFF000000), amoled.backgroundTop)

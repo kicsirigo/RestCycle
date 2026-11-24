@@ -51,12 +51,12 @@ class AtmosphereThemeUnitTest {
 
     @Test
     fun palettesMatchExactSpecificationTokens() {
-        assertEquals(Color(0xFFECEEF5), TokyoNightDayAtmospherePalette.backgroundGlow)
-        assertEquals(Color(0xFFD8DCEB), TokyoNightDayAtmospherePalette.backgroundBottom)
-        assertEquals(Color(0xFFF0F2F8), TokyoNightDayAtmospherePalette.cardSurface)
-        assertEquals(Color(0xFF2E7DE9), TokyoNightDayAtmospherePalette.accent)
-        assertEquals(Color(0xFF24283B), TokyoNightDayAtmospherePalette.textPrimary)
-        assertTrue(TokyoNightDayAtmospherePalette.isLightSystemBars)
+        assertEquals(Color(0xFF3D6EA8), TokyoNightDayAtmospherePalette.backgroundGlow)
+        assertEquals(Color(0xFF192136), TokyoNightDayAtmospherePalette.backgroundBottom)
+        assertEquals(Color(0xFF25304A), TokyoNightDayAtmospherePalette.cardSurface)
+        assertEquals(Color(0xFF7DCFFF), TokyoNightDayAtmospherePalette.accent)
+        assertEquals(Color(0xFFE6ECFF), TokyoNightDayAtmospherePalette.textPrimary)
+        assertFalse(TokyoNightDayAtmospherePalette.isLightSystemBars)
 
         assertEquals(Color(0xFFFF9E64), TokyoNightDawnDuskAtmospherePalette.backgroundGlow)
         assertEquals(Color(0xFF3E2A3D), TokyoNightDawnDuskAtmospherePalette.backgroundTop)
@@ -189,7 +189,7 @@ class AtmosphereThemeUnitTest {
             val dawn = paletteForTheme(SkyPhase.DAWN_DUSK, style)
             val night = paletteForTheme(SkyPhase.NIGHT, style)
 
-            assertTrue("$style DAY should use light system bars", day.isLightSystemBars)
+            assertFalse("$style DAY should use eye-safe dark system bars", day.isLightSystemBars)
             assertFalse("$style DAWN_DUSK should use dark system bars", dawn.isLightSystemBars)
             assertFalse("$style NIGHT should use dark system bars", night.isLightSystemBars)
 
@@ -232,7 +232,7 @@ class AtmosphereSystemBarsTest {
             assertFalse(controller.isAppearanceLightNavigationBars)
         }
 
-        // Switch back to WAKE_UP_AT and step twice via 44dp upward drag (06 -> 07 -> 08) -> DAY -> light bars = true
+        // Switch back to WAKE_UP_AT and step twice via 44dp upward drag (06 -> 07 -> 08) -> DAY -> eye-safe dark bars = false
         composeRule.onNodeWithTag(RestCycleTestTags.MODE_TAB_WAKE_UP_AT).performClick()
         composeRule.waitForIdle()
         repeat(2) {
@@ -241,8 +241,8 @@ class AtmosphereSystemBarsTest {
         }
         composeRule.activityRule.scenario.onActivity { activity ->
             val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-            assertTrue(controller.isAppearanceLightStatusBars)
-            assertTrue(controller.isAppearanceLightNavigationBars)
+            assertFalse(controller.isAppearanceLightStatusBars)
+            assertFalse(controller.isAppearanceLightNavigationBars)
         }
 
         // Survives STARTED -> RESUMED lifecycle transition
@@ -251,8 +251,8 @@ class AtmosphereSystemBarsTest {
         composeRule.waitForIdle()
         composeRule.activityRule.scenario.onActivity { activity ->
             val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-            assertTrue(controller.isAppearanceLightStatusBars)
-            assertTrue(controller.isAppearanceLightNavigationBars)
+            assertFalse(controller.isAppearanceLightStatusBars)
+            assertFalse(controller.isAppearanceLightNavigationBars)
         }
     }
 }

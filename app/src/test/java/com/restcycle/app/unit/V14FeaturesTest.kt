@@ -16,6 +16,7 @@ import com.restcycle.app.ui.RestCycleTestTags
 import com.restcycle.app.ui.theme.AppThemeStyle
 import com.restcycle.app.ui.theme.paletteForTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -40,14 +41,14 @@ class V14FeaturesTest {
         val tokyoNight = paletteForTheme(SkyPhase.NIGHT, AppThemeStyle.TOKYO_NIGHT, pureAmoledNight = false)
         val tokyoAmoled = paletteForTheme(SkyPhase.NIGHT, AppThemeStyle.TOKYO_NIGHT, pureAmoledNight = true)
 
-        assertTrue(tokyoDay.isLightSystemBars)
+        assertFalse(tokyoDay.isLightSystemBars)
         assertNotEquals(Color(0xFF000000), tokyoNight.backgroundBottom)
         assertEquals(Color(0xFF000000), tokyoAmoled.backgroundTop)
         assertEquals(Color(0xFF000000), tokyoAmoled.backgroundBottom)
 
         val gruvboxDay = paletteForTheme(SkyPhase.DAY, AppThemeStyle.GRUVBOX, pureAmoledNight = false)
         val gruvboxAmoled = paletteForTheme(SkyPhase.NIGHT, AppThemeStyle.GRUVBOX, pureAmoledNight = true)
-        assertTrue(gruvboxDay.isLightSystemBars)
+        assertFalse(gruvboxDay.isLightSystemBars)
         assertEquals(Color(0xFF000000), gruvboxAmoled.backgroundBottom)
     }
 
