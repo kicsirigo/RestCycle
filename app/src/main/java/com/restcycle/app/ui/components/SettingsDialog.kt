@@ -12,24 +12,30 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -42,7 +48,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.restcycle.app.R
 import com.restcycle.app.platform.update.GitHubUpdateChecker
 import com.restcycle.app.platform.update.ReleaseUpdateInfo
@@ -71,6 +76,7 @@ import com.restcycle.app.ui.theme.TokyoNightDawnDuskAtmospherePalette
 import com.restcycle.app.ui.theme.TokyoNightDayAtmospherePalette
 import com.restcycle.app.ui.theme.TokyoNightNightAtmospherePalette
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsDialog(
     themeStyle: AppThemeStyle,
@@ -86,7 +92,7 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.8.3",
+    installedVersionName: String = "1.8.4",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {},
@@ -102,23 +108,31 @@ fun SettingsDialog(
         if (updateUiState is UpdateUiState.Idle) onCheckForUpdates()
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = palette.cardSurface,
+        scrimColor = Color.Black.copy(alpha = 0.55f),
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(
+                color = palette.borderSubtle,
+                width = 36.dp,
+                height = 4.dp
+            )
+        }
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 18.dp)
                 .testTag(RestCycleTestTags.SETTINGS_DIALOG),
-            shape = RoundedCornerShape(24.dp),
-            color = palette.cardSurface,
-            border = BorderStroke(1.dp, palette.borderSubtle),
-            tonalElevation = 0.dp
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 18.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -512,7 +526,6 @@ fun SettingsDialog(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
-            }
         }
     }
 }

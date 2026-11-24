@@ -274,7 +274,7 @@ class AmbientSoundService : Service() {
         const val EXTRA_TIMER_MINUTES = "extra_timer_minutes"
 
         const val DEFAULT_VOLUME = 0.85f
-        const val MIN_VOLUME = 0.10f
+        const val MIN_VOLUME = 0.0f
         const val MAX_VOLUME = 1.0f
 
         val SLEEP_TIMER_OPTIONS = listOf(0, 15, 30, 45, 60)

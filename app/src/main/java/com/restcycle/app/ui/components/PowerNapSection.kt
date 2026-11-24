@@ -4,6 +4,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -28,8 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -81,12 +84,25 @@ fun PowerNapPresetCard(
     val buttonContainerColor = lerp(palette.pillContainer, palette.accent, highlightFraction)
     val buttonContentColor = lerp(palette.textPrimary, palette.onAccent, highlightFraction)
 
+    val cardInteraction = remember { MutableInteractionSource() }
+    val cardScale = rememberPressScale(
+        interactionSource = cardInteraction,
+        pressedScale = 0.97f,
+        restingScale = if (isHighlighted) 1.012f else 1f
+    )
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = cardScale
+                scaleY = cardScale
+            }
             .testTag(RestCycleTestTags.optionCard(option.id))
             .selectable(
                 selected = isHighlighted,
+                interactionSource = cardInteraction,
+                indication = null,
                 onClick = {
                     view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                     onSelect()
@@ -152,7 +168,7 @@ fun PowerNapPresetCard(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
+                    RollingOdometerText(
                         text = formattedTime,
                         style = TabularTextStyles.cardTargetTime.copy(fontSize = 20.sp, lineHeight = 24.sp),
                         color = palette.textPrimary

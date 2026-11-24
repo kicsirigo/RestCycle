@@ -3,6 +3,7 @@ package com.restcycle.app.ui.components
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,10 +32,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -183,7 +186,7 @@ fun AmbientSoundDialog(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
                         )
-                        Text(
+                        RollingOdometerText(
                             text = "${(playbackState.volume * 100f).roundToInt()}%",
                             style = TabularTextStyles.cardDuration,
                             color = palette.accentText
@@ -241,6 +244,8 @@ fun AmbientSoundDialog(
                                 stringResource(R.string.sound_timer_minutes, minutes)
                             }
                             val shape = RoundedCornerShape(10.dp)
+                            val timerInteraction = remember { MutableInteractionSource() }
+                            val timerScale = rememberPressScale(timerInteraction, pressedScale = 0.91f)
                             Surface(
                                 shape = shape,
                                 color = if (selected) palette.accent.copy(alpha = 0.22f) else palette.pillContainer,
@@ -250,8 +255,16 @@ fun AmbientSoundDialog(
                                 ),
                                 modifier = Modifier
                                     .weight(1f)
+                                    .graphicsLayer {
+                                        scaleX = timerScale
+                                        scaleY = timerScale
+                                    }
                                     .clip(shape)
-                                    .clickable(role = Role.RadioButton) {
+                                    .clickable(
+                                        interactionSource = timerInteraction,
+                                        indication = null,
+                                        role = Role.RadioButton
+                                    ) {
                                         view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                                         onSelectTimerMinutes(minutes)
                                     }
@@ -318,6 +331,8 @@ private fun SoundPackOptionRow(
     val palette = AtmosphereTheme.palette
     val shape = RoundedCornerShape(12.dp)
     val contentColor = if (selected) palette.accentText else palette.textPrimary
+    val rowInteraction = remember { MutableInteractionSource() }
+    val rowScale = rememberPressScale(rowInteraction, pressedScale = 0.97f)
 
     Surface(
         shape = shape,
@@ -326,7 +341,12 @@ private fun SoundPackOptionRow(
             width = 1.dp,
             color = if (selected) palette.accent else palette.borderSubtle
         ),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = rowScale
+                scaleY = rowScale
+            }
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -340,18 +360,30 @@ private fun SoundPackOptionRow(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable(role = Role.RadioButton, onClick = onSelect)
+                        .clickable(
+                            interactionSource = rowInteraction,
+                            indication = null,
+                            role = Role.RadioButton,
+                            onClick = onSelect
+                        )
                         .padding(vertical = 2.dp)
                         .testTag(RestCycleTestTags.ambientSoundOption(mode.name)),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(9.dp)
                 ) {
-                    Icon(
-                        imageVector = RestCycleIcons.forAmbientSound(mode),
-                        contentDescription = null,
-                        tint = contentColor,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    if (selected) {
+                        LiveEqualizerIcon(
+                            color = contentColor,
+                            iconSize = 16.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = RestCycleIcons.forAmbientSound(mode),
+                            contentDescription = null,
+                            tint = contentColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(
                             text = stringResource(mode.labelResId),

@@ -78,7 +78,11 @@ object AmbientSoundStateHolder {
  */
 class AmbientSoundController {
     private var mixJob: Job? = null
+
+    @Volatile
     private var primaryPlayer: MediaPlayer? = null
+
+    @Volatile
     private var offsetSelfPlayer: MediaPlayer? = null
 
     @Volatile
@@ -88,7 +92,7 @@ class AmbientSoundController {
     private var fadeMultiplier: Float = 1.0f
 
     fun setVolume(volume: Float) {
-        masterVolume = volume.coerceIn(0.1f, 1.0f)
+        masterVolume = volume.coerceIn(0.0f, 1.0f)
         applyCurrentVolumes()
     }
 
@@ -106,22 +110,22 @@ class AmbientSoundController {
     ) {
         stop()
         val trackResId = mode.rawResId ?: return
-        masterVolume = initialVolume.coerceIn(0.1f, 1.0f)
+        masterVolume = initialVolume.coerceIn(0.0f, 1.0f)
         fadeMultiplier = 1.0f
         val appContext = context.applicationContext
         val downloadedFile = AmbientSoundPackManager.resolveDownloadedFile(appContext, mode)
-        val isPreview = downloadedFile == null
 
         mixJob = scope.launch(Dispatchers.Default) {
             var p1: MediaPlayer? = null
             var p2: MediaPlayer? = null
             try {
                 val effective = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
+                val perceptualGain = effective * effective
                 p1 = if (downloadedFile != null) {
                     createFilePlayer(
                         context = appContext,
                         filePath = downloadedFile.absolutePath,
-                        initialVolume = 0.85f * effective,
+                        initialVolume = perceptualGain,
                         looping = true,
                         seekHalfway = false
                     )
@@ -129,7 +133,7 @@ class AmbientSoundController {
                     createRawPlayer(
                         context = appContext,
                         rawResId = trackResId,
-                        initialVolume = 0.85f * effective,
+                        initialVolume = perceptualGain,
                         looping = false,
                         seekHalfway = false
                     )?.apply {
@@ -140,7 +144,7 @@ class AmbientSoundController {
                     createFilePlayer(
                         context = appContext,
                         filePath = downloadedFile.absolutePath,
-                        initialVolume = 0.24f * effective,
+                        initialVolume = 0.24f * perceptualGain,
                         looping = true,
                         seekHalfway = true
                     )
@@ -152,6 +156,7 @@ class AmbientSoundController {
 
                 p1?.start()
                 p2?.start()
+                applyCurrentVolumes()
 
                 if (p2 != null) {
                     var elapsedSeconds = 0.0
@@ -189,9 +194,10 @@ class AmbientSoundController {
 
     private fun applyCurrentVolumes() {
         val scale = (masterVolume * fadeMultiplier).coerceIn(0f, 1f)
+        val perceptualGain = scale * scale
         runCatching {
-            primaryPlayer?.setVolume(0.85f * scale, 0.85f * scale)
-            offsetSelfPlayer?.setVolume(0.24f * scale, 0.22f * scale)
+            primaryPlayer?.setVolume(perceptualGain, perceptualGain)
+            offsetSelfPlayer?.setVolume(0.24f * perceptualGain, 0.22f * perceptualGain)
         }
     }
 

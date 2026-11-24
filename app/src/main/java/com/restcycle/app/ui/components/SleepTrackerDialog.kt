@@ -2,12 +2,15 @@ package com.restcycle.app.ui.components
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -704,7 +707,11 @@ fun SleepTrackerDialog(
                     }
                 }
 
-                if (showManualForm && canLogForSelectedDay) {
+                AnimatedVisibility(
+                    visible = showManualForm && canLogForSelectedDay,
+                    enter = expandVertically(tween(220)) + fadeIn(tween(180)),
+                    exit = shrinkVertically(tween(180)) + fadeOut(tween(140))
+                ) {
                     val bedDate = if (manualBedtime.isAfter(manualWaketime)) {
                         selectedDate.minusDays(1)
                     } else {
