@@ -61,6 +61,11 @@ class V15FeaturesTest {
     @Before
     fun resetAmbientSoundState() {
         AmbientSoundStateHolder.stopPlayback()
+        composeRule.waitForIdle()
+        runCatching {
+            composeRule.onNodeWithTag(RestCycleTestTags.ONBOARDING_SKIP_BTN).performClick()
+            composeRule.waitForIdle()
+        }
     }
 
     @Test

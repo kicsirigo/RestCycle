@@ -98,6 +98,9 @@ class SleepViewModel(
     private val _savedSoundMixes = MutableStateFlow<List<SoundMixPreset>>(emptyList())
     val savedSoundMixes: StateFlow<List<SoundMixPreset>> = _savedSoundMixes.asStateFlow()
 
+    private val _onboardingCompleted = MutableStateFlow<Boolean?>(null)
+    val onboardingCompleted: StateFlow<Boolean?> = _onboardingCompleted.asStateFlow()
+
     init {
         collectPref(repository.sleepLatencyMinutes, sleepWritesInFlight) { stored ->
             val clamped = stored.coerceIn(MIN_LATENCY, MAX_SLEEP_LATENCY)
@@ -149,6 +152,7 @@ class SleepViewModel(
         collectPref(repository.activeSleepStartMillis, genericWritesInFlight) { _activeSleepStartMillis.value = it }
         collectPref(repository.sleepHistory, genericWritesInFlight) { _sleepHistory.value = it }
         collectPref(repository.savedSoundMixes, genericWritesInFlight) { _savedSoundMixes.value = it }
+        collectPref(repository.onboardingCompleted, genericWritesInFlight) { _onboardingCompleted.value = it }
         collectPref(repository.timeFormatPreference, genericWritesInFlight) { stored ->
             if (stored != currentTimeFormatPref) {
                 currentTimeFormatPref = stored
@@ -408,6 +412,12 @@ class SleepViewModel(
         if (updated.size == _savedSoundMixes.value.size) return
         _savedSoundMixes.value = updated
         persistPref { repository.setSavedSoundMixes(updated) }
+    }
+
+    fun completeOnboarding() {
+        if (_onboardingCompleted.value == true) return
+        _onboardingCompleted.value = true
+        persistPref { repository.setOnboardingCompleted(true) }
     }
 
     fun exportSleepHistoryJson(): String =

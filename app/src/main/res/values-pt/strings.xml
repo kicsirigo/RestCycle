@@ -220,4 +220,25 @@
     <string name="sleep_factor_alcohol">Álcool</string>
     <string name="sleep_factor_insight_positive">%1$s: descansado %2$d%% das vezes (%3$d noites)</string>
     <string name="sleep_factor_insight_negative">%1$s: descansado apenas %2$d%% das vezes (%3$d noites)</string>
+
+    <!-- Interactive First-Launch Onboarding -->
+    <string name="onboarding_skip">Ignorar</string>
+    <string name="onboarding_back">Voltar</string>
+    <string name="onboarding_next">Seguinte</string>
+    <string name="onboarding_get_started">Começar</string>
+    <string name="onboarding_step_label">%1$d / %2$d</string>
+    <string name="onboarding_step1_title">Acorda entre ciclos</string>
+    <string name="onboarding_step1_body">O sono decorre em ciclos de 90 minutos. Acordar no fim de um ciclo em vez de no sono profundo deixa-te renovado.</string>
+    <string name="onboarding_step1_pill_modes">4 modos reativos de sono e sesta</string>
+    <string name="onboarding_step1_pill_sounds">Misturador multipista FLAC sem perdas</string>
+    <string name="onboarding_step1_pill_journal">Calendário, tendências de 7 dias e análises</string>
+    <string name="onboarding_step2_title">Tempo até adormecer</string>
+    <string name="onboarding_step2_body">Quanto tempo costumas demorar a adormecer? O RestCycle inclui este tempo em cada janela de sono e despertar.</string>
+    <string name="onboarding_step2_preview">Para acordar às %1$s, deita-te às %2$s (5 ciclos)</string>
+    <string name="onboarding_step3_title">Escolhe a atmosfera</string>
+    <string name="onboarding_step3_body">O céu e a paleta mudam suavemente do dia ao crepúsculo e à noite. Toca num tema para pré-visualizar ao vivo.</string>
+    <string name="onboarding_step4_title">Protege o teu sono</string>
+    <string name="onboarding_step4_body">Define o limite diário de cafeína e um lembrete suave opcional 20 minutos antes de deitar.</string>
+    <string name="onboarding_step4_reminder_desc">Notificação local 20 min antes da hora sugerida</string>
+    <string name="settings_replay_onboarding">Guia de boas-vindas</string>
 </resources>

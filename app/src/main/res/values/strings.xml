@@ -220,4 +220,25 @@
     <string name="sleep_factor_alcohol">Alcohol</string>
     <string name="sleep_factor_insight_positive">%1$s: rested %2$d%% of the time (%3$d nights)</string>
     <string name="sleep_factor_insight_negative">%1$s: rested only %2$d%% of the time (%3$d nights)</string>
+
+    <!-- Interactive First-Launch Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_back">Back</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_step_label">%1$d / %2$d</string>
+    <string name="onboarding_step1_title">Wake Up Between Cycles</string>
+    <string name="onboarding_step1_body">Sleep happens in 90-minute cycles. Waking at the end of a cycle instead of mid-deep sleep leaves you clear-headed and refreshed.</string>
+    <string name="onboarding_step1_pill_modes">4 reactive sleep &amp; nap modes</string>
+    <string name="onboarding_step1_pill_sounds">Multi-track lossless FLAC sound mixer</string>
+    <string name="onboarding_step1_pill_journal">Sleep calendar, 7-day trends &amp; insights</string>
+    <string name="onboarding_step2_title">Your Fall-Asleep Time</string>
+    <string name="onboarding_step2_body">How long does it usually take you to drift off? RestCycle builds this into every bedtime and wake-up window.</string>
+    <string name="onboarding_step2_preview">For a %1$s wake-up, aim for bed at %2$s (5 cycles)</string>
+    <string name="onboarding_step3_title">Choose Your Atmosphere</string>
+    <string name="onboarding_step3_body">Your sky and palette shift smoothly from sunlit day to twilight and night. Tap any theme to preview it live.</string>
+    <string name="onboarding_step4_title">Protect Your Sleep</string>
+    <string name="onboarding_step4_body">Set your daily caffeine cutoff and an optional gentle wind-down reminder 20 minutes before bedtime.</string>
+    <string name="onboarding_step4_reminder_desc">Local notification 20 min before your suggested bedtime</string>
+    <string name="settings_replay_onboarding">Welcome Guide</string>
 </resources>

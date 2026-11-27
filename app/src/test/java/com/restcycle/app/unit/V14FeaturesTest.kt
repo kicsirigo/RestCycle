@@ -35,6 +35,15 @@ class V14FeaturesTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    @org.junit.Before
+    fun dismissOnboardingIfShown() {
+        composeRule.waitForIdle()
+        runCatching {
+            composeRule.onNodeWithTag(RestCycleTestTags.ONBOARDING_SKIP_BTN).performClick()
+            composeRule.waitForIdle()
+        }
+    }
+
     @Test
     fun newThemesAndPureAmoledNightOverrideWorkAcrossAllSkyPhases() {
         val tokyoDay = paletteForTheme(SkyPhase.DAY, AppThemeStyle.TOKYO_NIGHT, pureAmoledNight = false)

@@ -220,4 +220,25 @@
     <string name="sleep_factor_alcohol">Alcohol</string>
     <string name="sleep_factor_insight_positive">%1$s: descansado %2$d%% de las veces (%3$d noches)</string>
     <string name="sleep_factor_insight_negative">%1$s: descansado solo %2$d%% de las veces (%3$d noches)</string>
+
+    <!-- Interactive First-Launch Onboarding -->
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_back">Atrás</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_get_started">Comenzar</string>
+    <string name="onboarding_step_label">%1$d / %2$d</string>
+    <string name="onboarding_step1_title">Despierta entre ciclos</string>
+    <string name="onboarding_step1_body">El sueño ocurre en ciclos de 90 minutos. Despertar al final de un ciclo en lugar de en sueño profundo te deja despejado y renovado.</string>
+    <string name="onboarding_step1_pill_modes">4 modos reactivos de sueño y siesta</string>
+    <string name="onboarding_step1_pill_sounds">Mezclador multipista FLAC sin pérdida</string>
+    <string name="onboarding_step1_pill_journal">Calendario, tendencias de 7 días y análisis</string>
+    <string name="onboarding_step2_title">Tu tiempo para dormirte</string>
+    <string name="onboarding_step2_body">¿Cuánto sueles tardar en conciliar el sueño? RestCycle lo incluye en cada ventana de descanso y despertar.</string>
+    <string name="onboarding_step2_preview">Para despertar a las %1$s, acuéstate a las %2$s (5 ciclos)</string>
+    <string name="onboarding_step3_title">Elige tu atmósfera</string>
+    <string name="onboarding_step3_body">El cielo y la paleta cambian suavemente entre día, crepúsculo y noche. Toca cualquier tema para verlo en vivo.</string>
+    <string name="onboarding_step4_title">Protege tu descanso</string>
+    <string name="onboarding_step4_body">Define tu límite diario de cafeína y un recordatorio suave opcional 20 minutos antes de acostarte.</string>
+    <string name="onboarding_step4_reminder_desc">Notificación local 20 min antes de tu hora sugerida</string>
+    <string name="settings_replay_onboarding">Guía de bienvenida</string>
 </resources>

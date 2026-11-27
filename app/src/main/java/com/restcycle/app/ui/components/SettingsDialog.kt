@@ -92,14 +92,15 @@ fun SettingsDialog(
     onSelectCaffeineCutoffHours: (Int) -> Unit = {},
     bedtimeReminderEnabled: Boolean = false,
     onToggleBedtimeReminder: (Boolean) -> Unit = {},
-    installedVersionName: String = "1.9.0",
+    installedVersionName: String = "1.9.1",
     updateUiState: UpdateUiState = UpdateUiState.Idle,
     onCheckForUpdates: () -> Unit = {},
     onDownloadUpdate: (ReleaseUpdateInfo) -> Unit = {},
     onCancelDownload: () -> Unit = {},
     onInstallUpdate: (ReleaseUpdateInfo, String) -> Unit = { _, _ -> },
     onExportBackup: () -> Unit = {},
-    onImportBackup: () -> Unit = {}
+    onImportBackup: () -> Unit = {},
+    onReplayOnboarding: () -> Unit = {}
 ) {
     val palette = AtmosphereTheme.palette
     val view = LocalView.current
@@ -515,6 +516,19 @@ fun SettingsDialog(
                         )
                     }
                 }
+
+                SettingsOptionPill(
+                    label = stringResource(R.string.settings_replay_onboarding),
+                    leadingIcon = RestCycleIcons.Sparkles,
+                    selected = false,
+                    role = Role.Button,
+                    fontSize = 12.sp,
+                    verticalPadding = 9.dp,
+                    onClick = onReplayOnboarding,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(RestCycleTestTags.SETTINGS_REPLAY_ONBOARDING_BTN)
+                )
 
                 Spacer(modifier = Modifier.height(2.dp))
                 HorizontalDivider(color = palette.borderSubtle.copy(alpha = 0.65f))

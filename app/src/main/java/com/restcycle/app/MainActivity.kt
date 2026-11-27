@@ -102,6 +102,7 @@ class MainActivity : ComponentActivity() {
             val activeSleepStartMillis by viewModel.activeSleepStartMillis.collectAsStateWithLifecycle()
             val sleepHistory by viewModel.sleepHistory.collectAsStateWithLifecycle()
             val savedSoundMixes by viewModel.savedSoundMixes.collectAsStateWithLifecycle()
+            val onboardingCompleted by viewModel.onboardingCompleted.collectAsStateWithLifecycle()
             val liveClockTime by viewModel.clockTime.collectAsStateWithLifecycle()
             val syncedClockTime = uiState.options.firstOrNull()
                 ?.takeIf {
@@ -164,7 +165,9 @@ class MainActivity : ComponentActivity() {
                         importBackupLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
                     },
                     backupStatusEvent = backupSnackbarEvent,
-                    openBreathingTrigger = openBreathingTrigger
+                    openBreathingTrigger = openBreathingTrigger,
+                    showOnboarding = onboardingCompleted == false,
+                    onCompleteOnboarding = viewModel::completeOnboarding
                 )
             }
         }

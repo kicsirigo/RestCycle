@@ -212,6 +212,15 @@ class AtmosphereSystemBarsTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    @org.junit.Before
+    fun dismissOnboardingIfShown() {
+        composeRule.waitForIdle()
+        runCatching {
+            composeRule.onNodeWithTag(RestCycleTestTags.ONBOARDING_SKIP_BTN).performClick()
+            composeRule.waitForIdle()
+        }
+    }
+
     @Test
     fun systemBars_updateLightAndDarkFlagsAcrossSkyPhasesAndLifecycle() {
         // Default WAKE_UP_AT 06:50 is DAWN_DUSK -> light bars = false

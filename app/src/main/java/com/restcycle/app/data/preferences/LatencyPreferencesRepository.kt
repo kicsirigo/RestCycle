@@ -46,6 +46,7 @@ interface LatencyPreferencesRepository {
     val activeSleepStartMillis: Flow<Long> get() = flowOf(0L)
     val sleepHistory: Flow<List<SleepSessionRecord>> get() = flowOf(emptyList())
     val savedSoundMixes: Flow<List<SoundMixPreset>> get() = flowOf(emptyList())
+    val onboardingCompleted: Flow<Boolean> get() = flowOf(true)
 
     suspend fun setSleepLatency(minutes: Int)
     suspend fun setNapLatency(minutes: Int)
@@ -61,6 +62,7 @@ interface LatencyPreferencesRepository {
     suspend fun setActiveSleepStartMillis(epochMillis: Long) {}
     suspend fun setSleepHistory(records: List<SleepSessionRecord>) {}
     suspend fun setSavedSoundMixes(presets: List<SoundMixPreset>) {}
+    suspend fun setOnboardingCompleted(completed: Boolean) {}
 
     companion object {
         const val PREFS_NAME = "restcycle_prefs"
@@ -102,6 +104,7 @@ class DataStoreLatencyPreferencesRepository(
         val ACTIVE_SLEEP_START_MILLIS = longPreferencesKey("active_sleep_start_millis")
         val SLEEP_HISTORY_RECORDS = stringPreferencesKey("sleep_history_records")
         val SAVED_SOUND_MIXES = stringPreferencesKey("saved_sound_mixes")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     }
 
     private val safeData: Flow<Preferences> = dataStore.data.catch { exception ->
@@ -173,6 +176,10 @@ class DataStoreLatencyPreferencesRepository(
         SoundMixCodec.decode(it[Keys.SAVED_SOUND_MIXES])
     }
 
+    override val onboardingCompleted: Flow<Boolean> = readPref {
+        it[Keys.ONBOARDING_COMPLETED] ?: false
+    }
+
     override suspend fun setSleepLatency(minutes: Int) = writePref(
         Keys.SLEEP_LATENCY_MINUTES,
         minutes.coerceIn(LatencyPreferencesRepository.MIN_SLEEP_LATENCY_MINUTES, LatencyPreferencesRepository.MAX_SLEEP_LATENCY_MINUTES)
@@ -224,6 +231,9 @@ class DataStoreLatencyPreferencesRepository(
 
     override suspend fun setSavedSoundMixes(presets: List<SoundMixPreset>) =
         writePref(Keys.SAVED_SOUND_MIXES, SoundMixCodec.encode(presets))
+
+    override suspend fun setOnboardingCompleted(completed: Boolean) =
+        writePref(Keys.ONBOARDING_COMPLETED, completed)
 
     companion object {
         fun createDataStore(

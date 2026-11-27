@@ -40,6 +40,15 @@ class RestCycleScreenAndMainActivityTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    @org.junit.Before
+    fun dismissOnboardingIfShown() {
+        composeRule.waitForIdle()
+        runCatching {
+            composeRule.onNodeWithTag(RestCycleTestTags.ONBOARDING_SKIP_BTN).performClick()
+            composeRule.waitForIdle()
+        }
+    }
+
     @Test
     fun thumbZoneProportions_andTransparentControls_andNoCalculateButton() {
         val rootBounds = composeRule.onNodeWithTag(RestCycleTestTags.SCREEN_ROOT)

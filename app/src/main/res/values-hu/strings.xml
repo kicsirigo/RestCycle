@@ -220,4 +220,25 @@
     <string name="sleep_factor_alcohol">Alkohol</string>
     <string name="sleep_factor_insight_positive">%1$s: %2$d%%-ban kipihent ébredés (%3$d éj)</string>
     <string name="sleep_factor_insight_negative">%1$s: csak %2$d%%-ban kipihent ébredés (%3$d éj)</string>
+
+    <!-- Interactive First-Launch Onboarding -->
+    <string name="onboarding_skip">Kihagyás</string>
+    <string name="onboarding_back">Vissza</string>
+    <string name="onboarding_next">Tovább</string>
+    <string name="onboarding_get_started">Kezdés</string>
+    <string name="onboarding_step_label">%1$d / %2$d</string>
+    <string name="onboarding_step1_title">Ébredj ciklusok között</string>
+    <string name="onboarding_step1_body">Az alvás 90 perces ciklusokban zajlik. Ha ciklus végén ébredsz mélyalvás helyett, frissen és kipihenten indul a napod.</string>
+    <string name="onboarding_step1_pill_modes">4 reaktív alvás- és szundimód</string>
+    <string name="onboarding_step1_pill_sounds">Többsávos, veszteségmentes FLAC hangkeverő</string>
+    <string name="onboarding_step1_pill_journal">Alvásnaptár, 7 napos trendek és elemzések</string>
+    <string name="onboarding_step2_title">Elalvási időd</string>
+    <string name="onboarding_step2_body">Általában hány perc alatt alszol el? A RestCycle ezt automatikusan beleszámolja minden lefekvési és ébredési időbe.</string>
+    <string name="onboarding_step2_preview">%1$s ébredéshez ideális lefekvés: %2$s (5 ciklus)</string>
+    <string name="onboarding_step3_title">Válassz hangulatot</string>
+    <string name="onboarding_step3_body">Az égbolt és a színpaletta finoman vált nappal, alkonyat és éjszaka között. Koppints bármelyik témára élő előnézethez.</string>
+    <string name="onboarding_step4_title">Óvd az alvásod</string>
+    <string name="onboarding_step4_body">Állítsd be a napi koffeinhatárt és egy opcionális, kíméletes esti emlékeztetőt 20 perccel lefekvés előtt.</string>
+    <string name="onboarding_step4_reminder_desc">Helyi értesítés 20 perccel a javasolt lefekvés előtt</string>
+    <string name="settings_replay_onboarding">Üdvözlő útmutató</string>
 </resources>

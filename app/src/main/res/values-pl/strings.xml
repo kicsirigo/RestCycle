@@ -220,4 +220,25 @@
     <string name="sleep_factor_alcohol">Alkohol</string>
     <string name="sleep_factor_insight_positive">%1$s: wypoczęty w %2$d%% nocy (%3$d nocy)</string>
     <string name="sleep_factor_insight_negative">%1$s: wypoczęty tylko w %2$d%% nocy (%3$d nocy)</string>
+
+    <!-- Interactive First-Launch Onboarding -->
+    <string name="onboarding_skip">Pomiń</string>
+    <string name="onboarding_back">Wstecz</string>
+    <string name="onboarding_next">Dalej</string>
+    <string name="onboarding_get_started">Rozpocznij</string>
+    <string name="onboarding_step_label">%1$d / %2$d</string>
+    <string name="onboarding_step1_title">Budź się między cyklami</string>
+    <string name="onboarding_step1_body">Sen przebiega w 90-minutowych cyklach. Pobudka pod koniec cyklu zamiast w głębokim śnie daje lekkość i świeży umysł.</string>
+    <string name="onboarding_step1_pill_modes">4 reaktywne tryby snu i drzemek</string>
+    <string name="onboarding_step1_pill_sounds">Wielościeżkowy mikser bezstratny FLAC</string>
+    <string name="onboarding_step1_pill_journal">Kalendarz snu, trendy 7-dniowe i analizy</string>
+    <string name="onboarding_step2_title">Twój czas zasypiania</string>
+    <string name="onboarding_step2_body">Ile zwykle zajmuje Ci zaśnięcie? RestCycle uwzględnia ten czas w każdym oknie snu i pobudki.</string>
+    <string name="onboarding_step2_preview">Na pobudkę o %1$s połóż się o %2$s (5 cykli)</string>
+    <string name="onboarding_step3_title">Wybierz atmosferę</string>
+    <string name="onboarding_step3_body">Niebo i paleta płynnie zmieniają się od dnia po zmierzch i noc. Dotknij motywu, aby zobaczyć go na żywo.</string>
+    <string name="onboarding_step4_title">Chroń swój sen</string>
+    <string name="onboarding_step4_body">Ustaw dzienny limit kofeiny oraz opcjonalne delikatne przypomnienie 20 minut przed snem.</string>
+    <string name="onboarding_step4_reminder_desc">Lokalne powiadomienie 20 min przed sugerowaną porą snu</string>
+    <string name="settings_replay_onboarding">Przewodnik powitalny</string>
 </resources>

@@ -61,6 +61,11 @@ class SleepOptionCardAndPowerNapTest {
     @Before
     fun setUpIntents() {
         Intents.init()
+        composeRule.waitForIdle()
+        runCatching {
+            composeRule.onNodeWithTag(RestCycleTestTags.ONBOARDING_SKIP_BTN).performClick()
+            composeRule.waitForIdle()
+        }
     }
 
     @After

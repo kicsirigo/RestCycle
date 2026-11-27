@@ -10,6 +10,7 @@ import android.view.HapticFeedbackConstants
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -117,6 +118,7 @@ import com.restcycle.app.ui.components.CelestialLandscapeScene
 import com.restcycle.app.ui.components.HapticTimeWheel
 import com.restcycle.app.ui.components.LatencySlider
 import com.restcycle.app.ui.components.ModeSegmentedBar
+import com.restcycle.app.ui.components.OnboardingOverlay
 import com.restcycle.app.ui.components.PowerNapInertiaTooltip
 import com.restcycle.app.ui.components.PowerNapPresetCard
 import com.restcycle.app.ui.components.RestCycleIcons
@@ -175,7 +177,9 @@ fun RestCycleScreen(
     onExportBackup: () -> Unit = {},
     onImportBackup: () -> Unit = {},
     backupStatusEvent: Pair<Int, String>? = null,
-    openBreathingTrigger: Int = 0
+    openBreathingTrigger: Int = 0,
+    showOnboarding: Boolean = false,
+    onCompleteOnboarding: () -> Unit = {}
 ) {
     val baseContext = LocalContext.current
     val baseConfiguration = LocalConfiguration.current
@@ -208,6 +212,7 @@ fun RestCycleScreen(
         var showSettings by remember { mutableStateOf(false) }
         var showBreathing by remember { mutableStateOf(false) }
         var showSleepTracker by remember { mutableStateOf(false) }
+        var replayOnboarding by remember { mutableStateOf(false) }
         var showSoundPicker by remember { mutableStateOf(false) }
         val ambientPlaybackState by AmbientSoundStateHolder.state.collectAsStateWithLifecycle()
         val ambientSoundMode = ambientPlaybackState.mode
@@ -798,7 +803,11 @@ fun RestCycleScreen(
                     }
                 },
                 onExportBackup = onExportBackup,
-                onImportBackup = onImportBackup
+                onImportBackup = onImportBackup,
+                onReplayOnboarding = {
+                    showSettings = false
+                    replayOnboarding = true
+                }
             )
         }
 
@@ -904,6 +913,47 @@ fun RestCycleScreen(
                     }
                 },
                 onDismiss = { showSleepTracker = false }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showOnboarding || replayOnboarding,
+            enter = fadeIn(tween(240)),
+            exit = fadeOut(tween(220))
+        ) {
+            OnboardingOverlay(
+                sleepLatencyMinutes = uiState.sleepLatencyMinutes,
+                themeStyle = themeStyle,
+                pureAmoledNight = pureAmoledNight,
+                caffeineCutoffHours = caffeineCutoffHours,
+                bedtimeReminderEnabled = bedtimeReminderEnabled,
+                is24HourFormat = uiState.is24HourFormat,
+                onUpdateSleepLatency = onUpdateSleepLatency,
+                onSelectThemeStyle = onSelectThemeStyle,
+                onTogglePureAmoledNight = onTogglePureAmoledNight,
+                onSelectCaffeineCutoffHours = onSelectCaffeineCutoffHours,
+                onToggleBedtimeReminder = { enable ->
+                    if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val granted = ContextCompat.checkSelfPermission(
+                            baseContext,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (!granted) {
+                            (baseContext as? Activity)?.let { act ->
+                                ActivityCompat.requestPermissions(
+                                    act,
+                                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                                    REQ_POST_NOTIFICATIONS
+                                )
+                            }
+                        }
+                    }
+                    onToggleBedtimeReminder(enable)
+                },
+                onFinish = {
+                    replayOnboarding = false
+                    onCompleteOnboarding()
+                }
             )
         }
     }
